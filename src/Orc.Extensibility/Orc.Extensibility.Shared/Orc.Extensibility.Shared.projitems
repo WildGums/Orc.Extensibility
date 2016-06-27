@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -10,7 +10,37 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\..\SolutionAssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\CustomAttributeDataExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Extensions\PluginExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces\IPlugin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces\IPluginConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces\IPluginInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Plugin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\PluginInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModuleInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\EventArgs\PluginEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Extensions\IPluginFinderExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Extensions\IPluginManagerExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IMultiplePluginsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginCleanupService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginInfoProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginLocationsProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\ISinglePluginService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\MultiplePluginsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginCleanupService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginFinderBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginInfoProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginLocationsProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PluginManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SinglePluginService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Attributes\" />
   </ItemGroup>
 </Project>

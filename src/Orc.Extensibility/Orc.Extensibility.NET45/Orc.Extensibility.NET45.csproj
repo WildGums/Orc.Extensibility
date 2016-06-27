@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{e518357e-5833-4b69-8cc9-63dc8b9be351}</ProjectGuid>
+    <ProjectGuid>{E518357E-5833-4B69-8CC9-63DC8B9BE351}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Orc.Extensibility</RootNamespace>
@@ -46,6 +46,11 @@
     <Reference Include="Catel.Fody.Attributes">
       <HintPath>..\..\..\lib\Catel.Fody.2.14.0\lib\portable-net4+sl4+wp7+win8+wpa81+MonoAndroid14+MonoTouch40\Catel.Fody.Attributes.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="MethodTimer">
+      <HintPath>..\..\..\lib\MethodTimer.Fody.1.16.0.0\lib\dotnet\MethodTimer.dll</HintPath>
+      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Obsolete">
       <HintPath>..\..\..\lib\Obsolete.Fody.4.0.5\lib\dotnet\Obsolete.dll</HintPath>

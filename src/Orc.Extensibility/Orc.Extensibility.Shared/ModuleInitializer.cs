@@ -15,7 +15,14 @@ public static class ModuleInitializer
     {
         var serviceLocator = ServiceLocator.Default;
 
-		// TODO: register services here
+        serviceLocator.RegisterType<IPluginCleanupService, PluginCleanupService>();
+        serviceLocator.RegisterType<IPluginLocationsProvider, PluginLocationsProvider>();
+        serviceLocator.RegisterType<IPluginManager, PluginManager>();
+        serviceLocator.RegisterType<IPluginFactory, PluginFactory>();
+        serviceLocator.RegisterType<IPluginInfoProvider, PluginInfoProvider>();
+
+        serviceLocator.RegisterType<ISinglePluginService, SinglePluginService>();
+        serviceLocator.RegisterType<IMultiplePluginsService, MultiplePluginsService>();
 
         var languageService = serviceLocator.ResolveType<ILanguageService>();
         languageService.RegisterLanguageSource(new LanguageResourceSource("Orc.Extensibility", "Orc.Extensibility.Properties", "Resources"));

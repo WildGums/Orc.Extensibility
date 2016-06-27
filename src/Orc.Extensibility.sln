@@ -14,6 +14,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{1FE0D431-A
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orc.Extensibility.Tests.NET40", "Orc.Extensibility.Tests\Orc.Extensibility.Tests.NET40\Orc.Extensibility.Tests.NET40.csproj", "{B4F82EB5-322C-4AD1-A559-8EC135890051}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ED260BA0-8B12-4B43-8592-95849AE22F11} = {ED260BA0-8B12-4B43-8592-95849AE22F11}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{0787DFC6-AB24-4D00-A8A4-FF203DC7D080}"
 EndProject

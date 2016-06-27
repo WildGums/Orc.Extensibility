@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <package>
   <metadata>
-    <id>Orc.</id>
+    <id>Orc.Extensibility</id>
     <version>[VERSION]</version>
-    <title>Orc.</title>
+    <title>Orc.Extensibility</title>
     <authors>WildGums</authors>
     <owners>WildGums</owners>
 
 	<description>
-	  Orc. description.
+	  Orc.Extensibility description.
 	</description>
 	<summary>
 	</summary>
@@ -24,7 +24,7 @@
 	<!--<iconUrl>http://www.catenalogic.com/catel.png</iconUrl>-->
     
     <dependencies>
-      <!-- <dependency id="Catel.Core" version="[replaced]" /> -->
+      <dependency id="Catel.Core" version="[replaced]" />
     </dependencies>
   </metadata>
 </package>

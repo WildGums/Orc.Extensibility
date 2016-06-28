@@ -14,7 +14,7 @@ namespace Orc.Extensibility
         {
         }
 
-        public IPluginInfo GetPluginInfo(Type pluginType)
+        public virtual IPluginInfo GetPluginInfo(Type pluginType)
         {
             return new PluginInfo(pluginType);
         }

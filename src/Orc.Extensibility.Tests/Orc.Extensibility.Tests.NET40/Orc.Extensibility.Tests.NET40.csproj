@@ -98,12 +98,6 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Orc.Extensibility\Orc.Extensibility.NET40\Orc.Extensibility.NET40.csproj">
-      <Project>{03521e12-02ee-4b8c-959d-19ad2161894e}</Project>
-      <Name>Orc.Extensibility.NET40</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>

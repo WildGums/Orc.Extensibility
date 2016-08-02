@@ -72,14 +72,14 @@ namespace Orc.Extensibility
                 foreach (var pluginFileFilter in PluginFileFilters)
                 {
                     var rootPlugins = (from file in Directory.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.TopDirectoryOnly)
-                                       orderby File.GetCreationTime(file) descending
+                                       orderby File.GetLastWriteTime(file) descending
                                        select file).ToList();
                     plugins.AddRange(FindPluginsInAssemblies(rootPlugins.ToArray()));
                 }
 
                 // Step 2: treat each subdirectory separately
                 var directories = (from directory in Directory.GetDirectories(pluginDirectory)
-                                   orderby Directory.GetCreationTime(directory) descending
+                                   orderby Directory.GetLastWriteTime(directory) descending
                                    select directory).ToList();
 
                 foreach (var directory in directories)
@@ -106,12 +106,42 @@ namespace Orc.Extensibility
                                   select plugin).ToList();
                 if (duplicates.Count > 1)
                 {
-                    var oldDuplicates = (from duplicate in duplicates
+                    List<IPluginInfo> oldDuplicates = null;
+
+                    // Method 1: use version
+                    if (oldDuplicates == null)
+                    {
+                        try
+                        {
+                            oldDuplicates = (from duplicate in duplicates
+                                             orderby new SemVersion(duplicate.Version) descending
+                                             select duplicate).Skip(1).ToList();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Failed to sort versions using Version");
+                        }
+                    }
+
+                    // Method 2: use last write time
+                    if (oldDuplicates == null)
+                    {
+                        oldDuplicates = (from duplicate in duplicates
                                          orderby File.GetLastWriteTime(duplicate.Location) descending
                                          select duplicate).Skip(1).ToList();
-                    foreach (var duplicate in oldDuplicates)
+                    }
+
+                    foreach (var oldDuplicate in oldDuplicates)
                     {
-                        plugins.Remove(duplicate);
+                        for (int j = 0; j < plugins.Count; j++)
+                        {
+                            var pluginInfo = plugins[j];
+                            if (pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName) &&
+                                pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
+                            {
+                                plugins.RemoveAt(j--);
+                            }
+                        }
                     }
 
                     i = 0;

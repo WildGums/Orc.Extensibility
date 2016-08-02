@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces\IPluginInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Plugin.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\PluginInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\SemVersion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModuleInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EventArgs\PluginEventArgs.cs" />

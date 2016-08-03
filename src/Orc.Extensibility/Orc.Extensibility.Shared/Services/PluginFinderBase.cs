@@ -140,6 +140,9 @@ namespace Orc.Extensibility
                                 pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
                             {
                                 plugins.RemoveAt(j--);
+
+                                // Stop processing, we must keep at least one
+                                break;
                             }
                         }
                     }

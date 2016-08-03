@@ -133,6 +133,12 @@ namespace Orc.Extensibility
                 version = version.Substring(0, dashIndex);
             }
 
+            var commaIndex = version.IndexOf(',');
+            if (commaIndex != -1)
+            {
+                version = version.Substring(0, commaIndex);
+            }
+
             return version;
         }
 

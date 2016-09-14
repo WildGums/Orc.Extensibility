@@ -8,6 +8,7 @@ namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
+    using Catel;
     using Catel.IO;
     using Catel.Reflection;
 
@@ -17,11 +18,41 @@ namespace Orc.Extensibility
         {
             var directories = new List<string>();
 
-            directories.Add(Path.Combine(Path.GetApplicationDataDirectory(), "plugins"));
-            directories.Add(Environment.CurrentDirectory);
-            directories.Add(AssemblyHelper.GetEntryAssembly().GetDirectory());
+            var pluginsDirectory = Path.Combine(Path.GetApplicationDataDirectory(), "plugins");
+            if (ValidateDirectory(pluginsDirectory))
+            {
+                directories.Add(pluginsDirectory);
+            }
+
+            var currentDirectory = Environment.CurrentDirectory;
+            if (ValidateDirectory(currentDirectory))
+            {
+                directories.Add(currentDirectory);
+            }
+
+            var appDirectory = AssemblyHelper.GetEntryAssembly().GetDirectory();
+            if (ValidateDirectory(appDirectory))
+            {
+                directories.Add(appDirectory);
+            }
 
             return directories;
+        }
+
+        protected virtual bool ValidateDirectory(string directory)
+        {
+            if (directory == null)
+            {
+                return false;
+            }
+
+            // We never ever want to include system directory
+            if (directory.ContainsIgnoreCase("\\windows\\"))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

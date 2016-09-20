@@ -7,14 +7,28 @@
 namespace Orc.Extensibility
 {
     using System;
-    using System.IO;
     using System.Linq;
+    using Catel;
     using Catel.Logging;
+    using FileSystem;
 
     public class PluginCleanupService : IPluginCleanupService
     {
-        private const string DeleteMeFilter = "*.deleteme";
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+
+        private const string DeleteMeFilter = "*.deleteme";
+
+        private readonly IFileService _fileService;
+        private readonly IDirectoryService _directoryService;
+
+        public PluginCleanupService(IFileService fileService, IDirectoryService directoryService)
+        {
+            Argument.IsNotNull(() => fileService);
+            Argument.IsNotNull(() => directoryService);
+
+            _fileService = fileService;
+            _directoryService = directoryService;
+        }
 
         public bool IsCleanupRequired(string directory)
         {
@@ -37,8 +51,8 @@ namespace Orc.Extensibility
 
             try
             {
-                Directory.Delete(directory, true);
-                succeeded = !Directory.Exists(directory);
+                _directoryService.Delete(directory, true);
+                succeeded = !_directoryService.Exists(directory);
             }
             catch (Exception ex)
             {
@@ -50,9 +64,9 @@ namespace Orc.Extensibility
                 try
                 {
                     // Create the file again, we didn't delete successfully
-                    if (!File.Exists(deleteMeFile))
+                    if (!_fileService.Exists(deleteMeFile))
                     {
-                        using (File.Create(deleteMeFile))
+                        using (_fileService.Create(deleteMeFile))
                         {
                             // No need to write contents
                         }
@@ -68,7 +82,7 @@ namespace Orc.Extensibility
         {
             try
             {
-                var files = Directory.GetFiles(directory, DeleteMeFilter, SearchOption.TopDirectoryOnly);
+                var files = _directoryService.GetFiles(directory, DeleteMeFilter);
                 return files.FirstOrDefault();
             }
             catch (Exception)

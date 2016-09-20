@@ -14,6 +14,7 @@ namespace Orc.Extensibility
     using Catel;
     using Catel.Logging;
     using Catel.Reflection;
+    using FileSystem;
     using MethodTimer;
 
     public abstract class PluginFinderBase : IPluginFinder
@@ -38,17 +39,23 @@ namespace Orc.Extensibility
         private readonly IPluginLocationsProvider _pluginLocationsProvider;
         private readonly IPluginInfoProvider _pluginInfoProvider;
         private readonly IPluginCleanupService _pluginCleanupService;
+        private readonly IDirectoryService _directoryService;
+        private readonly IFileService _fileService;
 
         protected PluginFinderBase(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService)
+            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
         {
             Argument.IsNotNull(() => pluginLocationsProvider);
             Argument.IsNotNull(() => pluginInfoProvider);
             Argument.IsNotNull(() => pluginCleanupService);
+            Argument.IsNotNull(() => directoryService);
+            Argument.IsNotNull(() => fileService);
 
             _pluginLocationsProvider = pluginLocationsProvider;
             _pluginInfoProvider = pluginInfoProvider;
             _pluginCleanupService = pluginCleanupService;
+            _directoryService = directoryService;
+            _fileService = fileService;
         }
 
         [Time]
@@ -63,7 +70,7 @@ namespace Orc.Extensibility
 
             foreach (var pluginDirectory in pluginDirectories)
             {
-                if (!Directory.Exists(pluginDirectory))
+                if (!_directoryService.Exists(pluginDirectory))
                 {
                     continue;
                 }
@@ -71,14 +78,14 @@ namespace Orc.Extensibility
                 // Step 1: top-level plugins (assemblies directly located inside the root)
                 foreach (var pluginFileFilter in PluginFileFilters)
                 {
-                    var rootPlugins = (from file in Directory.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.TopDirectoryOnly)
+                    var rootPlugins = (from file in _directoryService.GetFiles(pluginDirectory, pluginFileFilter)
                                        orderby File.GetLastWriteTime(file) descending
                                        select file).ToList();
                     plugins.AddRange(FindPluginsInAssemblies(rootPlugins.ToArray()));
                 }
 
                 // Step 2: treat each subdirectory separately
-                var directories = (from directory in Directory.GetDirectories(pluginDirectory)
+                var directories = (from directory in _directoryService.GetDirectories(pluginDirectory)
                                    orderby Directory.GetLastWriteTime(directory) descending
                                    select directory).ToList();
 
@@ -167,7 +174,7 @@ namespace Orc.Extensibility
 
             try
             {
-                if (!Directory.Exists(pluginDirectory))
+                if (!_directoryService.Exists(pluginDirectory))
                 {
                     Log.Debug("Directory does not exist, no plugins found");
                     return plugins;
@@ -176,7 +183,7 @@ namespace Orc.Extensibility
                 // Once we are in a good directory, the assembly can be located at any depth
                 foreach (var pluginFileFilter in PluginFileFilters)
                 {
-                    var assemblies = Directory.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.AllDirectories);
+                    var assemblies = _directoryService.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.AllDirectories);
 
                     plugins.AddRange(FindPluginsInAssemblies(assemblies));
                 }
@@ -273,7 +280,7 @@ namespace Orc.Extensibility
                 foreach (var possibleExtension in possibleExtensions)
                 {
                     var expectedPath = Path.Combine(possibleDirectory, $"{assemblyName}.{possibleExtension}");
-                    if (File.Exists(expectedPath))
+                    if (_fileService.Exists(expectedPath))
                     {
                         try
                         {

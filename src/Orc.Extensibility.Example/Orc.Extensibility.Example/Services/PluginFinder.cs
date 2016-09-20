@@ -11,14 +11,15 @@ namespace Orc.Extensibility.Example.Services
     using System.Linq;
     using Catel;
     using Catel.Reflection;
+    using FileSystem;
 
     public class PluginFinder : Orc.Extensibility.PluginFinderBase
     {
         private readonly string _pluginName = typeof(ICustomPlugin).Name;
 
         public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService)
-            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService)
+            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
+            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService)
         {
         }
 

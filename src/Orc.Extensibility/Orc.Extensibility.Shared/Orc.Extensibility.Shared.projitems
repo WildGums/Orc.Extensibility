@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\EventArgs\PluginEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Extensions\IPluginFinderExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Extensions\IPluginManagerExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\ILoadedPluginService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IMultiplePluginsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginCleanupService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginFactory.cs" />
@@ -32,6 +33,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\IPluginService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Interfaces\ISinglePluginService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\LoadedPluginService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\MultiplePluginsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PluginCleanupService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PluginFactory.cs" />

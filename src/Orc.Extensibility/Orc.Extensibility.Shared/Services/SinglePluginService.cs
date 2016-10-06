@@ -18,17 +18,20 @@ namespace Orc.Extensibility
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private readonly IPluginFactory _pluginFactory;
+        private readonly ILoadedPluginService _loadedPluginService;
         private readonly IPluginManager _pluginManager;
         #endregion
 
         #region Constructors
-        public SinglePluginService(IPluginManager pluginManager, IPluginFactory pluginFactory)
+        public SinglePluginService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
         {
             Argument.IsNotNull(() => pluginManager);
             Argument.IsNotNull(() => pluginFactory);
+            Argument.IsNotNull(() => loadedPluginService);
 
             _pluginManager = pluginManager;
             _pluginFactory = pluginFactory;
+            _loadedPluginService = loadedPluginService;
         }
         #endregion
 
@@ -109,6 +112,8 @@ namespace Orc.Extensibility
 
                 pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             }
+
+            _loadedPluginService.AddPlugin(pluginToLoad);
 
             PluginLoaded.SafeInvoke(this, () => new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
 

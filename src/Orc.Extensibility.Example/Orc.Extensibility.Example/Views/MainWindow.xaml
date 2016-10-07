@@ -1,0 +1,58 @@
+<catel:Window x:Class="Orc.Extensibility.Example.Views.MainWindow"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:catel="http://catel.codeplex.com"
+              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400">
+
+    <catel:StackGrid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Label>
+            <TextBlock TextWrapping="Wrap">
+            This example shows you how to use the Orc.Extensibility component. This example consists of the following components:
+            <LineBreak /><LineBreak />
+            - Host<LineBreak />
+            - Api<LineBreak />
+            - ExtensionA<LineBreak />
+            - ExtensionB<LineBreak />
+            <LineBreak />
+            The extensions can be automatically instantiated without having to reference them in the host. Note that for this example,
+            you will need to build the extensions manually (since there are no actual dependencies set up in Visual Studio). To make
+            deployment easy for this example, post-build steps are added to automatically copy the compiled extensions.
+            </TextBlock>
+        </Label>
+
+        <catel:StackGrid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Content="Selected plugin" />
+            <ComboBox ItemsSource="{Binding AvailablePlugins}" SelectedItem="{Binding SelectedPlugin}" />
+        </catel:StackGrid>
+
+        <Label>
+            <TextBlock TextWrapping="Wrap" FontStyle="Italic">
+            Note that changing the plugin requires a restart of the application
+            </TextBlock>
+        </Label>
+
+        <Rectangle Height="50" HorizontalAlignment="Stretch">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="{Binding Color}" />
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <TextBox x:Name="loggingTextBox" IsReadOnly="True" AcceptsReturn="True" />
+    </catel:StackGrid>
+
+</catel:Window>

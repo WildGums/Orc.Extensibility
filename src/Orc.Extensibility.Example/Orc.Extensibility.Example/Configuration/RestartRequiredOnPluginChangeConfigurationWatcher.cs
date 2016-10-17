@@ -31,7 +31,9 @@ namespace Orc.Extensibility.Example.Configuration
             _configurationService.ConfigurationChanged += OnConfigurationServiceConfigurationChanged;
         }
 
+#pragma warning disable AvoidAsyncVoid
         private async void OnConfigurationServiceConfigurationChanged(object sender, ConfigurationChangedEventArgs e)
+#pragma warning restore AvoidAsyncVoid
         {
             if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))
             {

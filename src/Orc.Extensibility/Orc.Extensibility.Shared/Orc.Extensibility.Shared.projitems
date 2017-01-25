@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)..\..\SolutionAssemblyInfo.cs" />
+	<Compile Include="$(MSBuildThisFileDirectory)..\..\GlobalSuppressions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CustomAttributeDataExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Extensions\PluginExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Interfaces\IPlugin.cs" />

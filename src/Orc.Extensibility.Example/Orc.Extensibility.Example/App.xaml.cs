@@ -13,7 +13,9 @@ namespace Orc.Extensibility.Example
     using Catel.IoC;
     using Catel.Logging;
     using Catel.Services;
-    using Catel.Windows;
+    
+    using Orchestra;
+
     using Configuration;
 
     public partial class App
@@ -39,7 +41,7 @@ namespace Orc.Extensibility.Example
 
             base.OnStartup(e);
 
-            StyleHelper.CreateStyleForwardersForDefaultStyles();
+            this.ApplyTheme();
 
             // In an Orchestra environment, this would go into the bootstrapper
             var configurationService = serviceLocator.ResolveType<IConfigurationService>();

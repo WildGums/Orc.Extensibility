@@ -50,7 +50,9 @@ namespace Orc.Extensibility
 
         public override string ToString()
         {
-            var value = $"{Name} {Version}";
+            var value = !string.IsNullOrWhiteSpace(Customer) ? $"{Customer} - " : string.Empty;
+
+            value += $"{Name} {Version}";
 
             if (!string.IsNullOrWhiteSpace(Company))
             {

@@ -3,10 +3,11 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-              xmlns:catel="http://catel.codeplex.com"
+              xmlns:catel="http://schemas.catelproject.com"
+              xmlns:orc="http://www.wildgums.net.au/orc"
               mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400">
 
-    <catel:StackGrid>
+    <orc:StackGrid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -30,7 +31,7 @@
             </TextBlock>
         </Label>
 
-        <catel:StackGrid>
+        <orc:StackGrid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -38,7 +39,7 @@
 
             <Label Content="Selected plugin" />
             <ComboBox ItemsSource="{Binding AvailablePlugins}" SelectedItem="{Binding SelectedPlugin}" />
-        </catel:StackGrid>
+        </orc:StackGrid>
 
         <Label>
             <TextBlock TextWrapping="Wrap" FontStyle="Italic">
@@ -53,6 +54,9 @@
         </Rectangle>
 
         <TextBox x:Name="loggingTextBox" IsReadOnly="True" AcceptsReturn="True" />
-    </catel:StackGrid>
+    </orc:StackGrid>
 
 </catel:Window>
+
+
+

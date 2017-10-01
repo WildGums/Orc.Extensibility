@@ -99,7 +99,6 @@ namespace Orc.Extensibility
         public MultiplePluginsService(Orc.Extensibility.IPluginManager pluginManager, Orc.Extensibility.IPluginFactory pluginFactory, Orc.Extensibility.ILoadedPluginService loadedPluginService) { }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
-        [MethodTimer.TimeAttribute()]
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins) { }
     }
     public class Plugin : Orc.Extensibility.IPlugin
@@ -131,18 +130,14 @@ namespace Orc.Extensibility
     public class PluginFactory : Orc.Extensibility.IPluginFactory
     {
         public PluginFactory(Catel.IoC.ITypeFactory typeFactory) { }
-        [MethodTimer.TimeAttribute()]
         public object CreatePlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
     }
     public abstract class PluginFinderBase : Orc.Extensibility.IPluginFinder
     {
         protected PluginFinderBase(Orc.Extensibility.IPluginLocationsProvider pluginLocationsProvider, Orc.Extensibility.IPluginInfoProvider pluginInfoProvider, Orc.Extensibility.IPluginCleanupService pluginCleanupService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService) { }
-        [MethodTimer.TimeAttribute()]
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPlugins() { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssemblies(params string[] assemblyPaths) { }
-        [MethodTimer.TimeAttribute()]
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssembly(System.Reflection.Assembly assembly) { }
-        [MethodTimer.TimeAttribute()]
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInDirectory(string pluginDirectory) { }
         protected abstract bool IsPlugin(System.Type type);
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }

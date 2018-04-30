@@ -1,1 +1,16 @@
-// Empty by design so it will never be overwritten by an update
+using System.Diagnostics;
+using Catel.Logging;
+
+/// <summary>
+/// Used by the ModuleInit. All code inside the Initialize method is ran as soon as the assembly is loaded.
+/// </summary>
+public static class ModuleInitializer
+{
+    /// <summary>
+    /// Initializes the module.
+    /// </summary>
+    public static void Initialize()
+    {
+        LogManager.AddDebugListener();
+    }
+}

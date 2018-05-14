@@ -108,10 +108,12 @@ namespace Orc.Extensibility
 
                 pluginToLoad = fallbackPlugin;
 
-                Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+                Log.Info("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
 
                 pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             }
+
+            Log.Debug($"Final instantiated plugin is '{pluginInstance?.GetType().Name}'");
 
             _loadedPluginService.AddPlugin(pluginToLoad);
 

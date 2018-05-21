@@ -23,17 +23,22 @@ namespace Orc.Extensibility
 
         private static readonly string[] PluginFileFilters = { "*.dll", "*.exe" };
 
-        // Note: make sure these are lowercase
+        // Note: make sure these are lowercase & alphabetically sorted
         private static readonly HashSet<string> KnownAssemblyPrefixesToIgnore = new HashSet<string>(new[]
         {
-            "system.",
-            "microsoft.",
-            "orc.",
             "catel.",
-            "orchestra.",
+            "costura.",
             "fluent.",
-            "obsolete",
-            "methodtimer",
+            "ionic.zip.",
+            "methodtimer.",
+            "microsoft.",
+            "moduleinit.",
+            "mono.cecil.",
+            "nuget.",
+            "obsolete.",
+            "orc.",
+            "orchestra.",
+            "system.",
         });
 
         private readonly IPluginLocationsProvider _pluginLocationsProvider;

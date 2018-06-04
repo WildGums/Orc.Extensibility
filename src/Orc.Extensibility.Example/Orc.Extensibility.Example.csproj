@@ -4,6 +4,7 @@
     <AssemblyName>Orc.Extensibility.Example</AssemblyName>
     <RootNamespace>Orc.Extensibility.Example</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <SonarQubeExclude>true</SonarQubeExclude>
   </PropertyGroup>
 
   <PropertyGroup>

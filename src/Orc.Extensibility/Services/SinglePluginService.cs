@@ -56,17 +56,38 @@ namespace Orc.Extensibility
 
             var plugins = _pluginManager.GetPlugins();
 
-            Log.Info("Found '{0}' plugins", plugins.Count());
+            Log.Debug("Found '{0}' plugins", plugins.Count());
 
             IPluginInfo pluginToLoad = null;
 
+            // Step 1: search for full name
             foreach (var plugin in plugins)
             {
-                Log.Info("  * {0} ({1})", plugin, plugin.Location);
+                Log.Debug("  * {0} ({1})", plugin, plugin.Location);
 
-                if (string.Equals(plugin.FullTypeName, expectedPlugin))
+                if (plugin.FullTypeName.EqualsIgnoreCase(expectedPlugin))
                 {
                     pluginToLoad = plugin;
+                    break;
+                }
+            }
+
+            // Step 2: search for simplified name (only for single plugins)
+            if (pluginToLoad == null)
+            {
+                var simplifiedName = expectedPlugin;
+                if (!simplifiedName.StartsWith("."))
+                {
+                    simplifiedName = $".{expectedPlugin}";
+                }
+
+                foreach (var plugin in plugins)
+                {
+                    if (plugin.FullTypeName.EndsWithIgnoreCase(expectedPlugin))
+                    {
+                        pluginToLoad = plugin;
+                        break;
+                    }
                 }
             }
 
@@ -94,7 +115,7 @@ namespace Orc.Extensibility
 
             try
             {
-                Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+                Log.Debug("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
 
                 pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             }
@@ -108,7 +129,7 @@ namespace Orc.Extensibility
 
                 pluginToLoad = fallbackPlugin;
 
-                Log.Info("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
+                Log.Debug("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
 
                 pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             }

@@ -38,7 +38,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orc.Extensibility.Example.E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orc.Extensibility.Example", "Orc.Extensibility.Example\Orc.Extensibility.Example.csproj", "{0FD582FC-2B1F-4164-80D7-B8AC7E715866}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orc.Extensibility.Tests", "Orc.Extensibility.Tests.NET\Orc.Extensibility.Tests.csproj", "{CCE14565-8C4F-4A2E-88FE-94CD6E4B0918}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orc.Extensibility.Tests", "Orc.Extensibility.Tests\Orc.Extensibility.Tests.csproj", "{CCE14565-8C4F-4A2E-88FE-94CD6E4B0918}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

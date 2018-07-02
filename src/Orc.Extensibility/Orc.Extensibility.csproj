@@ -10,6 +10,11 @@
     <PackageTags>orc;extensibility;extension;plugin;add-in;addin;add-on;addon</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- SonarQube requires a project guid -->
+    <ProjectGuid>504F9E8E-1463-4A1A-BB66-A1B791ABCCF8</ProjectGuid>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="MethodTimer.Fody" Version="2.1.0" PrivateAssets="all" />
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.5.4" PrivateAssets="all" />

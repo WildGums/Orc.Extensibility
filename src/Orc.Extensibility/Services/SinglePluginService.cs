@@ -44,16 +44,6 @@ namespace Orc.Extensibility
         #region Methods
         public IPlugin ConfigureAndLoadPlugin(string expectedPlugin, string defaultPlugin)
         {
-            //var pluginConfiguration = new PluginConfiguration
-            //{
-            //    FeedUrl = feedUrlTemplate
-            //};
-
-            //if (!_pluginConfigurationService.Configure(pluginConfiguration))
-            //{
-            //    return null;
-            //}
-
             var plugins = _pluginManager.GetPlugins();
 
             Log.Debug("Found '{0}' plugins", plugins.Count());
@@ -75,12 +65,6 @@ namespace Orc.Extensibility
             // Step 2: search for simplified name (only for single plugins)
             if (pluginToLoad == null)
             {
-                var simplifiedName = expectedPlugin;
-                if (!simplifiedName.StartsWith("."))
-                {
-                    simplifiedName = $".{expectedPlugin}";
-                }
-
                 foreach (var plugin in plugins)
                 {
                     if (plugin.FullTypeName.EndsWithIgnoreCase(expectedPlugin))

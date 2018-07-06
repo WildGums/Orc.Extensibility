@@ -23,15 +23,21 @@ namespace Orc.Extensibility
         {
             
         }
+        
+        public List<IPluginInfo> GetLoadedPlugins()
+        {
+            lock (_loadedPlugins)
+            {
+                return _loadedPlugins.Values.ToList();
+            }
+        }
 
+        [ObsoleteEx(ReplacementTypeOrMember = "GetLoadedPlugins", TreatAsErrorFromVersion = "3.0", RemoveInVersion = "4.0")]
         public List<IPluginInfo> LoadedPlugins
         {
             get
             {
-                lock (_loadedPlugins)
-                {
-                    return _loadedPlugins.Values.ToList();
-                }
+                return GetLoadedPlugins();
             }
         }
 

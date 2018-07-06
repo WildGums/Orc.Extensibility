@@ -118,30 +118,7 @@ namespace Orc.Extensibility
                                   select plugin).ToList();
                 if (duplicates.Count > 1)
                 {
-                    List<IPluginInfo> oldDuplicates = null;
-
-                    // Method 1: use version
-                    if (oldDuplicates == null)
-                    {
-                        try
-                        {
-                            oldDuplicates = (from duplicate in duplicates
-                                             orderby new SemVersion(duplicate.Version) descending
-                                             select duplicate).Skip(1).ToList();
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Failed to sort versions using Version");
-                        }
-                    }
-
-                    // Method 2: use last write time
-                    if (oldDuplicates == null)
-                    {
-                        oldDuplicates = (from duplicate in duplicates
-                                         orderby File.GetLastWriteTime(duplicate.Location) descending
-                                         select duplicate).Skip(1).ToList();
-                    }
+                    var oldDuplicates = GetOldestDuplicates(duplicates);
 
                     foreach (var oldDuplicate in oldDuplicates)
                     {
@@ -151,7 +128,7 @@ namespace Orc.Extensibility
                             if (pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName) &&
                                 pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
                             {
-                                plugins.RemoveAt(j--);
+                                plugins.RemoveAt(j);
 
                                 // Stop processing, we must keep at least one
                                 break;
@@ -162,6 +139,36 @@ namespace Orc.Extensibility
                     i = 0;
                 }
             }
+        }
+
+        private List<IPluginInfo> GetOldestDuplicates(List<IPluginInfo> duplicates)
+        {
+            List<IPluginInfo> oldDuplicates = null;
+
+            // Method 1: use version
+            if (oldDuplicates == null)
+            {
+                try
+                {
+                    oldDuplicates = (from duplicate in duplicates
+                                     orderby new SemVersion(duplicate.Version) descending
+                                     select duplicate).Skip(1).ToList();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to sort versions using Version");
+                }
+            }
+
+            // Method 2: use last write time
+            if (oldDuplicates == null)
+            {
+                oldDuplicates = (from duplicate in duplicates
+                                 orderby File.GetLastWriteTime(duplicate.Location) descending
+                                 select duplicate).Skip(1).ToList();
+            }
+
+            return oldDuplicates;
         }
 
         [Time]

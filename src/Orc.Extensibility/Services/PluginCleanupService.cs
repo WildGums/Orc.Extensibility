@@ -74,6 +74,7 @@ namespace Orc.Extensibility
                 }
                 catch (Exception)
                 {
+                    // Just ignore
                 }
             }
         }
@@ -87,6 +88,7 @@ namespace Orc.Extensibility
             }
             catch (Exception)
             {
+                // Just ignore
             }
 
             return null;

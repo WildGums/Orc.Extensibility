@@ -13,6 +13,7 @@ namespace Orc.Extensibility
     public interface ILoadedPluginService
     {
         #region Properties
+        [ObsoleteEx(ReplacementTypeOrMember = "GetLoadedPlugins", TreatAsErrorFromVersion = "3.0", RemoveInVersion = "4.0")]
         List<IPluginInfo> LoadedPlugins { get; }
         #endregion
 
@@ -21,6 +22,8 @@ namespace Orc.Extensibility
         #endregion
 
         #region Methods
+        List<IPluginInfo> GetLoadedPlugins();
+
         void AddPlugin(IPluginInfo pluginInfo);
         #endregion
     }

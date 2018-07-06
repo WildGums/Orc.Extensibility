@@ -13,9 +13,12 @@ namespace Orc.Extensibility
     }
     public interface ILoadedPluginService
     {
+        [System.ObsoleteAttribute("Use `GetLoadedPlugins` instead. Will be treated as an error from version 3.0.0. W" +
+            "ill be removed in version 4.0.0.", false)]
         System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo);
+        System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins();
     }
     public interface IMultiplePluginsService : Orc.Extensibility.IPluginService
     {
@@ -86,9 +89,12 @@ namespace Orc.Extensibility
     public class LoadedPluginService : Orc.Extensibility.ILoadedPluginService
     {
         public LoadedPluginService() { }
+        [System.ObsoleteAttribute("Use `GetLoadedPlugins` instead. Will be treated as an error from version 3.0.0. W" +
+            "ill be removed in version 4.0.0.", false)]
         public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
+        public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins() { }
     }
     public class MultiplePluginsService : Orc.Extensibility.IMultiplePluginsService, Orc.Extensibility.IPluginService
     {

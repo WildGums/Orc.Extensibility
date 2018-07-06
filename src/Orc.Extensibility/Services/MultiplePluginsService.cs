@@ -52,16 +52,6 @@ namespace Orc.Extensibility
         [Time]
         public IEnumerable<IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins)
         {
-            //var pluginConfiguration = new PluginConfiguration
-            //{
-            //    FeedUrl = feedUrlTemplate
-            //};
-
-            //if (!_pluginConfigurationService.Configure(pluginConfiguration))
-            //{
-            //    return null;
-            //}
-
             var plugins = _pluginManager.GetPlugins();
 
             Log.Info("Found '{0}' plugins", plugins.Count());

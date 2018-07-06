@@ -34,6 +34,7 @@ namespace Orc.Extensibility
 
             Log.Debug("Creating plugin '{0}'", pluginInfo);
 
+            // Note: we must use LoadFrom instead of Load
             var assembly = Assembly.LoadFrom(pluginInfo.Location);
             var type = assembly.GetType(pluginInfo.FullTypeName);
 

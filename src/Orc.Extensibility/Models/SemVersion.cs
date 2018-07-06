@@ -89,11 +89,11 @@ namespace Orc.Extensibility
             return !(x == y);
         }
 
-        public override bool Equals(object o)
+        public override bool Equals(object obj)
         {
             try
             {
-                return this == (SemVersion)o;
+                return this == (SemVersion)obj;
             }
             catch
             {
@@ -103,7 +103,7 @@ namespace Orc.Extensibility
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return _version.GetHashCode();
         }
 
         public override string ToString()

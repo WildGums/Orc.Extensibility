@@ -10,6 +10,8 @@ namespace Orc.Extensibility
     {
         public static object GetReflectionOnlyAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
+        public static System.Collections.Generic.List<object> GetReflectionOnlyAttributeValues<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
+            where TAttribute : System.Attribute { }
     }
     public interface ILoadedPluginService
     {

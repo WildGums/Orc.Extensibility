@@ -50,6 +50,7 @@ namespace Orc.Extensibility
     public class static IPluginFinderExtensions { }
     public interface IPluginInfo
     {
+        System.Collections.Generic.List<string> Aliases { get; }
         string Company { get; set; }
         string Customer { get; set; }
         string Description { get; set; }
@@ -145,6 +146,7 @@ namespace Orc.Extensibility
     public class PluginInfo : Orc.Extensibility.IPluginInfo
     {
         public PluginInfo(System.Type type) { }
+        public System.Collections.Generic.List<string> Aliases { get; }
         public string Company { get; set; }
         public string Customer { get; set; }
         public string Description { get; set; }

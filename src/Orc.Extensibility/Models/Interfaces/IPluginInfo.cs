@@ -7,6 +7,7 @@
 namespace Orc.Extensibility
 {
     using System;
+    using System.Collections.Generic;
 
     public interface IPluginInfo
     {
@@ -20,6 +21,8 @@ namespace Orc.Extensibility
         string Location { get; }
         string FullTypeName { get; }
         Type ReflectionOnlyType { get; }
+
+        List<string> Aliases { get; }
         #endregion
     }
 }

@@ -8,6 +8,7 @@
 namespace Orc.Extensibility
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
     using Catel;
     using Catel.Reflection;
@@ -30,6 +31,8 @@ namespace Orc.Extensibility
             Location = assembly.Location;
             ReflectionOnlyType = type;
             FullTypeName = type.FullName;
+
+            Aliases = new List<string>();
         }
 
         public string Name { get; set; }
@@ -47,6 +50,8 @@ namespace Orc.Extensibility
         public string FullTypeName { get; private set; }
 
         public Type ReflectionOnlyType { get; private set; }
+
+        public List<string> Aliases { get; private set; }
 
         public override string ToString()
         {

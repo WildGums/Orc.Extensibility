@@ -104,7 +104,7 @@ namespace Orc.Extensibility
 
                 Log.Warning(message);
 
-                PluginLoadingFailed.SafeInvoke(this, () => new PluginEventArgs(expectedPlugin, "Failed to load plugin", message));
+                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(expectedPlugin, "Failed to load plugin", message));
 
                 pluginToLoad = fallbackPlugin;
             }
@@ -128,7 +128,7 @@ namespace Orc.Extensibility
 
                 Log.Warning(ex, message);
 
-                PluginLoadingFailed.SafeInvoke(this, () => new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
+                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
 
                 pluginToLoad = fallbackPlugin;
 
@@ -141,7 +141,7 @@ namespace Orc.Extensibility
 
             _loadedPluginService.AddPlugin(pluginToLoad);
 
-            PluginLoaded.SafeInvoke(this, () => new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+            PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
 
             return new Plugin(pluginInstance, pluginToLoad);
         }

@@ -82,7 +82,7 @@ namespace Orc.Extensibility
 
                     _loadedPluginService.AddPlugin(pluginToLoad);
 
-                    PluginLoaded.SafeInvoke(this, () => new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+                    PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
                 }
                 catch (Exception ex)
                 {
@@ -90,7 +90,7 @@ namespace Orc.Extensibility
 
                     Log.Warning(ex, message);
 
-                    PluginLoadingFailed.SafeInvoke(this, () => new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
+                    PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
                 }
             }
 

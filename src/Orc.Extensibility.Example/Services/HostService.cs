@@ -22,7 +22,7 @@ namespace Orc.Extensibility.Example.Services
         {
             Log.Info($"Changing color to '{color}'");
 
-            ColorChanged.SafeInvoke(this, () => new ColorEventArgs(color));
+            ColorChanged?.Invoke(this, new ColorEventArgs(color));
         }
     }
 }

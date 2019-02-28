@@ -61,7 +61,7 @@ namespace Orc.Extensibility
                 _loadedPlugins.Add(key, pluginInfo);
             }
 
-            PluginLoaded.SafeInvoke(this, () => new PluginEventArgs(pluginInfo, string.Empty, string.Empty));
+            PluginLoaded?.Invoke(this, new PluginEventArgs(pluginInfo, string.Empty, string.Empty));
         }
     }
 }

@@ -8,7 +8,6 @@
 namespace Orc.Extensibility.Example.ExtensionA.Plugins
 {
     using System.Threading.Tasks;
-    using System.Windows.Media;
     using Catel;
     using Catel.Services;
     using Services;
@@ -31,7 +30,7 @@ namespace Orc.Extensibility.Example.ExtensionA.Plugins
         {
             await _messageService.ShowAsync("Plugin A has been loaded, setting color to red");
 
-            _hostService.SetColor(Colors.Red);
+            _hostService.SetColor(System.Windows.Media.Colors.Red);
         }
     }
 }

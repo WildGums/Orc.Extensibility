@@ -40,6 +40,8 @@ namespace Orc.Extensibility
 
             var plugin = _typeFactory.CreateInstance(type);
 
+            Log.Debug($"Plugin creation resulted in an instance: '{plugin != null}'");
+
             // Workaround for loading assemblies
             TypeCache.InitializeTypes(type.GetAssemblyEx(), true);
 

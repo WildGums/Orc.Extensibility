@@ -36,7 +36,7 @@ namespace Orc.Extensibility
         public int CompareTo(object obj)
         {
             var otherVersion = obj as SemVersion;
-            if (otherVersion == null)
+            if (otherVersion is null)
             {
                 return 0;
             }

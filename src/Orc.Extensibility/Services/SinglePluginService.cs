@@ -98,7 +98,7 @@ namespace Orc.Extensibility
                                   where string.Equals(plugin.FullTypeName, defaultPlugin)
                                   select plugin).FirstOrDefault();
 
-            if (pluginToLoad == null)
+            if (pluginToLoad is null)
             {
                 const string message = "Plugin could not be found, using default plugin";
 
@@ -109,7 +109,7 @@ namespace Orc.Extensibility
                 pluginToLoad = fallbackPlugin;
             }
 
-            if (pluginToLoad == null)
+            if (pluginToLoad is null)
             {
                 return null;
             }

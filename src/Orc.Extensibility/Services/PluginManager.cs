@@ -27,7 +27,7 @@ namespace Orc.Extensibility
         {
             lock (_lock)
             {
-                if (_plugins == null || forceRefresh)
+                if (_plugins is null || forceRefresh)
                 {
                     _plugins = new List<IPluginInfo>(_pluginFinder.FindPlugins().OrderBy(x => x.Name));
                 }

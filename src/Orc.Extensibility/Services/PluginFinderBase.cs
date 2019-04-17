@@ -146,7 +146,7 @@ namespace Orc.Extensibility
             List<IPluginInfo> oldDuplicates = null;
 
             // Method 1: use version
-            if (oldDuplicates == null)
+            if (oldDuplicates is null)
             {
                 try
                 {
@@ -161,7 +161,7 @@ namespace Orc.Extensibility
             }
 
             // Method 2: use last write time
-            if (oldDuplicates == null)
+            if (oldDuplicates is null)
             {
                 oldDuplicates = (from duplicate in duplicates
                                  orderby File.GetLastWriteTime(duplicate.Location) descending

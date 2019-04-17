@@ -41,7 +41,7 @@ namespace Orc.Extensibility
 
         protected virtual bool ValidateDirectory(string directory)
         {
-            if (directory == null)
+            if (directory is null)
             {
                 return false;
             }

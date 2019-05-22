@@ -7,6 +7,7 @@
 
 namespace Orc.Extensibility
 {
+    using System;
     using System.Reflection;
     using Catel;
     using Catel.IoC;
@@ -32,20 +33,36 @@ namespace Orc.Extensibility
         {
             Argument.IsNotNull(() => pluginInfo);
 
-            Log.Debug("Creating plugin '{0}'", pluginInfo);
+            try
+            {
+                Log.Debug($"Creating plugin '{pluginInfo}'");
 
-            // Note: we must use LoadFrom instead of Load
-            var assembly = Assembly.LoadFrom(pluginInfo.Location);
-            var type = assembly.GetType(pluginInfo.FullTypeName);
+                Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
-            var plugin = _typeFactory.CreateInstance(type);
+                // Note: we must use LoadFrom instead of Load
+                var assembly = Assembly.LoadFrom(pluginInfo.Location);
 
-            Log.Debug($"Plugin creation resulted in an instance: '{plugin != null}'");
+                Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 
-            // Workaround for loading assemblies
-            TypeCache.InitializeTypes(type.GetAssemblyEx(), true);
+                var type = assembly.GetType(pluginInfo.FullTypeName);
 
-            return plugin;
+                Log.Debug($"  3. Instantiating type '{type.GetSafeFullName(true)}'");
+
+                var plugin = _typeFactory.CreateInstance(type);
+
+                Log.Debug($"Plugin creation resulted in an instance: '{plugin != null}'");
+
+                // Workaround for loading assemblies
+                TypeCache.InitializeTypes(type.GetAssemblyEx(), true);
+
+                return plugin;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to create plugin '{pluginInfo}'");
+
+                throw;
+            }
         }
     }
 }

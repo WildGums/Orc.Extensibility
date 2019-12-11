@@ -73,6 +73,7 @@ namespace Orc.Extensibility
     public interface IPluginManager
     {
         System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = False);
+        void Refresh();
     }
     public class static IPluginManagerExtensions
     {
@@ -174,6 +175,7 @@ namespace Orc.Extensibility
     {
         public PluginManager(Orc.Extensibility.IPluginFinder pluginFinder) { }
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = False) { }
+        public void Refresh() { }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

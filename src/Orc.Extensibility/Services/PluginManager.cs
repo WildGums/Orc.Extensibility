@@ -29,10 +29,18 @@ namespace Orc.Extensibility
             {
                 if (_plugins is null || forceRefresh)
                 {
-                    _plugins = new List<IPluginInfo>(_pluginFinder.FindPlugins().OrderBy(x => x.Name));
+                    Refresh();
                 }
 
                 return _plugins.ToArray();
+            }
+        }
+
+        public void Refresh()
+        {
+            lock (_lock)
+            {
+                _plugins = new List<IPluginInfo>(_pluginFinder.FindPlugins().OrderBy(x => x.Name));
             }
         }
     }

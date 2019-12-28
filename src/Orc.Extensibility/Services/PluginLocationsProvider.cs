@@ -11,14 +11,24 @@ namespace Orc.Extensibility
     using Catel;
     using Catel.IO;
     using Catel.Reflection;
+    using Catel.Services;
 
     public class PluginLocationsProvider : IPluginLocationsProvider
     {
+        private readonly IAppDataService _appDataService;
+
+        public PluginLocationsProvider(IAppDataService appDataService)
+        {
+            Argument.IsNotNull(() => appDataService);
+
+            _appDataService = appDataService;
+        }
+
         public virtual IEnumerable<string> GetPluginDirectories()
         {
             var directories = new List<string>();
 
-            var pluginsDirectory = Path.Combine(Path.GetApplicationDataDirectory(), "plugins");
+            var pluginsDirectory = Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
             if (ValidateDirectory(pluginsDirectory))
             {
                 directories.Add(pluginsDirectory);

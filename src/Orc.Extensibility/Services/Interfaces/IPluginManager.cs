@@ -12,6 +12,7 @@ namespace Orc.Extensibility
     {
         #region Methods
         IEnumerable<IPluginInfo> GetPlugins(bool forceRefresh = false);
+        public void Refresh();
         #endregion
     }
 }

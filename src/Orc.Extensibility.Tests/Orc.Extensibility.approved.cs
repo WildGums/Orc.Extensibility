@@ -103,7 +103,8 @@ namespace Orc.Extensibility
         public MultiplePluginsService(Orc.Extensibility.IPluginManager pluginManager, Orc.Extensibility.IPluginFactory pluginFactory, Orc.Extensibility.ILoadedPluginService loadedPluginService) { }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
-        public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins) { }
+        protected virtual Orc.Extensibility.Plugin ConfigureAndLoadPlugin(Orc.Extensibility.IPluginInfo pluginToLoad, bool isLastTry) { }
+        public virtual System.Collections.Generic.IEnumerable<Orc.Extensibility.IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins) { }
     }
     public class Plugin : Orc.Extensibility.IPlugin
     {

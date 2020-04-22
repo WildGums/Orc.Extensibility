@@ -144,6 +144,7 @@ namespace Orc.Extensibility
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssembly(System.Reflection.Assembly assembly) { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInDirectory(string pluginDirectory) { }
         protected abstract bool IsPlugin(System.Type type);
+        protected virtual System.Reflection.Assembly LoadAssemblyForReflectionOnly(string assemblyPath) { }
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }
     }
     public class PluginInfo : Orc.Extensibility.IPluginInfo

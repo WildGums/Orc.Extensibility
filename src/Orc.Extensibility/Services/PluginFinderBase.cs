@@ -223,18 +223,10 @@ namespace Orc.Extensibility
                         continue;
                     }
 
-                    try
+                    var reflectionOnlyAssembly = LoadAssemblyForReflectionOnly(assemblyPath);
+                    if (reflectionOnlyAssembly != null)
                     {
-                        var assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
-                        plugins.AddRange(FindPluginsInAssembly(assembly));
-                    }
-                    catch (FileLoadException)
-                    {
-                        // Ignore, assembly already loaded
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning(ex, "Failed to load assembly '{0}' for reflection, ignoring as possible plugin container", assemblyPath);
+                        plugins.AddRange(FindPluginsInAssembly(reflectionOnlyAssembly));
                     }
                 }
             }
@@ -244,6 +236,42 @@ namespace Orc.Extensibility
             }
 
             return plugins;
+        }
+
+        protected virtual Assembly LoadAssemblyForReflectionOnly(string assemblyPath)
+        {
+            try
+            {
+                // Step 1: try to load from file
+                try
+                {
+                    var assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+                    return assembly;
+                }
+                catch (FileLoadException)
+                {
+                    // Ignore, assembly already loaded, we'll retry
+                }
+
+                // Step 2: try to match assembly name (but can be a miss!)
+                var fileName = Path.GetFileName(assemblyPath);
+                var reflectionOnlyAssemblies = AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies();
+                var reflectionOnlyAssembly = (from x in reflectionOnlyAssemblies
+                                              where x.Location.EndsWithIgnoreCase(fileName)
+                                              select x).FirstOrDefault();
+
+                if (reflectionOnlyAssembly != null)
+                {
+                    Log.Debug($"Failed to load assembly from '{assemblyPath}', but found a potential fallback at '{reflectionOnlyAssembly.Location}'");
+                }
+
+                return reflectionOnlyAssembly;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to load assembly '{0}' for reflection, ignoring as possible plugin container", assemblyPath);
+                return null;
+            }
         }
 
         [Time]

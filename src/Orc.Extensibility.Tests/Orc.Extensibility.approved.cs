@@ -1,12 +1,12 @@
-﻿[assembly: System.Resources.NeutralResourcesLanguageAttribute("en-US")]
-[assembly: System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.6", FrameworkDisplayName=".NET Framework 4.6")]
-public class static ModuleInitializer
+﻿[assembly: System.Resources.NeutralResourcesLanguage("en-US")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName="")]
+public static class ModuleInitializer
 {
     public static void Initialize() { }
 }
 namespace Orc.Extensibility
 {
-    public class static CustomAttributeDataExtensions
+    public static class CustomAttributeDataExtensions
     {
         public static object GetReflectionOnlyAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
@@ -15,9 +15,9 @@ namespace Orc.Extensibility
     }
     public interface ILoadedPluginService
     {
-        [System.ObsoleteAttribute("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
+        [System.Obsolete("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
         System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
-        public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
+        event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo);
         System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins();
     }
@@ -49,7 +49,7 @@ namespace Orc.Extensibility
     {
         System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPlugins();
     }
-    public class static IPluginFinderExtensions { }
+    public static class IPluginFinderExtensions { }
     public interface IPluginInfo
     {
         System.Collections.Generic.List<string> Aliases { get; }
@@ -72,18 +72,18 @@ namespace Orc.Extensibility
     }
     public interface IPluginManager
     {
-        System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = False);
+        System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = false);
         void Refresh();
     }
-    public class static IPluginManagerExtensions
+    public static class IPluginManagerExtensions
     {
-        public static System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> FindPluginImplementations<TPlugin>(this Orc.Extensibility.IPluginManager pluginManager) { }
         public static System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> FindPluginImplementations(this Orc.Extensibility.IPluginManager pluginManager, System.Type interfaceType) { }
+        public static System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> FindPluginImplementations<TPlugin>(this Orc.Extensibility.IPluginManager pluginManager) { }
     }
     public interface IPluginService
     {
-        public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
-        public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
+        event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
+        event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
     }
     public interface ISinglePluginService : Orc.Extensibility.IPluginService
     {
@@ -92,7 +92,7 @@ namespace Orc.Extensibility
     public class LoadedPluginService : Orc.Extensibility.ILoadedPluginService
     {
         public LoadedPluginService() { }
-        [System.ObsoleteAttribute("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
+        [System.Obsolete("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
         public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
@@ -128,7 +128,7 @@ namespace Orc.Extensibility
         public Orc.Extensibility.IPluginInfo PluginInfo { get; }
         public string PluginName { get; }
     }
-    public class static PluginExtensions
+    public static class PluginExtensions
     {
         public static string GetAssemblyName(this Orc.Extensibility.IPluginInfo pluginInfo) { }
     }
@@ -176,7 +176,7 @@ namespace Orc.Extensibility
     public class PluginManager : Orc.Extensibility.IPluginManager
     {
         public PluginManager(Orc.Extensibility.IPluginFinder pluginFinder) { }
-        public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = False) { }
+        public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = false) { }
         public void Refresh() { }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService

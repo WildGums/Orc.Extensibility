@@ -32,15 +32,6 @@ namespace Orc.Extensibility
             }
         }
 
-        [ObsoleteEx(ReplacementTypeOrMember = "GetLoadedPlugins", TreatAsErrorFromVersion = "3.0", RemoveInVersion = "4.0")]
-        public List<IPluginInfo> LoadedPlugins
-        {
-            get
-            {
-                return GetLoadedPlugins();
-            }
-        }
-
         public event EventHandler<PluginEventArgs> PluginLoaded;
 
         public void AddPlugin(IPluginInfo pluginInfo)

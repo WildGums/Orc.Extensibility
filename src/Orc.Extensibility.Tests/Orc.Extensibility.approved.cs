@@ -1,5 +1,5 @@
 ﻿[assembly: System.Resources.NeutralResourcesLanguage("en-US")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName="")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v3.1", FrameworkDisplayName="")]
 public static class ModuleInitializer
 {
     public static void Initialize() { }
@@ -15,8 +15,6 @@ namespace Orc.Extensibility
     }
     public interface ILoadedPluginService
     {
-        [System.Obsolete("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
-        System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
         event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo);
         System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins();
@@ -92,8 +90,6 @@ namespace Orc.Extensibility
     public class LoadedPluginService : Orc.Extensibility.ILoadedPluginService
     {
         public LoadedPluginService() { }
-        [System.Obsolete("Use `GetLoadedPlugins` instead. Will be removed in version 4.0.0.", true)]
-        public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> LoadedPlugins { get; }
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
         public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins() { }

@@ -131,7 +131,8 @@ namespace Orc.Extensibility
     public class PluginFactory : Orc.Extensibility.IPluginFactory
     {
         public PluginFactory(Catel.IoC.ITypeFactory typeFactory) { }
-        public object CreatePlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
+        public virtual object CreatePlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
+        protected virtual void PreloadAssembly(System.Reflection.Assembly assembly) { }
     }
     public abstract class PluginFinderBase : Orc.Extensibility.IPluginFinder
     {

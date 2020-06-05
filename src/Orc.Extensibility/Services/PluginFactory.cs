@@ -34,7 +34,6 @@
 
                 Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
-                // Note: we must use LoadFrom instead of Load
                 var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
                 var assembly = Assembly.Load(assemblyName);
 

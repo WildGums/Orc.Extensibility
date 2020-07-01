@@ -16,6 +16,8 @@ namespace Orc.Extensibility
     using Catel.Reflection;
     using FileSystem;
     using MethodTimer;
+    using System.Reflection.Metadata;
+    using System.Reflection.PortableExecutable;
 
     public abstract class PluginFinderBase : IPluginFinder
     {
@@ -223,10 +225,10 @@ namespace Orc.Extensibility
                         continue;
                     }
 
-                    var reflectionOnlyAssembly = LoadAssemblyForReflectionOnly(assemblyPath);
-                    if (reflectionOnlyAssembly != null)
+                    var assemblyPlugins = LoadAssemblyForReflectionOnly(assemblyPath);
+                    if (assemblyPlugins.Any())
                     {
-                        plugins.AddRange(FindPluginsInAssembly(reflectionOnlyAssembly));
+                        plugins.AddRange(assemblyPlugins);
                     }
                 }
             }
@@ -238,70 +240,59 @@ namespace Orc.Extensibility
             return plugins;
         }
 
-        protected virtual Assembly LoadAssemblyForReflectionOnly(string assemblyPath)
+        protected IEnumerable<IPluginInfo> LoadAssemblyForReflectionOnly(string assemblyPath)
         {
+            var plugins = new List<IPluginInfo>();
+
             try
             {
-                // Step 1: try to load from file
-                try
+                using (var fileStream = _fileService.OpenRead(assemblyPath))
                 {
-                    var assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
-                    return assembly;
-                }
-                catch (FileLoadException)
-                {
-                    // Ignore, assembly already loaded, we'll retry
-                }
+                    var peReader = new PEReader(fileStream);
+                    if (!peReader.HasMetadata)
+                    {
+                        return plugins;
+                    }
 
-                // Step 2: try to match assembly name (but can be a miss!)
-                var fileName = Path.GetFileName(assemblyPath);
-                var reflectionOnlyAssemblies = AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies();
-                var reflectionOnlyAssembly = (from x in reflectionOnlyAssemblies
-                                              where x.Location.EndsWithIgnoreCase(fileName)
-                                              select x).FirstOrDefault();
+                    var metadataReader = peReader.GetMetadataReader();
+                    var assemblyDefinition = metadataReader.GetAssemblyDefinition();
 
-                if (reflectionOnlyAssembly != null)
-                {
-                    Log.Debug($"Failed to load assembly from '{assemblyPath}', but found a potential fallback at '{reflectionOnlyAssembly.Location}'");
+                    foreach (var typeDefinitionHandle in metadataReader.TypeDefinitions)
+                    {
+                        if (typeDefinitionHandle.IsNil)
+                        {
+                            continue;
+                        }
+
+                        var typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
+                        var typeAttributes = typeDefinition.Attributes;
+
+                        // Ignore abstract types
+                        if (Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Abstract))
+                        {
+                            continue;
+                        }
+
+                        // Ignore anything but actual class types
+                        if (!Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Class))
+                        {
+                            continue;
+                        }
+
+                        if (IsPlugin(metadataReader, typeDefinition))
+                        {
+                            var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, metadataReader, typeDefinition);
+                            if (pluginInfo != null)
+                            {
+                                plugins.Add(pluginInfo);
+                            }
+                        }
+                    }
                 }
-
-                return reflectionOnlyAssembly;
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to load assembly '{0}' for reflection, ignoring as possible plugin container", assemblyPath);
-                return null;
-            }
-        }
-
-        [Time]
-        protected IEnumerable<IPluginInfo> FindPluginsInAssembly(Assembly assembly)
-        {
-            var plugins = new List<IPluginInfo>();
-
-            Log.Debug("Searching for plugins in assembly '{0}'", assembly.FullName);
-
-            try
-            {
-                var allTypes = assembly.GetAllTypesSafely();
-                var pluginTypes = (from type in allTypes
-                                   where !type.IsAbstractEx() && IsPlugin(type)
-                                   select type).ToList();
-
-                foreach (var type in pluginTypes)
-                {
-                    var pluginInfo = _pluginInfoProvider.GetPluginInfo(type);
-                    if (pluginInfo != null)
-                    {
-                        plugins.Add(pluginInfo);
-                    }
-                }
-
-                Log.Debug("Found '{0}' plugins in assembly '{1}'", plugins.Count, assembly.FullName);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to search for plugins in assembly '{0}'", assembly.FullName);
             }
 
             return plugins;
@@ -368,6 +359,6 @@ namespace Orc.Extensibility
             return false;
         }
 
-        protected abstract bool IsPlugin(Type type);
+        protected abstract bool IsPlugin(MetadataReader metadataReader, TypeDefinition typeDefinition);
     }
 }

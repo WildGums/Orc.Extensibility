@@ -25,6 +25,7 @@
     <PackageReference Include="ModuleInit.Fody" Version="2.1.0" PrivateAssets="all" />
     <PackageReference Include="Obsolete.Fody" Version="5.2.1" PrivateAssets="all" />
     <PackageReference Include="Orc.FileSystem" Version="3.2.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.8.1" />
   </ItemGroup>
 
   <ItemGroup>

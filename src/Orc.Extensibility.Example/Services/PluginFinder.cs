@@ -1,14 +1,8 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginFinder.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example.Services
+﻿namespace Orc.Extensibility.Example.Services
 {
     using System;
     using System.Linq;
+    using System.Reflection.Metadata;
     using Catel;
     using Catel.Reflection;
     using FileSystem;
@@ -23,12 +17,40 @@ namespace Orc.Extensibility.Example.Services
         {
         }
 
-        protected override bool IsPlugin(Type type)
+        protected override bool IsPlugin(MetadataReader metadataReader, TypeDefinition typeDefinition)
         {
-            // Note: since we are in a reflection-only context here, you can't compare actual types, but need to use string names
-            return (from iface in type.GetInterfacesEx()
-                    where iface.Name.Equals(_pluginName)
-                    select iface).Any();
+            foreach (var interfaceHandle in typeDefinition.GetInterfaceImplementations())
+            {
+                try
+                {
+                    var interfaceImplementation = metadataReader.GetInterfaceImplementation(interfaceHandle);
+                    var fullTypeName = string.Empty;
+
+                    switch (interfaceImplementation.Interface.Kind)
+                    {
+                        case HandleKind.TypeDefinition:
+                            var interfaceTypeDefinition = metadataReader.GetTypeDefinition((TypeDefinitionHandle)interfaceImplementation.Interface);
+                            fullTypeName = interfaceTypeDefinition.GetFullTypeName(metadataReader);
+                            break;
+
+                        case HandleKind.TypeReference:
+                            var interfaceTypeReference = metadataReader.GetTypeReference((TypeReferenceHandle)interfaceImplementation.Interface);
+                            fullTypeName = interfaceTypeReference.GetFullTypeName(metadataReader);
+                            break;
+                    }
+
+                    if (fullTypeName.Equals(_pluginName))
+                    {
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
+
+            return false;
         }
 
         protected override bool ShouldIgnoreAssembly(string assemblyPath)

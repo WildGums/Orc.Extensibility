@@ -34,8 +34,9 @@
 
                 Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
-                var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
-                var assembly = Assembly.Load(assemblyName);
+                //var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
+                //var assembly = Assembly.Load(assemblyName);
+                var assembly = Assembly.LoadFrom(pluginInfo.Location);
 
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 

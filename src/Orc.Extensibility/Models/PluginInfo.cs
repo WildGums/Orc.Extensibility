@@ -63,7 +63,7 @@
             }
 
             //Location = metadataReader.GetAssemblyDefinition()..Location;
-            FullTypeName = metadataReader.GetString(typeDefinition.Name);
+            FullTypeName = typeDefinition.GetFullTypeName(metadataReader);
         }
     }
 }

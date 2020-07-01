@@ -70,9 +70,6 @@ namespace Orc.Extensibility
         {
             var plugins = new List<IPluginInfo>();
 
-            var appDomain = AppDomain.CurrentDomain;
-            appDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
-
             var pluginDirectories = _pluginLocationsProvider.GetPluginDirectories();
 
             foreach (var pluginDirectory in pluginDirectories)
@@ -103,8 +100,6 @@ namespace Orc.Extensibility
             }
 
             RemoveDuplicates(plugins);
-
-            appDomain.ReflectionOnlyAssemblyResolve -= OnReflectionOnlyAssemblyResolve;
 
             return plugins;
         }
@@ -225,7 +220,7 @@ namespace Orc.Extensibility
                         continue;
                     }
 
-                    var assemblyPlugins = LoadAssemblyForReflectionOnly(assemblyPath);
+                    var assemblyPlugins = FindPluginsInAssembly(assemblyPath);
                     if (assemblyPlugins.Any())
                     {
                         plugins.AddRange(assemblyPlugins);
@@ -240,7 +235,7 @@ namespace Orc.Extensibility
             return plugins;
         }
 
-        protected IEnumerable<IPluginInfo> LoadAssemblyForReflectionOnly(string assemblyPath)
+        protected IEnumerable<IPluginInfo> FindPluginsInAssembly(string assemblyPath)
         {
             var plugins = new List<IPluginInfo>();
 
@@ -279,8 +274,15 @@ namespace Orc.Extensibility
                             continue;
                         }
 
+#if DEBUG
+                        var typeName = typeDefinition.GetFullTypeName(metadataReader);
+
+                        Log.Debug($"Investigating '{typeName}'");
+#endif
+
                         if (IsPlugin(metadataReader, typeDefinition))
                         {
+
                             var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, metadataReader, typeDefinition);
                             if (pluginInfo != null)
                             {
@@ -296,42 +298,6 @@ namespace Orc.Extensibility
             }
 
             return plugins;
-        }
-
-        private Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs e)
-        {
-            var requestingAssemblyDirectory = e.RequestingAssembly.GetDirectory();
-
-            var assemblyName = TypeHelper.GetAssemblyNameWithoutOverhead(e.Name);
-            var possibleDirectories = new[] { requestingAssemblyDirectory, AssemblyHelper.GetEntryAssembly().GetDirectory() };
-            var possibleExtensions = new[] { "dll", "exe" };
-
-            foreach (var possibleDirectory in possibleDirectories)
-            {
-                foreach (var possibleExtension in possibleExtensions)
-                {
-                    var expectedPath = Path.Combine(possibleDirectory, $"{assemblyName}.{possibleExtension}");
-                    if (_fileService.Exists(expectedPath))
-                    {
-                        try
-                        {
-                            var assembly = Assembly.ReflectionOnlyLoadFrom(expectedPath);
-                            if (assembly != null)
-                            {
-                                return assembly;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning(ex, $"Failed to load assembly '{expectedPath}' for reflection only");
-                        }
-                    }
-                }
-            }
-
-            // As a last result, try to load the assembly automatically
-            var autoAssembly = Assembly.ReflectionOnlyLoad(e.Name);
-            return autoAssembly;
         }
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)

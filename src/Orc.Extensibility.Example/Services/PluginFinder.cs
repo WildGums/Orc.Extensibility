@@ -1,15 +1,16 @@
 ﻿namespace Orc.Extensibility.Example.Services
 {
     using System;
-    using System.Linq;
     using System.Reflection.Metadata;
     using Catel;
-    using Catel.Reflection;
+    using Catel.Logging;
     using FileSystem;
 
     public class PluginFinder : Orc.Extensibility.PluginFinderBase
     {
-        private readonly string _pluginName = typeof(ICustomPlugin).Name;
+        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+
+        private readonly string _pluginName = $"{typeof(ICustomPlugin).Namespace}.{typeof(ICustomPlugin).Name}";
 
         public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
             IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)

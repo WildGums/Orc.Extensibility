@@ -55,8 +55,8 @@
 
         protected override bool ShouldIgnoreAssembly(string assemblyPath)
         {
-            // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here
-            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example"))
+            // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here (ExtensionA and ExtensionB)
+            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension"))
             {
                 return false;
             }

@@ -13,6 +13,7 @@
 
         string Location { get; }
         string FullTypeName { get; }
+        string AssemblyName { get; }
 
         List<string> Aliases { get; }
     }

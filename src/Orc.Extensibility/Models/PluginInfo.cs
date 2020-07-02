@@ -32,6 +32,8 @@
 
         public string FullTypeName { get; private set; }
 
+        public string AssemblyName { get; private set; }
+
         public List<string> Aliases { get; private set; }
 
         public override string ToString()
@@ -60,6 +62,7 @@
             Company = customAttributes.GetCustomAttributeValue<AssemblyCompanyAttribute>(metadataReader) as string;
 
             FullTypeName = typeDefinition.GetFullTypeName(metadataReader);
+            AssemblyName = metadataReader.GetString(metadataReader.GetAssemblyDefinition().Name);
         }
     }
 }

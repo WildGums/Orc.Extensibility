@@ -44,6 +44,7 @@ namespace Orc.Extensibility
     public interface IPluginInfo
     {
         System.Collections.Generic.List<string> Aliases { get; }
+        string AssemblyName { get; }
         string Company { get; set; }
         string Customer { get; set; }
         string Description { get; set; }
@@ -136,6 +137,7 @@ namespace Orc.Extensibility
     {
         public PluginInfo(string location, System.Reflection.Metadata.MetadataReader metadataReader, System.Reflection.Metadata.TypeDefinition typeDefinition) { }
         public System.Collections.Generic.List<string> Aliases { get; }
+        public string AssemblyName { get; }
         public string Company { get; set; }
         public string Customer { get; set; }
         public string Description { get; set; }

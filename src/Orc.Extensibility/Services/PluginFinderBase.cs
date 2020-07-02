@@ -251,7 +251,13 @@ namespace Orc.Extensibility
                         continue;
                     }
 
-                    resolvableAssemblyPaths.Add(loadedAssembly.Location);
+                    var location = loadedAssembly.Location;
+                    if (string.IsNullOrWhiteSpace(location) || !_fileService.Exists(location))
+                    {
+                        continue;
+                    }
+
+                    resolvableAssemblyPaths.Add(location);
                 }
 
                 var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
@@ -282,48 +288,6 @@ namespace Orc.Extensibility
                         }
                     }
                 }
-
-                //var peReader = new PEReader(fileStream);
-                //if (!peReader.HasMetadata)
-                //{
-                //    return plugins;
-                //}
-
-                //var metadataReader = peReader.GetMetadataReader();
-                //var assemblyDefinition = metadataReader.GetAssemblyDefinition();
-
-                //foreach (var typeDefinitionHandle in metadataReader.TypeDefinitions)
-                //{
-                //    if (typeDefinitionHandle.IsNil)
-                //    {
-                //        continue;
-                //    }
-
-                //    var typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
-                //    var typeAttributes = typeDefinition.Attributes;
-
-                //    // Ignore abstract types
-                //    if (Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Abstract))
-                //    {
-                //        continue;
-                //    }
-
-                //    // Ignore anything but actual class types
-                //    if (!Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Class))
-                //    {
-                //        continue;
-                //    }
-
-                //    if (IsPlugin(metadataReader, typeDefinition))
-                //    {
-
-                //        var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, metadataReader, typeDefinition);
-                //        if (pluginInfo != null)
-                //        {
-                //            plugins.Add(pluginInfo);
-                //        }
-                //    }
-                //}
             }
             catch (Exception ex)
             {

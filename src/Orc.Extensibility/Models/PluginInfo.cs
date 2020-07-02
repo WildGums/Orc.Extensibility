@@ -1,38 +1,21 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginInfo.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
-    using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Reflection.Metadata;
     using Catel;
-    using Catel.Reflection;
 
     public class PluginInfo : IPluginInfo
     {
-        public PluginInfo(Type type)
+        public PluginInfo(string location, MetadataReader metadataReader, TypeDefinition typeDefinition)
         {
-            Argument.IsNotNull(() => type);
+            Argument.IsNotNull(() => location);
+            Argument.IsNotNull(() => metadataReader);
 
-            var assembly = type.Assembly;
-
-            // Note: since reflection only, we need to have a custom reflection mechanism
-            var customAssemblyAttributes = assembly.GetCustomAttributesData();
-
-            Name = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyTitleAttribute>() as string ?? assembly.Title();
-            Version = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? assembly.Version();
-            Company = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyCompanyAttribute>() as string;
-
-            Location = assembly.Location;
-            ReflectionOnlyType = type;
-            FullTypeName = type.FullName;
-
+            Location = location;
             Aliases = new List<string>();
+
+            InitializeData(metadataReader, typeDefinition);
         }
 
         public string Name { get; set; }
@@ -49,8 +32,6 @@ namespace Orc.Extensibility
 
         public string FullTypeName { get; private set; }
 
-        public Type ReflectionOnlyType { get; private set; }
-
         public List<string> Aliases { get; private set; }
 
         public override string ToString()
@@ -65,6 +46,20 @@ namespace Orc.Extensibility
             }
 
             return value;
+        }
+
+        private void InitializeData(MetadataReader metadataReader, TypeDefinition typeDefinition)
+        {
+            Name = metadataReader.GetString(metadataReader.GetAssemblyDefinition().Name);
+            Version = metadataReader.GetAssemblyDefinition().Version.ToString(3);
+
+            var customAttributes = metadataReader.GetAssemblyDefinition().GetCustomAttributes();
+
+            Name = customAttributes.GetCustomAttributeValue<AssemblyTitleAttribute>(metadataReader) as string ?? Name;
+            Version = customAttributes.GetCustomAttributeValue<AssemblyInformationalVersionAttribute>(metadataReader) as string ?? Version;
+            Company = customAttributes.GetCustomAttributeValue<AssemblyCompanyAttribute>(metadataReader) as string;
+
+            FullTypeName = typeDefinition.GetFullTypeName(metadataReader);
         }
     }
 }

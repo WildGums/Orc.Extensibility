@@ -34,8 +34,10 @@
 
                 Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
-                var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
-                var assembly = Assembly.Load(assemblyName);
+                // Note: load via assembly name does not work when it's in a specific directory in .net core
+                //var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
+                //var assembly = Assembly.Load(assemblyName);
+                var assembly = Assembly.LoadFrom(pluginInfo.Location);
 
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 

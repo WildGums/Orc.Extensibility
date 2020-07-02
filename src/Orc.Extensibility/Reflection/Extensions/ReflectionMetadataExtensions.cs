@@ -1,9 +1,54 @@
 ﻿namespace Orc.Extensibility
 {
     using System.Reflection.Metadata;
+    using System.Text.RegularExpressions;
+    using Catel;
 
     public static class ReflectionMetadataExtensions
     {
+        private static readonly Regex StringCleanupRegex = new Regex(@"[^\u0009\u000A\u000D\u0020-\u007E]", RegexOptions.Compiled);
+
+        public static object GetCustomAttributeValue<TAttribute>(this CustomAttributeHandleCollection attributeHandles, MetadataReader reader)
+        {
+            var expectedAttributeFullName = $"{typeof(TAttribute).Namespace}.{typeof(TAttribute).Name}";
+
+            foreach (var customAttributeHandle in attributeHandles)
+            {
+                var customAttribute = reader.GetCustomAttribute(customAttributeHandle);
+
+                var constructorHandle = customAttribute.Constructor;
+                var constructor = reader.GetMemberReference((MemberReferenceHandle)constructorHandle);
+
+                var customAttributeType = reader.GetTypeReference((TypeReferenceHandle)constructor.Parent);
+                var customAttributeTypeName = GetFullTypeName(customAttributeType, reader);
+                if (customAttributeTypeName.Equals(expectedAttributeFullName))
+                {
+                    var blobHandle = customAttribute.Value;
+                    if (blobHandle.IsNil)
+                    {
+                        continue;
+                    }
+
+                    var blobReader = reader.GetBlobReader(blobHandle);
+
+                    // For now just support strings
+                    var value = blobReader.ReadUTF8(blobReader.RemainingBytes);
+
+                    // Remove special characters
+                    value = StringCleanupRegex.Replace(value, string.Empty);
+
+                    if (value.StartsWithAny("$", "\r") && value.Length > 1)
+                    {
+                        value = value.Substring(1);
+                    }
+
+                    return value;
+                }
+            }
+
+            return null;
+        }
+
         public static string GetFullTypeName(this TypeDefinition typeDefinition, MetadataReader reader, bool includeAssemblyName = false)
         {
             var ns = typeDefinition.Namespace.GetString(reader);

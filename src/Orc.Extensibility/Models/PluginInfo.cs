@@ -1,6 +1,7 @@
 ﻿namespace Orc.Extensibility
 {
     using System.Collections.Generic;
+    using System.Reflection;
     using System.Reflection.Metadata;
     using Catel;
 
@@ -52,15 +53,11 @@
             Name = metadataReader.GetString(metadataReader.GetAssemblyDefinition().Name);
             Version = metadataReader.GetAssemblyDefinition().Version.ToString(3);
 
-            foreach (var customAttributeHandle in metadataReader.GetAssemblyDefinition().GetCustomAttributes())
-            {
-                var customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
+            var customAttributes = metadataReader.GetAssemblyDefinition().GetCustomAttributes();
 
-                //Name = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyTitleAttribute>() as string ?? assembly.Title();
-                //Version = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? assembly.Version();
-                //Company = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyCompanyAttribute>() as string;
-
-            }
+            Name = customAttributes.GetCustomAttributeValue<AssemblyTitleAttribute>(metadataReader) as string ?? Name;
+            Version = customAttributes.GetCustomAttributeValue<AssemblyInformationalVersionAttribute>(metadataReader) as string ?? Version;
+            Company = customAttributes.GetCustomAttributeValue<AssemblyCompanyAttribute>(metadataReader) as string;
 
             //Location = metadataReader.GetAssemblyDefinition()..Location;
             FullTypeName = typeDefinition.GetFullTypeName(metadataReader);

@@ -57,7 +57,7 @@
                 // Remove special characters
                 value = StringCleanupRegex.Replace(value, string.Empty);
 
-                if (value.StartsWithAny("$", "\r") && value.Length > 1)
+                if (value.StartsWithAny("$", "\r", "\t") && value.Length > 1)
                 {
                     value = value.Substring(1);
                 }

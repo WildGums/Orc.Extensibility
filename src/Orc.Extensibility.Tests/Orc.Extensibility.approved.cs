@@ -166,9 +166,12 @@ namespace Orc.Extensibility
     {
         public static object GetCustomAttributeValue<TAttribute>(this System.Reflection.Metadata.CustomAttributeHandleCollection attributeHandles, System.Reflection.Metadata.MetadataReader reader) { }
         public static string GetFullAssemblyName(this System.Reflection.Metadata.MetadataReader reader) { }
+        public static string GetFullTypeName(this System.Type type) { }
         public static string GetFullTypeName(this System.Reflection.Metadata.TypeDefinition typeDefinition, System.Reflection.Metadata.MetadataReader reader, bool includeAssemblyName = false) { }
         public static string GetFullTypeName(this System.Reflection.Metadata.TypeReference typeReference, System.Reflection.Metadata.MetadataReader reader, bool includeAssemblyName = false) { }
         public static string GetString(this System.Reflection.Metadata.StringHandle stringHandle, System.Reflection.Metadata.MetadataReader reader) { }
+        public static bool ImplementsInterface<TInterface>(this System.Reflection.Metadata.InterfaceImplementationHandleCollection interfaceImplementations, System.Reflection.Metadata.MetadataReader reader) { }
+        public static bool ImplementsInterface<TInterface>(this System.Reflection.Metadata.TypeDefinition typeDefinition, System.Reflection.Metadata.MetadataReader reader) { }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

@@ -1,5 +1,6 @@
 ﻿namespace Orc.Extensibility
 {
+    using System;
     using System.Reflection.Metadata;
     using System.Text.RegularExpressions;
     using Catel;
@@ -8,9 +9,15 @@
     {
         private static readonly Regex StringCleanupRegex = new Regex(@"[^\u0009\u000A\u000D\u0020-\u007E]", RegexOptions.Compiled);
 
+        public static string GetFullTypeName(this Type type)
+        {
+            var fullName = $"{type.Namespace}.{type.Name}";
+            return fullName;
+        }
+
         public static object GetCustomAttributeValue<TAttribute>(this CustomAttributeHandleCollection attributeHandles, MetadataReader reader)
         {
-            var expectedAttributeFullName = $"{typeof(TAttribute).Namespace}.{typeof(TAttribute).Name}";
+            var expectedAttributeFullName = typeof(TAttribute).GetFullTypeName();
 
             foreach (var customAttributeHandle in attributeHandles)
             {
@@ -47,6 +54,49 @@
             }
 
             return null;
+        }
+
+        public static bool ImplementsInterface<TInterface>(this TypeDefinition typeDefinition, MetadataReader reader)
+        {
+            return ImplementsInterface<TInterface>(typeDefinition.GetInterfaceImplementations(), reader);
+        }
+
+        public static bool ImplementsInterface<TInterface>(this InterfaceImplementationHandleCollection interfaceImplementations, MetadataReader reader)
+        {
+            var expectedInterfaceTypeName = typeof(TInterface).GetFullTypeName();
+
+            foreach (var interfaceHandle in interfaceImplementations)
+            {
+                try
+                {
+                    var interfaceImplementation = reader.GetInterfaceImplementation(interfaceHandle);
+                    var fullTypeName = string.Empty;
+
+                    switch (interfaceImplementation.Interface.Kind)
+                    {
+                        case HandleKind.TypeDefinition:
+                            var interfaceTypeDefinition = reader.GetTypeDefinition((TypeDefinitionHandle)interfaceImplementation.Interface);
+                            fullTypeName = interfaceTypeDefinition.GetFullTypeName(reader);
+                            break;
+
+                        case HandleKind.TypeReference:
+                            var interfaceTypeReference = reader.GetTypeReference((TypeReferenceHandle)interfaceImplementation.Interface);
+                            fullTypeName = interfaceTypeReference.GetFullTypeName(reader);
+                            break;
+                    }
+
+                    if (fullTypeName.Equals(expectedInterfaceTypeName))
+                    {
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
+
+            return false;
         }
 
         public static string GetFullTypeName(this TypeDefinition typeDefinition, MetadataReader reader, bool includeAssemblyName = false)

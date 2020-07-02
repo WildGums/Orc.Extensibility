@@ -1,10 +1,8 @@
 ﻿namespace Orc.Extensibility.Example.Services
 {
     using System;
-    using System.Reflection;
     using Catel;
     using Catel.Logging;
-    using Catel.Reflection;
     using FileSystem;
 
     public class PluginFinder : Orc.Extensibility.PluginFinderBase
@@ -17,7 +15,7 @@
         {
         }
 
-        protected override bool IsPlugin(MetadataLoadContext context, Type type)
+        protected override bool IsPlugin(PluginProbingContext context, Type type)
         {
             return type.ImplementsInterface<ICustomPlugin>();
         }

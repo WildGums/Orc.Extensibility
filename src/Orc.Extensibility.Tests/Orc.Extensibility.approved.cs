@@ -142,11 +142,19 @@ namespace Orc.Extensibility
     public abstract class PluginFinderBase : Orc.Extensibility.IPluginFinder
     {
         protected PluginFinderBase(Orc.Extensibility.IPluginLocationsProvider pluginLocationsProvider, Orc.Extensibility.IPluginInfoProvider pluginInfoProvider, Orc.Extensibility.IPluginCleanupService pluginCleanupService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService) { }
+        protected virtual bool CanInvestigateAssembly(Orc.Extensibility.PluginProbingContext context, System.Reflection.Assembly assembly) { }
+        protected virtual bool CanInvestigateAssembly(Orc.Extensibility.PluginProbingContext context, string assemblyPath) { }
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPlugins() { }
-        protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssemblies(params string[] assemblyPaths) { }
-        protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssembly(string assemblyPath) { }
-        protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInDirectory(string pluginDirectory) { }
-        protected abstract bool IsPlugin(System.Reflection.MetadataLoadContext context, System.Type type);
+        protected void FindPluginsInAssemblies(Orc.Extensibility.PluginProbingContext context, params string[] assemblyPaths) { }
+        protected virtual void FindPluginsInAssembly(Orc.Extensibility.PluginProbingContext context, System.Reflection.Assembly assembly) { }
+        protected virtual void FindPluginsInAssembly(Orc.Extensibility.PluginProbingContext context, string assemblyPath) { }
+        protected virtual void FindPluginsInDirectory(Orc.Extensibility.PluginProbingContext context, string pluginDirectory) { }
+        protected virtual void FindPluginsInLoadedAssemblies(Orc.Extensibility.PluginProbingContext context) { }
+        protected virtual void FindPluginsInUnloadedAssemblies(Orc.Extensibility.PluginProbingContext context) { }
+        protected virtual System.Collections.Generic.List<string> FindResolvableAssemblyPaths() { }
+        protected virtual System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetOldestDuplicates(System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> duplicates) { }
+        protected abstract bool IsPlugin(Orc.Extensibility.PluginProbingContext context, System.Type type);
+        protected virtual void RemoveDuplicates(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }
     }
     public class PluginInfo : Orc.Extensibility.IPluginInfo
@@ -179,6 +187,12 @@ namespace Orc.Extensibility
         public PluginManager(Orc.Extensibility.IPluginFinder pluginFinder) { }
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = false) { }
         public void Refresh() { }
+    }
+    public class PluginProbingContext
+    {
+        public PluginProbingContext() { }
+        public System.Collections.Generic.HashSet<string> Locations { get; }
+        public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> Plugins { get; }
     }
     public static class ReflectionExtensions
     {

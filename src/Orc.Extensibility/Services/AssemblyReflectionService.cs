@@ -26,20 +26,24 @@
         {
             if (!_isPeAssembly.TryGetValue(assemblyPath, out var isPeAssembly))
             {
-                using (var fileStream = _fileService.OpenRead(assemblyPath))
+                // Somehow .exe are not pe files
+                if (!assemblyPath.EndsWithIgnoreCase(".exe"))
                 {
-                    isPeAssembly = false;
-
-                    using (var reader = new PEReader(fileStream))
+                    using (var fileStream = _fileService.OpenRead(assemblyPath))
                     {
-                        if (reader.HasMetadata)
+                        isPeAssembly = false;
+
+                        using (var reader = new PEReader(fileStream))
                         {
-                            isPeAssembly = true;
+                            if (reader.HasMetadata)
+                            {
+                                isPeAssembly = true;
+                            }
                         }
                     }
-
-                    _isPeAssembly[assemblyPath] = isPeAssembly;
                 }
+
+                _isPeAssembly[assemblyPath] = isPeAssembly;
             }
 
             return isPeAssembly;

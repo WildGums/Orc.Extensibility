@@ -1,4 +1,4 @@
-using Catel.IoC;
+﻿using Catel.IoC;
 using Catel.Services;
 using Orc.Extensibility;
 
@@ -19,6 +19,7 @@ public static class ModuleInitializer
         serviceLocator.RegisterType<IPluginManager, PluginManager>();
         serviceLocator.RegisterType<IPluginFactory, PluginFactory>();
         serviceLocator.RegisterType<IPluginInfoProvider, PluginInfoProvider>();
+        serviceLocator.RegisterType<IAssemblyReflectionService, AssemblyReflectionService>();
 
         serviceLocator.RegisterType<ILoadedPluginService, LoadedPluginService>();
         serviceLocator.RegisterType<ISinglePluginService, SinglePluginService>();

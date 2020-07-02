@@ -6,12 +6,21 @@ public static class ModuleInitializer
 }
 namespace Orc.Extensibility
 {
+    public class AssemblyReflectionService : Orc.Extensibility.IAssemblyReflectionService
+    {
+        public AssemblyReflectionService(Orc.FileSystem.IFileService fileService) { }
+        public virtual bool IsPeAssembly(string assemblyPath) { }
+    }
     public static class CustomAttributeDataExtensions
     {
         public static object GetAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
         public static System.Collections.Generic.List<object> GetAttributeValues<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
+    }
+    public interface IAssemblyReflectionService
+    {
+        bool IsPeAssembly(string assemblyPath);
     }
     public interface ILoadedPluginService
     {
@@ -132,7 +141,7 @@ namespace Orc.Extensibility
     }
     public abstract class PluginFinderBase : Orc.Extensibility.IPluginFinder
     {
-        protected PluginFinderBase(Orc.Extensibility.IPluginLocationsProvider pluginLocationsProvider, Orc.Extensibility.IPluginInfoProvider pluginInfoProvider, Orc.Extensibility.IPluginCleanupService pluginCleanupService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService) { }
+        protected PluginFinderBase(Orc.Extensibility.IPluginLocationsProvider pluginLocationsProvider, Orc.Extensibility.IPluginInfoProvider pluginInfoProvider, Orc.Extensibility.IPluginCleanupService pluginCleanupService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService) { }
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPlugins() { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssemblies(params string[] assemblyPaths) { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssembly(string assemblyPath) { }

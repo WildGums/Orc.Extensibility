@@ -16,7 +16,6 @@ namespace Orc.Extensibility
     using Catel.Reflection;
     using FileSystem;
     using MethodTimer;
-    using System.Reflection.Metadata;
     using System.Reflection.PortableExecutable;
 
     public abstract class PluginFinderBase : IPluginFinder
@@ -48,21 +47,25 @@ namespace Orc.Extensibility
         private readonly IPluginCleanupService _pluginCleanupService;
         private readonly IDirectoryService _directoryService;
         private readonly IFileService _fileService;
+        private readonly IAssemblyReflectionService _assemblyReflectionService;
 
         protected PluginFinderBase(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
+            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService,
+            IAssemblyReflectionService assemblyReflectionService)
         {
             Argument.IsNotNull(() => pluginLocationsProvider);
             Argument.IsNotNull(() => pluginInfoProvider);
             Argument.IsNotNull(() => pluginCleanupService);
             Argument.IsNotNull(() => directoryService);
             Argument.IsNotNull(() => fileService);
+            Argument.IsNotNull(() => assemblyReflectionService);
 
             _pluginLocationsProvider = pluginLocationsProvider;
             _pluginInfoProvider = pluginInfoProvider;
             _pluginCleanupService = pluginCleanupService;
             _directoryService = directoryService;
             _fileService = fileService;
+            _assemblyReflectionService = assemblyReflectionService;
         }
 
         [Time]
@@ -253,6 +256,12 @@ namespace Orc.Extensibility
 
                     var location = loadedAssembly.Location;
                     if (string.IsNullOrWhiteSpace(location) || !_fileService.Exists(location))
+                    {
+                        continue;
+                    }
+
+                    var isPeAssembly = _assemblyReflectionService.IsPeAssembly(location);
+                    if (!isPeAssembly)
                     {
                         continue;
                     }

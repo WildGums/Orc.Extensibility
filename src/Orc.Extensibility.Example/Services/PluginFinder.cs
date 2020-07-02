@@ -11,9 +11,9 @@
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-        public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
-            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService)
+        public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider, IPluginCleanupService pluginCleanupService,
+            IDirectoryService directoryService, IFileService fileService, IAssemblyReflectionService assemblyReflectionService)
+            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService, assemblyReflectionService)
         {
         }
 

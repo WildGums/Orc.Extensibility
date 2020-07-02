@@ -9,9 +9,9 @@
         {
         }
 
-        public virtual IPluginInfo GetPluginInfo(string location, MetadataReader metadataReader, TypeDefinition typeDefinition)
+        public virtual IPluginInfo GetPluginInfo(string location, Type type)
         {
-            return new PluginInfo(location, metadataReader, typeDefinition);
+            return new PluginInfo(location, type);
         }
     }
 }

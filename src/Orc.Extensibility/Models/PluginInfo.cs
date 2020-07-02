@@ -1,21 +1,23 @@
 ﻿namespace Orc.Extensibility
 {
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
     using System.Reflection.Metadata;
     using Catel;
+    using Catel.Reflection;
 
     public class PluginInfo : IPluginInfo
     {
-        public PluginInfo(string location, MetadataReader metadataReader, TypeDefinition typeDefinition)
+        public PluginInfo(string location, Type type)
         {
             Argument.IsNotNull(() => location);
-            Argument.IsNotNull(() => metadataReader);
+            Argument.IsNotNull(() => type);
 
             Location = location;
             Aliases = new List<string>();
 
-            InitializeData(metadataReader, typeDefinition);
+            InitializeData(type);
         }
 
         public string Name { get; set; }
@@ -50,19 +52,19 @@
             return value;
         }
 
-        private void InitializeData(MetadataReader metadataReader, TypeDefinition typeDefinition)
+        private void InitializeData(Type type)
         {
-            Name = metadataReader.GetString(metadataReader.GetAssemblyDefinition().Name);
-            Version = metadataReader.GetAssemblyDefinition().Version.ToString(3);
+            FullTypeName = type.FullName;
+            AssemblyName = type.Assembly.GetName().Name;
 
-            var customAttributes = metadataReader.GetAssemblyDefinition().GetCustomAttributes();
+            Name = AssemblyName;
+            Version = type.Assembly.Version();
 
-            Name = customAttributes.GetCustomAttributeValue<AssemblyTitleAttribute>(metadataReader) as string ?? Name;
-            Version = customAttributes.GetCustomAttributeValue<AssemblyInformationalVersionAttribute>(metadataReader) as string ?? Version;
-            Company = customAttributes.GetCustomAttributeValue<AssemblyCompanyAttribute>(metadataReader) as string;
+            var customAttributes = type.Assembly.GetCustomAttributesData();
 
-            FullTypeName = typeDefinition.GetFullTypeName(metadataReader);
-            AssemblyName = metadataReader.GetString(metadataReader.GetAssemblyDefinition().Name);
+            Name = customAttributes.GetAttributeValue<AssemblyTitleAttribute>() as string ?? Name;
+            Version = customAttributes.GetAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? Version;
+            Company = customAttributes.GetAttributeValue<AssemblyCompanyAttribute>() as string;
         }
     }
 }

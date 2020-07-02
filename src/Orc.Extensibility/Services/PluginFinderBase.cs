@@ -241,49 +241,40 @@ namespace Orc.Extensibility
 
             try
             {
-                using (var fileStream = _fileService.OpenRead(assemblyPath))
+                // Important: all types already in the app domain should be included as well
+                var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
+
+                foreach (var loadedAssembly in AppDomain.CurrentDomain.GetLoadedAssemblies())
                 {
-                    var peReader = new PEReader(fileStream);
-                    if (!peReader.HasMetadata)
+                    if (loadedAssembly.IsDynamic)
                     {
-                        return plugins;
+                        continue;
                     }
 
-                    var metadataReader = peReader.GetMetadataReader();
-                    var assemblyDefinition = metadataReader.GetAssemblyDefinition();
+                    resolvableAssemblyPaths.Add(loadedAssembly.Location);
+                }
 
-                    foreach (var typeDefinitionHandle in metadataReader.TypeDefinitions)
+                var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
+
+                using (var context = new MetadataLoadContext(resolver))
+                {
+                    var assembly = context.LoadFromAssemblyPath(assemblyPath);
+                    
+                    foreach (var type in assembly.GetTypes())
                     {
-                        if (typeDefinitionHandle.IsNil)
+                        if (!type.IsClassEx())
                         {
                             continue;
                         }
 
-                        var typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
-                        var typeAttributes = typeDefinition.Attributes;
-
-                        // Ignore abstract types
-                        if (Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Abstract))
+                        if (type.IsAbstractEx())
                         {
                             continue;
                         }
 
-                        // Ignore anything but actual class types
-                        if (!Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Class))
+                        if (IsPlugin(context, type))
                         {
-                            continue;
-                        }
-
-#if DEBUG
-                        var typeName = typeDefinition.GetFullTypeName(metadataReader);
-
-                        Log.Debug($"Investigating '{typeName}'");
-#endif
-
-                        if (IsPlugin(metadataReader, typeDefinition))
-                        {
-
-                            var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, metadataReader, typeDefinition);
+                            var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, type);
                             if (pluginInfo != null)
                             {
                                 plugins.Add(pluginInfo);
@@ -291,6 +282,48 @@ namespace Orc.Extensibility
                         }
                     }
                 }
+
+                //var peReader = new PEReader(fileStream);
+                //if (!peReader.HasMetadata)
+                //{
+                //    return plugins;
+                //}
+
+                //var metadataReader = peReader.GetMetadataReader();
+                //var assemblyDefinition = metadataReader.GetAssemblyDefinition();
+
+                //foreach (var typeDefinitionHandle in metadataReader.TypeDefinitions)
+                //{
+                //    if (typeDefinitionHandle.IsNil)
+                //    {
+                //        continue;
+                //    }
+
+                //    var typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
+                //    var typeAttributes = typeDefinition.Attributes;
+
+                //    // Ignore abstract types
+                //    if (Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Abstract))
+                //    {
+                //        continue;
+                //    }
+
+                //    // Ignore anything but actual class types
+                //    if (!Enum<TypeAttributes>.Flags.IsFlagSet(typeAttributes, TypeAttributes.Class))
+                //    {
+                //        continue;
+                //    }
+
+                //    if (IsPlugin(metadataReader, typeDefinition))
+                //    {
+
+                //        var pluginInfo = _pluginInfoProvider.GetPluginInfo(assemblyPath, metadataReader, typeDefinition);
+                //        if (pluginInfo != null)
+                //        {
+                //            plugins.Add(pluginInfo);
+                //        }
+                //    }
+                //}
             }
             catch (Exception ex)
             {
@@ -325,6 +358,6 @@ namespace Orc.Extensibility
             return false;
         }
 
-        protected abstract bool IsPlugin(MetadataReader metadataReader, TypeDefinition typeDefinition);
+        protected abstract bool IsPlugin(MetadataLoadContext context, Type type);
     }
 }

@@ -83,7 +83,7 @@
 
                     unsafe
                     {
-                        byte* resourcesStart = peImage.Pointer + start;
+                        var resourcesStart = peImage.Pointer + start;
 
                         var mdReader = peReader.GetMetadataReader();
 
@@ -129,7 +129,7 @@
                                 continue;
                             }
 
-                            byte* resourceStart = resourcesStart + resource.Offset + sizeof(int);
+                            var resourceStart = resourcesStart + resource.Offset + sizeof(int);
                             using (var resourceStream = new UnmanagedMemoryStream(resourceStart, size))
                             {
                                 ExtractAssemblyFromEmbeddedResource(assemblyPath, resourceStream, resourceName, targetDirectory);

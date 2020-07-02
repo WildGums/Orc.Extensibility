@@ -17,7 +17,7 @@
             {
                 try
                 {
-                    if (iface.FullName.Equals(typeName))
+                    if (iface.FullName?.Equals(typeName) ?? false)
                     {
                         return true;
                     }

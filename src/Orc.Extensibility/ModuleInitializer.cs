@@ -19,6 +19,8 @@ public static class ModuleInitializer
         serviceLocator.RegisterType<IPluginManager, PluginManager>();
         serviceLocator.RegisterType<IPluginFactory, PluginFactory>();
         serviceLocator.RegisterType<IPluginInfoProvider, PluginInfoProvider>();
+
+        serviceLocator.RegisterType<IRuntimeAssemblyResolverService, RuntimeAssemblyResolverService>();
         serviceLocator.RegisterType<IAssemblyReflectionService, AssemblyReflectionService>();
 
         serviceLocator.RegisterType<ILoadedPluginService, LoadedPluginService>();

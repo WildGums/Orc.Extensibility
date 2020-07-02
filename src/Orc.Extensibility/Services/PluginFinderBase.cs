@@ -40,6 +40,7 @@ namespace Orc.Extensibility
             "microsoft.",
             "moduleinit.",
             "mono.cecil.",
+            "mscorlib",
             "nuget.",
             "obsolete.",
             "orc.",
@@ -61,12 +62,12 @@ namespace Orc.Extensibility
         private readonly IDirectoryService _directoryService;
         private readonly IFileService _fileService;
         private readonly IAssemblyReflectionService _assemblyReflectionService;
-
-        private readonly List<string> _resolvableAssemblyPaths = new List<string>();
+        private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
+        private readonly List<string> _appDomainResolvablePaths = new List<string>();
 
         protected PluginFinderBase(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
             IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService,
-            IAssemblyReflectionService assemblyReflectionService)
+            IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
             Argument.IsNotNull(() => pluginLocationsProvider);
             Argument.IsNotNull(() => pluginInfoProvider);
@@ -74,6 +75,7 @@ namespace Orc.Extensibility
             Argument.IsNotNull(() => directoryService);
             Argument.IsNotNull(() => fileService);
             Argument.IsNotNull(() => assemblyReflectionService);
+            Argument.IsNotNull(() => runtimeAssemblyResolverService);
 
             _pluginLocationsProvider = pluginLocationsProvider;
             _pluginInfoProvider = pluginInfoProvider;
@@ -81,6 +83,7 @@ namespace Orc.Extensibility
             _directoryService = directoryService;
             _fileService = fileService;
             _assemblyReflectionService = assemblyReflectionService;
+            _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
         }
 
         [Time]
@@ -298,6 +301,8 @@ namespace Orc.Extensibility
                 return;
             }
 
+            _runtimeAssemblyResolverService.RegisterAssembly(assemblyPath);
+
             // Important: all types already in the app domain should be included as well
             var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
 
@@ -316,32 +321,39 @@ namespace Orc.Extensibility
         {
             foreach (var type in assembly.GetTypes())
             {
-                if (!type.IsClassEx())
+                try
                 {
-                    continue;
-                }
-
-                if (type.IsAbstractEx())
-                {
-                    continue;
-                }
-
-                if (IsPlugin(context, type))
-                {
-                    var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
-                    if (pluginInfo != null)
+                    if (!type.IsClassEx())
                     {
-                        Log.Debug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
-
-                        context.Plugins.Add(pluginInfo);
+                        continue;
                     }
+
+                    if (type.IsAbstractEx())
+                    {
+                        continue;
+                    }
+
+                    if (IsPlugin(context, type))
+                    {
+                        var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
+                        if (pluginInfo != null)
+                        {
+                            Log.Debug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
+
+                            context.Plugins.Add(pluginInfo);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore
                 }
             }
         }
 
         protected virtual List<string> FindResolvableAssemblyPaths()
         {
-            if (_resolvableAssemblyPaths.Count == 0)
+            if (_appDomainResolvablePaths.Count == 0)
             {
                 foreach (var loadedAssembly in AppDomain.CurrentDomain.GetLoadedAssemblies())
                 {
@@ -362,11 +374,16 @@ namespace Orc.Extensibility
                         continue;
                     }
 
-                    _resolvableAssemblyPaths.Add(location);
+                    _appDomainResolvablePaths.Add(location);
                 }
             }
 
-            return _resolvableAssemblyPaths;
+            var paths = new List<string>(_appDomainResolvablePaths);
+
+            // Always add runtime assemblies, they could be changed. We could (should?) maybe do this *per assembly*
+            paths.AddRange(_runtimeAssemblyResolverService.GetRuntimeAssemblies().Select(x => x.Location));
+
+            return paths;
         }
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)

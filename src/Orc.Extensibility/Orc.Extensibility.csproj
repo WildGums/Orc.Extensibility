@@ -8,6 +8,7 @@
     <PackageVersion>4.0.0-alpha0196</PackageVersion>
     <Description>Extensibility library.</Description>
     <PackageTags>orc;extensibility;extension;plugin;add-in;addin;add-on;addon</PackageTags>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <PropertyGroup>

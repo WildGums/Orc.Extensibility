@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="App.xaml.cs" company="WildGums">
 //   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
 // </copyright>
@@ -42,6 +42,10 @@ namespace Orc.Extensibility.Example
             base.OnStartup(e);
 
             this.ApplyTheme();
+
+            // Support Costura embedded runtime assemblies
+            var appDomainWatcher = serviceLocator.RegisterTypeAndInstantiate<AppDomainRuntimeAssemblyWatcher>();
+            appDomainWatcher.Attach();
 
             // In an Orchestra environment, this would go into the bootstrapper
             var configurationService = serviceLocator.ResolveType<IConfigurationService>();

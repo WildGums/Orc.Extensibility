@@ -59,7 +59,6 @@
             Version = customAttributes.GetCustomAttributeValue<AssemblyInformationalVersionAttribute>(metadataReader) as string ?? Version;
             Company = customAttributes.GetCustomAttributeValue<AssemblyCompanyAttribute>(metadataReader) as string;
 
-            //Location = metadataReader.GetAssemblyDefinition()..Location;
             FullTypeName = typeDefinition.GetFullTypeName(metadataReader);
         }
     }

@@ -21,36 +21,48 @@
 
             foreach (var customAttributeHandle in attributeHandles)
             {
-                var customAttribute = reader.GetCustomAttribute(customAttributeHandle);
-
-                var constructorHandle = customAttribute.Constructor;
-                var constructor = reader.GetMemberReference((MemberReferenceHandle)constructorHandle);
-
-                var customAttributeType = reader.GetTypeReference((TypeReferenceHandle)constructor.Parent);
-                var customAttributeTypeName = GetFullTypeName(customAttributeType, reader);
-                if (customAttributeTypeName.Equals(expectedAttributeFullName))
+                var customAttributeValue = GetCustomAttributeValue<TAttribute>(customAttributeHandle, reader);
+                if (customAttributeValue is null == false)
                 {
-                    var blobHandle = customAttribute.Value;
-                    if (blobHandle.IsNil)
-                    {
-                        continue;
-                    }
-
-                    var blobReader = reader.GetBlobReader(blobHandle);
-
-                    // For now just support strings
-                    var value = blobReader.ReadUTF8(blobReader.RemainingBytes);
-
-                    // Remove special characters
-                    value = StringCleanupRegex.Replace(value, string.Empty);
-
-                    if (value.StartsWithAny("$", "\r") && value.Length > 1)
-                    {
-                        value = value.Substring(1);
-                    }
-
-                    return value;
+                    return customAttributeValue;
                 }
+            }
+
+            return null;
+        }
+
+        public static object GetCustomAttributeValue<TAttribute>(this CustomAttributeHandle attributeHandle, MetadataReader reader)
+        {
+            var expectedAttributeFullName = typeof(TAttribute).GetFullTypeName();
+            var customAttribute = reader.GetCustomAttribute(attributeHandle);
+
+            var constructorHandle = customAttribute.Constructor;
+            var constructor = reader.GetMemberReference((MemberReferenceHandle)constructorHandle);
+
+            var customAttributeType = reader.GetTypeReference((TypeReferenceHandle)constructor.Parent);
+            var customAttributeTypeName = GetFullTypeName(customAttributeType, reader);
+            if (customAttributeTypeName.Equals(expectedAttributeFullName))
+            {
+                var blobHandle = customAttribute.Value;
+                if (blobHandle.IsNil)
+                {
+                    return null;
+                }
+
+                var blobReader = reader.GetBlobReader(blobHandle);
+
+                // For now just support strings
+                var value = blobReader.ReadUTF8(blobReader.RemainingBytes);
+
+                // Remove special characters
+                value = StringCleanupRegex.Replace(value, string.Empty);
+
+                if (value.StartsWithAny("$", "\r") && value.Length > 1)
+                {
+                    value = value.Substring(1);
+                }
+
+                return value;
             }
 
             return null;

@@ -164,6 +164,7 @@ namespace Orc.Extensibility
     }
     public static class ReflectionMetadataExtensions
     {
+        public static object GetCustomAttributeValue<TAttribute>(this System.Reflection.Metadata.CustomAttributeHandle attributeHandle, System.Reflection.Metadata.MetadataReader reader) { }
         public static object GetCustomAttributeValue<TAttribute>(this System.Reflection.Metadata.CustomAttributeHandleCollection attributeHandles, System.Reflection.Metadata.MetadataReader reader) { }
         public static string GetFullAssemblyName(this System.Reflection.Metadata.MetadataReader reader) { }
         public static string GetFullTypeName(this System.Type type) { }

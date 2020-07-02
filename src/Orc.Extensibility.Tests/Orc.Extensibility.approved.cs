@@ -6,6 +6,13 @@ public static class ModuleInitializer
 }
 namespace Orc.Extensibility
 {
+    public static class CustomAttributeDataExtensions
+    {
+        public static object GetAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
+            where TAttribute : System.Attribute { }
+        public static System.Collections.Generic.List<object> GetAttributeValues<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
+            where TAttribute : System.Attribute { }
+    }
     public interface ILoadedPluginService
     {
         event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
@@ -55,7 +62,7 @@ namespace Orc.Extensibility
     }
     public interface IPluginInfoProvider
     {
-        Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Reflection.Metadata.MetadataReader metadataReader, System.Reflection.Metadata.TypeDefinition typeDefinition);
+        Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Type type);
     }
     public interface IPluginLocationsProvider
     {
@@ -130,12 +137,12 @@ namespace Orc.Extensibility
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssemblies(params string[] assemblyPaths) { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInAssembly(string assemblyPath) { }
         protected System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> FindPluginsInDirectory(string pluginDirectory) { }
-        protected abstract bool IsPlugin(System.Reflection.Metadata.MetadataReader metadataReader, System.Reflection.Metadata.TypeDefinition typeDefinition);
+        protected abstract bool IsPlugin(System.Reflection.MetadataLoadContext context, System.Type type);
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }
     }
     public class PluginInfo : Orc.Extensibility.IPluginInfo
     {
-        public PluginInfo(string location, System.Reflection.Metadata.MetadataReader metadataReader, System.Reflection.Metadata.TypeDefinition typeDefinition) { }
+        public PluginInfo(string location, System.Type type) { }
         public System.Collections.Generic.List<string> Aliases { get; }
         public string AssemblyName { get; }
         public string Company { get; set; }
@@ -150,7 +157,7 @@ namespace Orc.Extensibility
     public class PluginInfoProvider : Orc.Extensibility.IPluginInfoProvider
     {
         public PluginInfoProvider() { }
-        public virtual Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Reflection.Metadata.MetadataReader metadataReader, System.Reflection.Metadata.TypeDefinition typeDefinition) { }
+        public virtual Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Type type) { }
     }
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
     {
@@ -164,17 +171,9 @@ namespace Orc.Extensibility
         public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins(bool forceRefresh = false) { }
         public void Refresh() { }
     }
-    public static class ReflectionMetadataExtensions
+    public static class ReflectionExtensions
     {
-        public static object GetCustomAttributeValue<TAttribute>(this System.Reflection.Metadata.CustomAttributeHandle attributeHandle, System.Reflection.Metadata.MetadataReader reader) { }
-        public static object GetCustomAttributeValue<TAttribute>(this System.Reflection.Metadata.CustomAttributeHandleCollection attributeHandles, System.Reflection.Metadata.MetadataReader reader) { }
-        public static string GetFullAssemblyName(this System.Reflection.Metadata.MetadataReader reader) { }
-        public static string GetFullTypeName(this System.Type type) { }
-        public static string GetFullTypeName(this System.Reflection.Metadata.TypeDefinition typeDefinition, System.Reflection.Metadata.MetadataReader reader, bool includeAssemblyName = false) { }
-        public static string GetFullTypeName(this System.Reflection.Metadata.TypeReference typeReference, System.Reflection.Metadata.MetadataReader reader, bool includeAssemblyName = false) { }
-        public static string GetString(this System.Reflection.Metadata.StringHandle stringHandle, System.Reflection.Metadata.MetadataReader reader) { }
-        public static bool ImplementsInterface<TInterface>(this System.Reflection.Metadata.InterfaceImplementationHandleCollection interfaceImplementations, System.Reflection.Metadata.MetadataReader reader) { }
-        public static bool ImplementsInterface<TInterface>(this System.Reflection.Metadata.TypeDefinition typeDefinition, System.Reflection.Metadata.MetadataReader reader) { }
+        public static bool ImplementsInterface<TInterface>(this System.Type type) { }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

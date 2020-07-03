@@ -12,6 +12,8 @@
     using Catel.Services;
     using System.Reflection.Metadata;
     using Catel;
+    using MethodTimer;
+    using Catel.Reflection;
 
     public class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
     {
@@ -54,6 +56,7 @@
             return System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), "runtime");
         }
 
+        [Time]
         protected virtual void UnpackCosturaEmbeddedAssemblies(string assemblyPath, string targetDirectory)
         {
             Log.Debug($"Unpacking all Costura embedded assemblies from '{assemblyPath}' to '{targetDirectory}'");
@@ -62,98 +65,185 @@
             {
                 using (var peReader = new PEReader(fileStream))
                 {
-                    var resourcesDirectory = peReader.PEHeaders.CorHeader.ResourcesDirectory;
-                    if (resourcesDirectory.Size <= 0)
+                    var embeddedResources = FindEmbeddedResources(peReader, assemblyPath);
+
+                    var costuraEmbeddedAssembliesFromMetadata = FindEmbeddedAssembliesViaMetadata(embeddedResources);
+                    if (costuraEmbeddedAssembliesFromMetadata is null)
                     {
-                        return;
-                    }
+                        Log.Warning($"Files are embedded with an older version of Costura (< 5.x). It's recommended to update so metadata is embedded by Costura");
 
-                    if (!peReader.PEHeaders.TryGetDirectoryOffset(resourcesDirectory, out var start))
-                    {
-                        Log.Warning($"could not obtain ResourcesDirectory offset for assembly {assemblyPath}");
-                        return;
-                    }
-
-                    var peImage = peReader.GetEntireImage();
-                    if (start + resourcesDirectory.Size >= peImage.Length)
-                    {
-                        Log.Warning($"Invalid resource offset {start} + length {resourcesDirectory.Size} greater than {peImage.Length}");
-                        return;
-                    }
-
-                    unsafe
-                    {
-                        var resourcesStart = peImage.Pointer + start;
-
-                        var mdReader = peReader.GetMetadataReader();
-
-                        foreach (var resourceHandle in mdReader.ManifestResources)
+                        // Old version of Costura, just extract everything
+                        foreach (var embeddedResource in embeddedResources)
                         {
-                            var resource = mdReader.GetManifestResource(resourceHandle);
-
-                            // Only care about embedded resources
-                            if (!resource.Implementation.IsNil)
+                            if (!embeddedResource.Name.StartsWith("costura."))
                             {
                                 continue;
                             }
 
-                            // Only care about costura
-                            var resourceName = mdReader.GetString(resource.Name);
-                            if (!resourceName.StartsWithIgnoreCase("costura.") || resourceName.Contains(".pdb"))
-                            {
-                                continue;
-                            }
+                            // Dynamically create the info
+                            var costuraEmbeddedAssembly = new CosturaEmbeddedAssembly(embeddedResource);
 
-                            if (resource.Offset < 0)
-                            {
-                                Log.Warning($"Unexpected offset {resource.Offset} for resource {resourceName}");
-                                continue;
-                            }
+                            costuraEmbeddedAssembly.ResourceName = embeddedResource.Name;
+                            costuraEmbeddedAssembly.RelativeFileName = embeddedResource.Name.Replace("costura.", string.Empty).Replace(".compressed", string.Empty);
+                            costuraEmbeddedAssembly.AssemblyName = costuraEmbeddedAssembly.RelativeFileName.Replace(".dll", string.Empty).Replace(".exe", string.Empty);
 
-                            if (resource.Offset + sizeof(int) > resourcesDirectory.Size)
-                            {
-                                Log.Warning($"Offset {resource.Offset} leaves no room for size for resource {resourceName}");
-                                continue;
-                            }
-
-                            var size = *(int*)(resourcesStart + resource.Offset);
-                            if (size < 0)
-                            {
-                                Log.Warning($"Unexpected size {size} for resource {resourceName}");
-                                continue;
-                            }
-
-                            if (resource.Offset + size > resourcesDirectory.Size)
-                            {
-                                Log.Warning($"Size {size} exceeds size of resource directory for resource {resourceName}");
-                                continue;
-                            }
-
-                            var resourceStart = resourcesStart + resource.Offset + sizeof(int);
-                            using (var resourceStream = new UnmanagedMemoryStream(resourceStart, size))
-                            {
-                                ExtractAssemblyFromEmbeddedResource(assemblyPath, resourceStream, resourceName, targetDirectory);
-                            }
+                            ExtractAssemblyFromEmbeddedResource(costuraEmbeddedAssembly, targetDirectory);
+                        }
+                    }
+                    else
+                    {
+                        // Extract only what is included (we know exactly what)
+                        foreach (var costuraEmbeddedAssembly in costuraEmbeddedAssembliesFromMetadata)
+                        {
+                            ExtractAssemblyFromEmbeddedResource(costuraEmbeddedAssembly, targetDirectory);
                         }
                     }
                 }
             }
         }
 
-        protected virtual void ExtractAssemblyFromEmbeddedResource(string sourceAssemblyPath, Stream stream, string resourceName, string targetDirectory)
+        protected List<EmbeddedResource> FindEmbeddedResources(PEReader peReader, string assemblyPath)
         {
-            if (resourceName.Contains(".pdb"))
+            var embeddedResources = new List<EmbeddedResource>();
+
+            var resourcesDirectory = peReader.PEHeaders.CorHeader.ResourcesDirectory;
+            if (resourcesDirectory.Size <= 0)
             {
-                // Ignore for now
-                return;
+                return embeddedResources;
             }
 
-            var assemblyName = resourceName.Replace("costura.", string.Empty)
-                .Replace(".compressed", string.Empty)
-                .Replace(".dll", string.Empty)
-                .Replace(".exe", string.Empty);
+            if (!peReader.PEHeaders.TryGetDirectoryOffset(resourcesDirectory, out var start))
+            {
+                Log.Warning($"could not obtain ResourcesDirectory offset");
+                return embeddedResources;
+            }
 
-            if (_extractedAssemblies.ContainsKey(assemblyName))
+            var peImage = peReader.GetEntireImage();
+            if (start + resourcesDirectory.Size >= peImage.Length)
+            {
+                Log.Warning($"Invalid resource offset {start} + length {resourcesDirectory.Size} greater than {peImage.Length}");
+                return embeddedResources;
+            }
+
+            unsafe
+            {
+                var resourcesStart = peImage.Pointer + start;
+
+                var mdReader = peReader.GetMetadataReader();
+
+                foreach (var resourceHandle in mdReader.ManifestResources)
+                {
+                    var resource = mdReader.GetManifestResource(resourceHandle);
+
+                    // Only care about embedded resources
+                    if (!resource.Implementation.IsNil)
+                    {
+                        continue;
+                    }
+
+                    var resourceName = mdReader.GetString(resource.Name);
+
+                    //// Only care about costura
+                    //if (!resourceName.StartsWithIgnoreCase("costura.") || resourceName.Contains(".pdb"))
+                    //{
+                    //    continue;
+                    //}
+
+                    if (resource.Offset < 0)
+                    {
+                        Log.Warning($"Unexpected offset {resource.Offset} for resource {resourceName}");
+                        continue;
+                    }
+
+                    if (resource.Offset + sizeof(int) > resourcesDirectory.Size)
+                    {
+                        Log.Warning($"Offset {resource.Offset} leaves no room for size for resource {resourceName}");
+                        continue;
+                    }
+
+                    var size = *(int*)(resourcesStart + resource.Offset);
+                    if (size < 0)
+                    {
+                        Log.Warning($"Unexpected size {size} for resource {resourceName}");
+                        continue;
+                    }
+
+                    if (resource.Offset + size > resourcesDirectory.Size)
+                    {
+                        Log.Warning($"Size {size} exceeds size of resource directory for resource {resourceName}");
+                        continue;
+                    }
+
+                    var resourceStart = resourcesStart + resource.Offset + sizeof(int);
+
+                    embeddedResources.Add(new EmbeddedResource
+                    {
+                        SourceAssemblyPath = assemblyPath,
+                        Name = resourceName,
+                        Start = resourceStart,
+                        Size = size
+                    });
+                }
+            }
+
+            return embeddedResources;
+        }
+
+        protected List<CosturaEmbeddedAssembly> FindEmbeddedAssembliesViaMetadata(IEnumerable<EmbeddedResource> resources)
+        {
+            var metadataResource = (from x in resources
+                                    where x.Name.EqualsIgnoreCase("costura.metadata")
+                                    select x).FirstOrDefault();
+            if (metadataResource is null)
+            {
+                // Not found, return null
+                return null;
+            }
+
+            var embeddedResources = new List<CosturaEmbeddedAssembly>();
+
+            unsafe
+            {
+                using (var resourceStream = new UnmanagedMemoryStream(metadataResource.Start, metadataResource.Size))
+                {
+                    var streamReader = new StreamReader(resourceStream);
+
+                    while (streamReader.Peek() >= 0)
+                    {
+                        var line = streamReader.ReadLine();
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            var costuraEmbeddedResource = new CosturaEmbeddedAssembly(line);
+
+                            var embeddedResource = (from x in resources
+                                                    where x.Name == costuraEmbeddedResource.ResourceName
+                                                    select x).FirstOrDefault();
+                            if (embeddedResource is null)
+                            {
+                                Log.Error($"Expected to find Costura embedded resource '{costuraEmbeddedResource.ResourceName}', but could not find it");
+                                continue;
+                            }
+
+                            costuraEmbeddedResource.EmbeddedResource = embeddedResource;
+
+                            embeddedResources.Add(costuraEmbeddedResource);
+                        }
+                    }
+                }
+            }
+
+            return embeddedResources;
+        }
+
+        protected virtual void ExtractAssemblyFromEmbeddedResource(CosturaEmbeddedAssembly costuraEmbeddedAssembly, string targetDirectory)
+        {
+            //if (costuraEmbeddedAssembly.Name.Contains(".pdb"))
+            //{
+            //    // Ignore for now
+            //    return;
+            //}
+
+            if (_extractedAssemblies.ContainsKey(costuraEmbeddedAssembly.ResourceName))
             {
                 // Already extracted
                 return;
@@ -172,29 +262,42 @@
 
             byte[] rawAssembly;
 
-            using (var assemblyStream = LoadStream(stream, resourceName))
+            unsafe
             {
-                if (assemblyStream is null)
+                var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
+
+                using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
                 {
-                    return;
+                    using (var assemblyStream = LoadStream(resourceStream, embeddedResource.Name))
+                    {
+                        if (assemblyStream is null)
+                        {
+                            return;
+                        }
+
+                        rawAssembly = ReadStream(assemblyStream);
+
+                        // Note: in the future, we could use reflection to check the version and see if it's higher, if so, use that instead
+
+                        var targetFileName = Path.Combine(targetDirectory, costuraEmbeddedAssembly.RelativeFileName);
+
+                        var fileDirectory = Path.GetDirectoryName(targetFileName);
+
+                        _directoryService.Create(fileDirectory);
+
+                        using (var targetStream = _fileService.Create(targetFileName))
+                        {
+                            targetStream.Write(rawAssembly, 0, rawAssembly.Length);
+                            targetStream.Flush();
+                        }
+
+                        _extractedAssemblies.Add(costuraEmbeddedAssembly.ResourceName, 
+                            new RuntimeAssembly(TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName), targetFileName, embeddedResource.SourceAssemblyPath));
+
+                        // Could be nested, extract this one
+                        RegisterAssembly(targetFileName);
+                    }
                 }
-
-                rawAssembly = ReadStream(assemblyStream);
-
-                // Note: in the future, we could use reflection to check the version and see if it's higher, if so, use that instead
-
-                var targetFileName = Path.Combine(targetDirectory, assemblyName);
-
-                using (var targetStream = _fileService.Create(targetFileName))
-                {
-                    targetStream.Write(rawAssembly, 0, rawAssembly.Length);
-                    targetStream.Flush();
-                }
-
-                _extractedAssemblies.Add(assemblyName, new RuntimeAssembly(assemblyName, targetFileName, sourceAssemblyPath));
-
-                // Could be nested, extract this one
-                RegisterAssembly(targetFileName);
             }
 
             //using (var symbolStream = LoadStream(symbolNames, text))
@@ -205,7 +308,6 @@
             //        return Assembly.Load(rawAssembly, rawSymbolStore);
             //    }
             //}
-
         }
 
         private Stream LoadStream(Stream existingStream, string resourceName)
@@ -239,6 +341,52 @@
             byte[] array = new byte[stream.Length];
             stream.Read(array, 0, array.Length);
             return array;
+        }
+
+        public unsafe class EmbeddedResource
+        {
+            public string SourceAssemblyPath { get; set; }
+
+            public string Name { get; set; }
+
+            public byte* Start { get; set; }
+
+            public int Size { get; set; }
+        }
+
+        public class CosturaEmbeddedAssembly
+        {
+            public CosturaEmbeddedAssembly(EmbeddedResource embeddedResource)
+            {
+                EmbeddedResource = embeddedResource;
+            }
+
+            public CosturaEmbeddedAssembly(string content)
+            {
+                var splitted = content.Split('|');
+
+                ResourceName = splitted[0];
+                Version = splitted[1];
+                AssemblyName = splitted[2];
+                RelativeFileName = splitted[3];
+                Checksum = splitted[4];
+            }
+
+            public string ResourceName { get; set; }
+
+            public string Version { get; set; }
+
+            public string AssemblyName { get; set; }
+
+            public string RelativeFileName { get; set; }
+
+            public string Checksum { get; set; }
+            public EmbeddedResource EmbeddedResource { get; set; }
+
+            public override string ToString()
+            {
+                return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Checksum}";
+            }
         }
     }
 }

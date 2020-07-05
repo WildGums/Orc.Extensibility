@@ -5,6 +5,7 @@
 namespace Orc.Extensibility
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
     using Catel.Logging;
 
@@ -12,6 +13,7 @@ namespace Orc.Extensibility
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
+        public static readonly string[] RuntimeIdentifiers;
         public static readonly string[] NativeLibraryExtensions;
         public static readonly string[] NativeLibraryPrefixes;
         public static readonly string[] ManagedAssemblyExtensions = new[]
@@ -24,10 +26,16 @@ namespace Orc.Extensibility
 
         static PlatformInformation()
         {
+            var runtimeIdentifiers = new List<string>();
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 NativeLibraryPrefixes = new[] { "" };
                 NativeLibraryExtensions = new[] { ".dll" };
+
+                // For now we only care about windows
+                runtimeIdentifiers.Add($"win-{RuntimeInformation.OSArchitecture.ToString().ToLower()}");
+                runtimeIdentifiers.Add("win");
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -46,6 +54,8 @@ namespace Orc.Extensibility
                 NativeLibraryPrefixes = Array.Empty<string>();
                 NativeLibraryExtensions = Array.Empty<string>();
             }
+
+            RuntimeIdentifiers = runtimeIdentifiers.ToArray();
         }
     }
 }

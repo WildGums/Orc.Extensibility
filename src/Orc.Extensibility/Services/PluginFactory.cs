@@ -9,6 +9,11 @@
     using Catel.Reflection;
     using MethodTimer;
 
+#if NETCORE
+    using System.Runtime.InteropServices;
+    using System.Runtime.Loader;
+#endif
+
     public class PluginFactory : IPluginFactory
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
@@ -38,22 +43,52 @@
 
                 Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
-#if NETCORE
-                // Use DotNetCorePlugins
-                var pluginLoader = PluginLoader.CreateFromAssemblyFile(
-                    assemblyFile: pluginInfo.Location,
-                    x =>
-                    {
-                        // See https://github.com/natemcmaster/DotNetCorePlugins/blob/main/docs/what-are-shared-types.md
-                        x.PreferSharedTypes = true;
-                        x.AdditionalProbingPaths.Add(_runtimeAssemblyResolverService.TargetDirectory);
-                    });
-                var assembly = pluginLoader.LoadDefaultAssembly();
-#else
+                //#if NETCORE
+                //                // Use DotNetCorePlugins
+                //                var pluginLoader = PluginLoader.CreateFromAssemblyFile(
+                //                    assemblyFile: pluginInfo.Location,
+                //                    x =>
+                //                    {
+                //                        // See https://github.com/natemcmaster/DotNetCorePlugins/blob/main/docs/what-are-shared-types.md
+                //                        x.PreferSharedTypes = true;
+                //                        x.AdditionalProbingPaths.Add(_runtimeAssemblyResolverService.TargetDirectory);
+                //                    });
+                //                var assembly = pluginLoader.LoadDefaultAssembly();
+                //#else
                 // Note: load via assembly name does not work when it's in a specific directory in .net core
                 //var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
                 //var assembly = Assembly.Load(assemblyName);
                 var assembly = Assembly.LoadFrom(pluginInfo.Location);
+                //#endif
+
+#if NETCORE
+                //// NOTE: when using separate load context per assembly, this becomes important
+                //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
+                //loadContext.Resolving += OnLoadContextResolving;
+
+                // Load context
+
+                var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                                         where x.PluginLocation.EqualsIgnoreCase(pluginInfo.Location)
+                                         select x).FirstOrDefault();
+                if (pluginLoadContext is null == false)
+                {
+                    // TODO: support deps.json?
+
+                    foreach (var runtimeReference in pluginLoadContext.RuntimeAssemblies)
+                    {
+                        try
+                        {
+                            Log.Debug($"Force-loading runtime assembly from '{runtimeReference.Location}'");
+
+                            Assembly.LoadFrom(runtimeReference.Location);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, $"Failed to load runtime assembly from '{runtimeReference.Location}'");
+                        }
+                    }
+                }
 #endif
 
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");

@@ -3,7 +3,7 @@
     public interface IRuntimeAssemblyResolverService
     {
         string TargetDirectory { get; }
-        RuntimeAssembly[] GetRuntimeAssemblies();
+        PluginLoadContext[] GetPluginLoadContexts();
         void RegisterAssembly(string assemblyLocation);
     }
 }

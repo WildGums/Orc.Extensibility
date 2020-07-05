@@ -32,55 +32,34 @@
             Log.Debug($"Registering '{targetDirectory}' as extra path to resolve runtime references");
 
             var loadContext = AssemblyLoadContext.Default;
+            loadContext.Resolving += OnLoadContextResolving;
             loadContext.ResolvingUnmanagedDll += OnLoadContextResolvingUnmanagedDll;
-
-            //loadContext.
 #endif
-
-            AppDomain.CurrentDomain.AssemblyResolve += OnAppDomainAssemblyResolve;
-
         }
 
 #if NETCORE
-        private IntPtr ResolveNativeDll(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+        private Assembly OnLoadContextResolving(AssemblyLoadContext arg1, AssemblyName arg2)
         {
-            return IntPtr.Zero;
+            Log.Debug($"Requesting to load '{arg2.FullName}'");
+
+            //foreach (var runtimeReference in _runtimeAssemblyResolverService.GetRuntimeAssemblies())
+            //{
+            //    if (runtimeReference.Name.EqualsIgnoreCase(arg2.Name))
+            //    {
+            //        var assembly = Assembly.LoadFrom(runtimeReference.Location);
+            //        return assembly;
+            //    }
+            //}
+
+            return null;
         }
 
-        private IntPtr OnLoadContextResolvingUnmanagedDll(Assembly arg1, string arg2)
+        private IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
         {
-            //NativeLibrary.
+            Log.Debug($"Requesting to load '{libraryName}', requested by '{assembly.FullName}'");
 
-            //NativeLibrary.SetDllImportResolver(, )
-
-            //throw new NotImplementedException();
             return IntPtr.Zero;
         }
 #endif
-
-        private Assembly OnAppDomainAssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            var assemblyName = new AssemblyName(args.Name);
-
-            var runtimeAssemblies = _runtimeAssemblyResolverService.GetRuntimeAssemblies();
-
-            var assemblyPath = (from x in runtimeAssemblies
-                                where x.Name.EqualsIgnoreCase(assemblyName.Name)
-                                select x.Location).FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(assemblyPath))
-            {
-                return null;
-            }
-
-            Log.Debug($"Dynamically lazy-loading runtime assembly '{args.Name}'");
-
-            var assembly = Assembly.LoadFrom(assemblyPath);
-
-//#if NETCORE
-//            NativeLibrary.SetDllImportResolver(assembly, ResolveNativeDll);
-//#endif
-
-            return assembly;
-        } 
     }
 }

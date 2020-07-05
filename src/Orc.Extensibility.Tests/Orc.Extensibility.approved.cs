@@ -95,7 +95,8 @@ namespace Orc.Extensibility
     }
     public interface IRuntimeAssemblyResolverService
     {
-        Orc.Extensibility.RuntimeAssembly[] GetRuntimeAssemblies();
+        string TargetDirectory { get; }
+        Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts();
         void RegisterAssembly(string assemblyLocation);
     }
     public interface ISinglePluginService : Orc.Extensibility.IPluginService
@@ -145,7 +146,7 @@ namespace Orc.Extensibility
     }
     public class PluginFactory : Orc.Extensibility.IPluginFactory
     {
-        public PluginFactory(Catel.IoC.ITypeFactory typeFactory) { }
+        public PluginFactory(Catel.IoC.ITypeFactory typeFactory, Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
         public virtual object CreatePlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
         protected virtual void PreloadAssembly(System.Reflection.Assembly assembly) { }
     }
@@ -161,7 +162,7 @@ namespace Orc.Extensibility
         protected virtual void FindPluginsInDirectory(Orc.Extensibility.PluginProbingContext context, string pluginDirectory) { }
         protected virtual void FindPluginsInLoadedAssemblies(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual void FindPluginsInUnloadedAssemblies(Orc.Extensibility.PluginProbingContext context) { }
-        protected virtual System.Collections.Generic.List<string> FindResolvableAssemblyPaths() { }
+        protected virtual System.Collections.Generic.List<string> FindResolvableAssemblyPaths(string assemblyPath) { }
         protected virtual System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetOldestDuplicates(System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> duplicates) { }
         protected abstract bool IsPlugin(Orc.Extensibility.PluginProbingContext context, System.Type type);
         protected virtual void RemoveDuplicates(Orc.Extensibility.PluginProbingContext context) { }
@@ -185,6 +186,14 @@ namespace Orc.Extensibility
     {
         public PluginInfoProvider() { }
         public virtual Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Type type) { }
+    }
+    public class PluginLoadContext
+    {
+        public PluginLoadContext(string pluginLocation, string runtimeDirectory) { }
+        public string DependenciesFilePath { get; }
+        public string PluginLocation { get; }
+        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> RuntimeAssemblies { get; }
+        public string RuntimeDirectory { get; }
     }
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
     {
@@ -211,6 +220,8 @@ namespace Orc.Extensibility
     public class RuntimeAssembly
     {
         public RuntimeAssembly(string name, string location, string source) { }
+        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> Dependencies { get; }
+        public bool IsRuntime { get; set; }
         public string Location { get; }
         public string Name { get; }
         public string Source { get; }
@@ -218,11 +229,36 @@ namespace Orc.Extensibility
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService
     {
         public RuntimeAssemblyResolverService(Orc.FileSystem.IFileService fileService, Orc.FileSystem.IDirectoryService directoryService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService, Catel.Services.IAppDataService appDataService) { }
+        public string TargetDirectory { get; }
         protected virtual string DetermineTargetDirectory() { }
-        protected virtual void ExtractAssemblyFromEmbeddedResource(string sourceAssemblyPath, System.IO.Stream stream, string resourceName, string targetDirectory) { }
-        public Orc.Extensibility.RuntimeAssembly[] GetRuntimeAssemblies() { }
+        protected virtual void ExtractAssemblyFromEmbeddedResource(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, Orc.Extensibility.RuntimeAssemblyResolverService.CosturaEmbeddedAssembly costuraEmbeddedAssembly) { }
+        protected System.Collections.Generic.List<Orc.Extensibility.RuntimeAssemblyResolverService.CosturaEmbeddedAssembly> FindEmbeddedAssembliesViaMetadata(System.Collections.Generic.IEnumerable<Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource> resources) { }
+        protected System.Collections.Generic.List<Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource> FindEmbeddedResources(System.Reflection.PortableExecutable.PEReader peReader, string assemblyPath) { }
+        public Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts() { }
         public void RegisterAssembly(string assemblyLocation) { }
-        protected virtual void UnpackCosturaEmbeddedAssemblies(string assemblyPath, string targetDirectory) { }
+        protected void RegisterAssembly(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyLocation) { }
+        protected virtual void UnpackCosturaEmbeddedAssemblies(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyPath) { }
+        public class CosturaEmbeddedAssembly
+        {
+            public CosturaEmbeddedAssembly(Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource embeddedResource) { }
+            public CosturaEmbeddedAssembly(string content) { }
+            public string AssemblyName { get; set; }
+            public string Checksum { get; set; }
+            public Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource EmbeddedResource { get; set; }
+            public bool IsRuntime { get; }
+            public string RelativeFileName { get; set; }
+            public string ResourceName { get; set; }
+            public string Version { get; set; }
+            public override string ToString() { }
+        }
+        public class EmbeddedResource
+        {
+            public EmbeddedResource() { }
+            public string Name { get; set; }
+            public int Size { get; set; }
+            public string SourceAssemblyPath { get; set; }
+            public unsafe byte* Start { get; set; }
+        }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

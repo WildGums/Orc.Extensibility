@@ -5,10 +5,16 @@
     <RootNamespace>Orc.Extensibility</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageId>Orc.Extensibility</PackageId>
-    <PackageVersion>4.0.0-alpha0196</PackageVersion>
+    <PackageVersion>4.0.0-alpha0204</PackageVersion>
     <Description>Extensibility library.</Description>
     <PackageTags>orc;extensibility;extension;plugin;add-in;addin;add-on;addon</PackageTags>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <!-- Used for DotNetCorePlugins part -->
+  <PropertyGroup>
+    <!--<DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);FEATURE_UNLOAD</DefineConstants>-->
+    <DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);FEATURE_NATIVE_RESOLVER</DefineConstants>
   </PropertyGroup>
   
   <PropertyGroup>

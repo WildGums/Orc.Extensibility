@@ -24,21 +24,23 @@
         private readonly IAssemblyReflectionService _assemblyReflectionService;
         private readonly IAppDataService _appDataService;
 
-        private readonly string _embeddedAssembliesTargetDirectory;
         private readonly Dictionary<string, RuntimeAssembly> _extractedAssemblies = new Dictionary<string, RuntimeAssembly>(StringComparer.OrdinalIgnoreCase);
 
-        public RuntimeAssemblyResolverService(IFileService fileService, IDirectoryService directoryService, IAssemblyReflectionService assemblyReflectionService, IAppDataService appDataService)
+        public RuntimeAssemblyResolverService(IFileService fileService, IDirectoryService directoryService, 
+            IAssemblyReflectionService assemblyReflectionService, IAppDataService appDataService)
         {
             _fileService = fileService;
             _directoryService = directoryService;
             _assemblyReflectionService = assemblyReflectionService;
             _appDataService = appDataService;
 
-            _embeddedAssembliesTargetDirectory = DetermineTargetDirectory();
+            TargetDirectory = DetermineTargetDirectory();
 
-            _directoryService.Delete(_embeddedAssembliesTargetDirectory, true);
-            _directoryService.Create(_embeddedAssembliesTargetDirectory);
+            _directoryService.Delete(TargetDirectory, true);
+            _directoryService.Create(TargetDirectory);
         }
+
+        public string TargetDirectory { get; private set; }
 
         public RuntimeAssembly[] GetRuntimeAssemblies()
         {
@@ -48,7 +50,7 @@
         public void RegisterAssembly(string assemblyLocation)
         {
             // TODO: We *could* consider lazy-loading, but let's pre-load for now
-            UnpackCosturaEmbeddedAssemblies(assemblyLocation, _embeddedAssembliesTargetDirectory);
+            UnpackCosturaEmbeddedAssemblies(assemblyLocation, TargetDirectory);
         }
 
         protected virtual string DetermineTargetDirectory()
@@ -65,6 +67,11 @@
             {
                 using (var peReader = new PEReader(fileStream))
                 {
+                    if (!peReader.HasMetadata)
+                    {
+                        return;
+                    }
+
                     var embeddedResources = FindEmbeddedResources(peReader, assemblyPath);
 
                     var costuraEmbeddedAssembliesFromMetadata = FindEmbeddedAssembliesViaMetadata(embeddedResources);
@@ -237,11 +244,11 @@
 
         protected virtual void ExtractAssemblyFromEmbeddedResource(CosturaEmbeddedAssembly costuraEmbeddedAssembly, string targetDirectory)
         {
-            //if (costuraEmbeddedAssembly.Name.Contains(".pdb"))
-            //{
-            //    // Ignore for now
-            //    return;
-            //}
+            if (costuraEmbeddedAssembly.ResourceName.Contains(".pdb"))
+            {
+                // Ignore for now
+                return;
+            }
 
             if (_extractedAssemblies.ContainsKey(costuraEmbeddedAssembly.ResourceName))
             {
@@ -291,8 +298,12 @@
                             targetStream.Flush();
                         }
 
+                        var assemblyName = !string.IsNullOrWhiteSpace(costuraEmbeddedAssembly.AssemblyName) ?
+                            TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName) :
+                            costuraEmbeddedAssembly.ResourceName;
+
                         _extractedAssemblies.Add(costuraEmbeddedAssembly.ResourceName, 
-                            new RuntimeAssembly(TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName), targetFileName, embeddedResource.SourceAssemblyPath));
+                            new RuntimeAssembly(assemblyName, targetFileName, embeddedResource.SourceAssemblyPath));
 
                         // Could be nested, extract this one
                         RegisterAssembly(targetFileName);

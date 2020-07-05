@@ -2,7 +2,8 @@
 {
     public interface IRuntimeAssemblyResolverService
     {
-        RuntimeAssembly[] GetRuntimeAssemblies();
+        string TargetDirectory { get; }
+        PluginLoadContext[] GetPluginLoadContexts();
         void RegisterAssembly(string assemblyLocation);
     }
 }

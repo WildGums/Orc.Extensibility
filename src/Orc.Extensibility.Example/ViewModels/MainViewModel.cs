@@ -84,7 +84,9 @@ namespace Orc.Extensibility.Example.ViewModels
                 await plugin.InitializeAsync();
             }
 
-            RuntimeAssemblies = _runtimeAssemblyResolverService.GetRuntimeAssemblies().ToList();
+            RuntimeAssemblies = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                                 from runtimeAssembly in pluginLoadContext.RuntimeAssemblies
+                                 select runtimeAssembly).ToList();
 
             _isInitialized = true;
         }

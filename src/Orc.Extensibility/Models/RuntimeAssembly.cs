@@ -1,10 +1,6 @@
 ﻿namespace Orc.Extensibility
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     public class RuntimeAssembly
     {
@@ -13,6 +9,7 @@
             Name = name;
             Location = location;
             Source = source;
+            Dependencies = new List<RuntimeAssembly>();
         }
 
         public string Name { get; private set; }
@@ -20,5 +17,9 @@
         public string Location { get; private set; }
 
         public string Source { get; private set; }
+
+        public bool IsRuntime { get; set; }
+
+        public List<RuntimeAssembly> Dependencies { get; private set; }
     }
 }

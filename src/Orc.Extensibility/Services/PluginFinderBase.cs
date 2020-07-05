@@ -306,7 +306,7 @@ namespace Orc.Extensibility
             // Important: all types already in the app domain should be included as well
             var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
 
-            resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths());
+            resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths(assemblyPath));
 
             var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
 
@@ -351,7 +351,7 @@ namespace Orc.Extensibility
             }
         }
 
-        protected virtual List<string> FindResolvableAssemblyPaths()
+        protected virtual List<string> FindResolvableAssemblyPaths(string assemblyPath)
         {
             if (_appDomainResolvablePaths.Count == 0)
             {
@@ -381,7 +381,16 @@ namespace Orc.Extensibility
             var paths = new List<string>(_appDomainResolvablePaths);
 
             // Always add runtime assemblies, they could be changed. We could (should?) maybe do this *per assembly*
-            paths.AddRange(_runtimeAssemblyResolverService.GetRuntimeAssemblies().Select(x => x.Location));
+            var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                                     where x.PluginLocation.EqualsIgnoreCase(assemblyPath)
+                                     select x).FirstOrDefault();
+            if (pluginLoadContext is null == false)
+            {
+                foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
+                {
+                    paths.Add(runtimeAssembly.Location);
+                }
+            }
 
             return paths;
         }

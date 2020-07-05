@@ -65,30 +65,6 @@
                 //// NOTE: when using separate load context per assembly, this becomes important
                 //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
                 //loadContext.Resolving += OnLoadContextResolving;
-
-                // Load context
-
-                var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-                                         where x.PluginLocation.EqualsIgnoreCase(pluginInfo.Location)
-                                         select x).FirstOrDefault();
-                if (pluginLoadContext is null == false)
-                {
-                    // TODO: support deps.json?
-
-                    foreach (var runtimeReference in pluginLoadContext.RuntimeAssemblies)
-                    {
-                        try
-                        {
-                            Log.Debug($"Force-loading runtime assembly from '{runtimeReference.Location}'");
-
-                            Assembly.LoadFrom(runtimeReference.Location);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning(ex, $"Failed to load runtime assembly from '{runtimeReference.Location}'");
-                        }
-                    }
-                }
 #endif
 
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");

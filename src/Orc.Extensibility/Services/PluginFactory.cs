@@ -55,11 +55,11 @@
                 //                    });
                 //                var assembly = pluginLoader.LoadDefaultAssembly();
                 //#else
+
                 // Note: load via assembly name does not work when it's in a specific directory in .net core
                 //var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
                 //var assembly = Assembly.Load(assemblyName);
                 var assembly = Assembly.LoadFrom(pluginInfo.Location);
-                //#endif
 
 #if NETCORE
                 //// NOTE: when using separate load context per assembly, this becomes important

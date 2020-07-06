@@ -230,6 +230,7 @@ namespace Orc.Extensibility
     {
         public RuntimeAssemblyResolverService(Orc.FileSystem.IFileService fileService, Orc.FileSystem.IDirectoryService directoryService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService, Catel.Services.IAppDataService appDataService) { }
         public string TargetDirectory { get; }
+        protected virtual string CalculateChecksum(System.IO.Stream stream) { }
         protected virtual string DetermineTargetDirectory() { }
         protected virtual void ExtractAssemblyFromEmbeddedResource(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, Orc.Extensibility.RuntimeAssemblyResolverService.CosturaEmbeddedAssembly costuraEmbeddedAssembly) { }
         protected System.Collections.Generic.List<Orc.Extensibility.RuntimeAssemblyResolverService.CosturaEmbeddedAssembly> FindEmbeddedAssembliesViaMetadata(System.Collections.Generic.IEnumerable<Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource> resources) { }

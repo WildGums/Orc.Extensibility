@@ -14,6 +14,8 @@
     using Catel;
     using MethodTimer;
     using Catel.Reflection;
+    using System.Security.Cryptography;
+    using System.Text;
 
     public class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
     {
@@ -36,7 +38,8 @@
 
             TargetDirectory = DetermineTargetDirectory();
 
-            _directoryService.Delete(TargetDirectory, true);
+            // Note: deleting might fail when files are in use, that should be possible, 
+            // we will only overwrite
             _directoryService.Create(TargetDirectory);
         }
 
@@ -291,57 +294,78 @@
             }
 #endif
 
+            var extract = true;
             var targetDirectory = pluginLoadContext.RuntimeDirectory;
+            var targetFileName = Path.Combine(targetDirectory, costuraEmbeddedAssembly.RelativeFileName);
 
-            byte[] rawAssembly;
-
-            unsafe
+            if (_fileService.Exists(targetFileName))
             {
-                var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
+                // Check md5 hash
+                var checksum = string.Empty;
 
-                using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
+                using (var existingFileStream = _fileService.OpenRead(targetFileName))
                 {
-                    using (var assemblyStream = LoadStream(resourceStream, embeddedResource.Name))
+                    checksum = CalculateChecksum(existingFileStream);
+                }
+
+                if (checksum.EqualsIgnoreCase(costuraEmbeddedAssembly.Checksum))
+                {
+                    // Already extracted
+                    extract = false;
+                }
+                else
+                {
+                    Log.Warning($"File '{targetFileName}' does not have correct hash, deleting file and re-extracting...");
+
+                    _fileService.Delete(targetFileName);
+                }
+            }
+
+            var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
+
+            if (extract)
+            {
+                Log.Debug($"Extracting embedded assembly '{costuraEmbeddedAssembly.ResourceName}' to '{targetFileName}'");
+
+                unsafe
+                {
+                    using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
                     {
-                        if (assemblyStream is null)
+                        using (var assemblyStream = LoadStream(resourceStream, embeddedResource.Name))
                         {
-                            return;
+                            if (assemblyStream is null)
+                            {
+                                return;
+                            }
+
+                            var rawAssembly = ReadStream(assemblyStream);
+
+                            var fileDirectory = Path.GetDirectoryName(targetFileName);
+
+                            _directoryService.Create(fileDirectory);
+
+                            using (var targetStream = _fileService.Create(targetFileName))
+                            {
+                                targetStream.Write(rawAssembly, 0, rawAssembly.Length);
+                                targetStream.Flush();
+                            }
                         }
-
-                        rawAssembly = ReadStream(assemblyStream);
-
-                        // Note: in the future, we could use reflection to check the version and see if it's higher, if so, use that instead
-
-                        var targetFileName = Path.Combine(targetDirectory, costuraEmbeddedAssembly.RelativeFileName);
-
-                        var fileDirectory = Path.GetDirectoryName(targetFileName);
-
-                        _directoryService.Create(fileDirectory);
-
-                        using (var targetStream = _fileService.Create(targetFileName))
-                        {
-                            targetStream.Write(rawAssembly, 0, rawAssembly.Length);
-                            targetStream.Flush();
-                        }
-
-                        var assemblyName = !string.IsNullOrWhiteSpace(costuraEmbeddedAssembly.AssemblyName) ?
-                            TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName) :
-                            costuraEmbeddedAssembly.ResourceName;
-
-                        var runtimeAssembly = new RuntimeAssembly(assemblyName, targetFileName, embeddedResource.SourceAssemblyPath)
-                        {
-                            IsRuntime = costuraEmbeddedAssembly.ResourceName.ContainsIgnoreCase(".runtimes.")
-                        };
-
-                        originatingAssembly?.Dependencies.Add(runtimeAssembly);
-
-                        pluginLoadContext.RuntimeAssemblies.Add(runtimeAssembly);
-
-                        // Could be nested, extract this one
-                        RegisterAssembly(pluginLoadContext, runtimeAssembly, targetFileName);
                     }
                 }
             }
+
+            var assemblyName = !string.IsNullOrWhiteSpace(costuraEmbeddedAssembly.AssemblyName) ?
+                TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName) :
+                costuraEmbeddedAssembly.ResourceName;
+
+            var runtimeAssembly = new RuntimeAssembly(assemblyName, targetFileName, embeddedResource.SourceAssemblyPath)
+            {
+                IsRuntime = costuraEmbeddedAssembly.ResourceName.ContainsIgnoreCase(".runtimes.")
+            };
+
+            originatingAssembly?.Dependencies.Add(runtimeAssembly);
+
+            pluginLoadContext.RuntimeAssemblies.Add(runtimeAssembly);
 
             //using (var symbolStream = LoadStream(symbolNames, text))
             //{
@@ -351,6 +375,28 @@
             //        return Assembly.Load(rawAssembly, rawSymbolStore);
             //    }
             //}
+
+            // Could be nested, extract this one
+            RegisterAssembly(pluginLoadContext, runtimeAssembly, targetFileName);
+        }
+
+        protected virtual string CalculateChecksum(Stream stream)
+        {
+            using (var bs = new BufferedStream(stream))
+            {
+                using (var sha1 = new SHA1CryptoServiceProvider())
+                {
+                    var hash = sha1.ComputeHash(bs);
+                    var formatted = new StringBuilder(2 * hash.Length);
+
+                    foreach (var b in hash)
+                    {
+                        formatted.AppendFormat("{0:X2}", b);
+                    }
+
+                    return formatted.ToString();
+                }
+            }
         }
 
         private Stream LoadStream(Stream existingStream, string resourceName)

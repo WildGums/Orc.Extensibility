@@ -1,8 +1,7 @@
 ﻿namespace Orc.Extensibility
 {
     using System;
-    using System.Linq;
-    using System.Reflection;
+    using System.Collections.Generic;
     using Catel;
     using Catel.Logging;
 
@@ -10,6 +9,8 @@
     using System.Runtime.InteropServices;
     using System.Runtime.Loader;
     using System.IO;
+    using System.Reflection;
+    using System.Linq;
 #endif
 
     public class AppDomainRuntimeAssemblyWatcher
@@ -17,6 +18,7 @@
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
+        private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>();
 
         public AppDomainRuntimeAssemblyWatcher(IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
@@ -28,15 +30,30 @@
         public void Attach()
         {
 #if NETCORE
-            var targetDirectory = _runtimeAssemblyResolverService.TargetDirectory;
-
-            Log.Debug($"Registering '{targetDirectory}' as extra path to resolve runtime references");
-
-            var loadContext = AssemblyLoadContext.Default;
-            loadContext.Resolving += OnLoadContextResolving;
-            loadContext.ResolvingUnmanagedDll += OnLoadContextResolvingUnmanagedDll;
+            Attach(AssemblyLoadContext.Default);
 #endif
         }
+
+#if NETCORE
+        public void Attach(AssemblyLoadContext assemblyLoadContext)
+        {
+            var name = assemblyLoadContext.Name;
+
+            if (_registeredLoadContexts.Contains(name))
+            {
+                return;
+            }
+
+            _registeredLoadContexts.Add(name);
+
+            var targetDirectory = _runtimeAssemblyResolverService.TargetDirectory;
+
+            Log.Debug($"Registering '{targetDirectory}' as extra path to resolve runtime references for assembly load context '{name}'");
+
+            assemblyLoadContext.Resolving += OnLoadContextResolving;
+            assemblyLoadContext.ResolvingUnmanagedDll += OnLoadContextResolvingUnmanagedDll;
+        }
+#endif
 
 #if NETCORE
         private Assembly OnLoadContextResolving(AssemblyLoadContext arg1, AssemblyName arg2)

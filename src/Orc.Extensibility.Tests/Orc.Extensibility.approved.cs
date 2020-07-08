@@ -10,6 +10,7 @@ namespace Orc.Extensibility
     {
         public AppDomainRuntimeAssemblyWatcher(Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
         public void Attach() { }
+        public void Attach(System.Runtime.Loader.AssemblyLoadContext assemblyLoadContext) { }
     }
     public class AssemblyReflectionService : Orc.Extensibility.IAssemblyReflectionService
     {
@@ -259,6 +260,7 @@ namespace Orc.Extensibility
             public int Size { get; set; }
             public string SourceAssemblyPath { get; set; }
             public unsafe byte* Start { get; set; }
+            public override string ToString() { }
         }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService

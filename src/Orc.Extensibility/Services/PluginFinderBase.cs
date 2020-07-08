@@ -287,6 +287,7 @@ namespace Orc.Extensibility
             }
         }
 
+        [Time("{assemblyPath}")]
         protected virtual void FindPluginsInAssembly(PluginProbingContext context, string assemblyPath)
         {
             if (!CanInvestigateAssembly(context, assemblyPath))
@@ -329,6 +330,21 @@ namespace Orc.Extensibility
                     }
 
                     if (type.IsAbstractEx())
+                    {
+                        continue;
+                    }
+
+                    // Don't support nested private classes as plugins. Developers should
+                    // expose their plugins, not nest them as private. This saves a lot of 
+                    // generated classes to investigate. If someone really need this, they can
+                    // override this method and implement their own
+                    if (type.IsNestedPrivate)
+                    {
+                        continue;
+                    }
+
+                    // ignore compiler specific classes (such as <>c_displayclass, etc)
+                    if (type.Name.Contains("<>c"))
                     {
                         continue;
                     }

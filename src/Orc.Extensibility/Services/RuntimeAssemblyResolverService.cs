@@ -16,6 +16,7 @@
     using Catel.Reflection;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Diagnostics;
 
     public class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
     {
@@ -92,6 +93,11 @@
                     }
 
                     var embeddedResources = FindEmbeddedResources(peReader, assemblyPath);
+                    if (embeddedResources.Count == 0)
+                    {
+                        // Not using Costura
+                        return;
+                    }
 
                     var costuraEmbeddedAssembliesFromMetadata = FindEmbeddedAssembliesViaMetadata(embeddedResources);
                     if (costuraEmbeddedAssembliesFromMetadata is null)
@@ -169,11 +175,11 @@
 
                     var resourceName = mdReader.GetString(resource.Name);
 
-                    //// Only care about costura
-                    //if (!resourceName.StartsWithIgnoreCase("costura.") || resourceName.Contains(".pdb"))
-                    //{
-                    //    continue;
-                    //}
+                    // Only care about costura for now
+                    if (!resourceName.StartsWithIgnoreCase("costura"))
+                    {
+                        continue;
+                    }
 
                     if (resource.Offset < 0)
                     {
@@ -441,6 +447,11 @@
             public byte* Start { get; set; }
 
             public int Size { get; set; }
+
+            public override string ToString()
+            {
+                return $"{Name} ({SourceAssemblyPath})";
+            }
         }
 
         public class CosturaEmbeddedAssembly

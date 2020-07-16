@@ -11,6 +11,7 @@ namespace Orc.Extensibility
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Xml;
     using Catel;
     using Catel.Logging;
     using Catel.Reflection;
@@ -26,19 +27,33 @@ namespace Orc.Extensibility
         // Note: make sure these are lowercase & alphabetically sorted
         private static readonly HashSet<string> KnownAssemblyPrefixesToIgnore = new HashSet<string>(new[]
         {
+            "accessibility",
             "catel.",
             "costura.",
+            "controlzex",
+            "directwriteforwarder",
+            "dotnetzip",
             "fluent.",
             "ionic.zip.",
+            "mahapps.",
             "methodtimer.",
             "microsoft.",
             "moduleinit.",
             "mono.cecil.",
+            "mscorlib",
             "nuget.",
             "obsolete.",
             "orc.",
             "orchestra.",
+            "presentationcore",
+            "presentationframework",
+            "presentationui",
+            "reachframework",
             "system.",
+            "uiautomationprovider",
+            "uiautomationtypes",
+            "windowsbase",
+            "windowsformsintegration"
         });
 
         private readonly IPluginLocationsProvider _pluginLocationsProvider;
@@ -46,31 +61,62 @@ namespace Orc.Extensibility
         private readonly IPluginCleanupService _pluginCleanupService;
         private readonly IDirectoryService _directoryService;
         private readonly IFileService _fileService;
+        private readonly IAssemblyReflectionService _assemblyReflectionService;
+        private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
+        private readonly List<string> _appDomainResolvablePaths = new List<string>();
 
         protected PluginFinderBase(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
+            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService,
+            IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
             Argument.IsNotNull(() => pluginLocationsProvider);
             Argument.IsNotNull(() => pluginInfoProvider);
             Argument.IsNotNull(() => pluginCleanupService);
             Argument.IsNotNull(() => directoryService);
             Argument.IsNotNull(() => fileService);
+            Argument.IsNotNull(() => assemblyReflectionService);
+            Argument.IsNotNull(() => runtimeAssemblyResolverService);
 
             _pluginLocationsProvider = pluginLocationsProvider;
             _pluginInfoProvider = pluginInfoProvider;
             _pluginCleanupService = pluginCleanupService;
             _directoryService = directoryService;
             _fileService = fileService;
+            _assemblyReflectionService = assemblyReflectionService;
+            _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
         }
 
         [Time]
         public IEnumerable<IPluginInfo> FindPlugins()
         {
-            var plugins = new List<IPluginInfo>();
+            var pluginProbingContext = new PluginProbingContext();
 
-            var appDomain = AppDomain.CurrentDomain;
-            appDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
+            // Step 1: Check plugins already in the current AppDomain
+            FindPluginsInLoadedAssemblies(pluginProbingContext);
 
+            // Step 2: Check for plugins outside AppDomain
+            FindPluginsInUnloadedAssemblies(pluginProbingContext);
+
+            RemoveDuplicates(pluginProbingContext);
+
+            return pluginProbingContext.Plugins;
+        }
+
+        [Time]
+        protected virtual void FindPluginsInLoadedAssemblies(PluginProbingContext context)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (CanInvestigateAssembly(context, assembly))
+                {
+                    FindPluginsInAssembly(context, assembly);
+                }
+            }
+        }
+
+        [Time]
+        protected virtual void FindPluginsInUnloadedAssemblies(PluginProbingContext context)
+        {
             var pluginDirectories = _pluginLocationsProvider.GetPluginDirectories();
 
             foreach (var pluginDirectory in pluginDirectories)
@@ -83,10 +129,11 @@ namespace Orc.Extensibility
                 // Step 1: top-level plugins (assemblies directly located inside the root)
                 foreach (var pluginFileFilter in PluginFileFilters)
                 {
-                    var rootPlugins = (from file in _directoryService.GetFiles(pluginDirectory, pluginFileFilter)
-                                       orderby File.GetLastWriteTime(file) descending
-                                       select file).ToList();
-                    plugins.AddRange(FindPluginsInAssemblies(rootPlugins.ToArray()));
+                    var potentialPluginFiles = (from file in _directoryService.GetFiles(pluginDirectory, pluginFileFilter)
+                                                orderby File.GetLastWriteTime(file) descending
+                                                select file).ToList();
+
+                    FindPluginsInAssemblies(context, potentialPluginFiles.ToArray());
                 }
 
                 // Step 2: treat each subdirectory separately
@@ -96,24 +143,18 @@ namespace Orc.Extensibility
 
                 foreach (var directory in directories)
                 {
-                    plugins.AddRange(FindPluginsInDirectory(directory));
+                    FindPluginsInDirectory(context, directory);
                 }
             }
-
-            RemoveDuplicates(plugins);
-
-            appDomain.ReflectionOnlyAssemblyResolve -= OnReflectionOnlyAssemblyResolve;
-
-            return plugins;
         }
 
-        private void RemoveDuplicates(List<IPluginInfo> plugins)
+        protected virtual void RemoveDuplicates(PluginProbingContext context)
         {
-            for (var i = 0; i < plugins.Count; i++)
+            for (var i = 0; i < context.Plugins.Count; i++)
             {
-                var pluginName = plugins[i].FullTypeName;
+                var pluginName = context.Plugins[i].FullTypeName;
 
-                var duplicates = (from plugin in plugins
+                var duplicates = (from plugin in context.Plugins
                                   where string.Equals(plugin.FullTypeName, pluginName)
                                   select plugin).ToList();
                 if (duplicates.Count > 1)
@@ -122,13 +163,13 @@ namespace Orc.Extensibility
 
                     foreach (var oldDuplicate in oldDuplicates)
                     {
-                        for (int j = 0; j < plugins.Count; j++)
+                        for (int j = 0; j < context.Plugins.Count; j++)
                         {
-                            var pluginInfo = plugins[j];
+                            var pluginInfo = context.Plugins[j];
                             if (pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName) &&
                                 pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
                             {
-                                plugins.RemoveAt(j);
+                                context.Plugins.RemoveAt(j);
 
                                 // Stop processing, we must keep at least one
                                 break;
@@ -141,7 +182,7 @@ namespace Orc.Extensibility
             }
         }
 
-        private List<IPluginInfo> GetOldestDuplicates(List<IPluginInfo> duplicates)
+        protected virtual List<IPluginInfo> GetOldestDuplicates(List<IPluginInfo> duplicates)
         {
             List<IPluginInfo> oldDuplicates = null;
 
@@ -172,14 +213,12 @@ namespace Orc.Extensibility
         }
 
         [Time]
-        protected IEnumerable<IPluginInfo> FindPluginsInDirectory(string pluginDirectory)
+        protected virtual void FindPluginsInDirectory(PluginProbingContext context, string pluginDirectory)
         {
-            var plugins = new List<IPluginInfo>();
-
             if (_pluginCleanupService.IsCleanupRequired(pluginDirectory))
             {
                 _pluginCleanupService.Cleanup(pluginDirectory);
-                return plugins;
+                return;
             }
 
             Log.Debug("Searching for plugins in directory '{0}'", pluginDirectory);
@@ -189,7 +228,7 @@ namespace Orc.Extensibility
                 if (!_directoryService.Exists(pluginDirectory))
                 {
                     Log.Debug("Directory does not exist, no plugins found");
-                    return plugins;
+                    return;
                 }
 
                 // Once we are in a good directory, the assembly can be located at any depth
@@ -197,150 +236,179 @@ namespace Orc.Extensibility
                 {
                     var assemblies = _directoryService.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.AllDirectories);
 
-                    plugins.AddRange(FindPluginsInAssemblies(assemblies));
+                    FindPluginsInAssemblies(context, assemblies);
                 }
-
-                Log.Debug("Found '{0}' plugins in directory '{1}'", plugins.Count, pluginDirectory);
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to search for plugins in directory '{0}'", pluginDirectory);
             }
-
-            return plugins;
         }
 
-        protected IEnumerable<IPluginInfo> FindPluginsInAssemblies(params string[] assemblyPaths)
+        protected virtual bool CanInvestigateAssembly(PluginProbingContext context, Assembly assembly)
         {
-            var plugins = new List<IPluginInfo>();
-
-            try
+            if (assembly.IsDynamic)
             {
-                foreach (var assemblyPath in assemblyPaths)
+                return false;
+            }
+
+            return CanInvestigateAssembly(context, assembly.Location);
+        }
+
+        protected virtual bool CanInvestigateAssembly(PluginProbingContext context, string assemblyPath)
+        {
+            if (context.Locations.Contains(assemblyPath))
+            {
+                return false;
+            }
+
+            context.Locations.Add(assemblyPath);
+
+            if (ShouldIgnoreAssembly(assemblyPath))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        protected void FindPluginsInAssemblies(PluginProbingContext context, params string[] assemblyPaths)
+        {
+            foreach (var assemblyPath in assemblyPaths)
+            {
+                try
                 {
-                    if (ShouldIgnoreAssembly(assemblyPath))
+                    FindPluginsInAssembly(context, assemblyPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to search for plugins");
+                }
+            }
+        }
+
+        [Time("{assemblyPath}")]
+        protected virtual void FindPluginsInAssembly(PluginProbingContext context, string assemblyPath)
+        {
+            if (!CanInvestigateAssembly(context, assemblyPath))
+            {
+                return;
+            }
+
+            // Double check that this is a resolvable app (exe don't seem to be resolvable)
+            var isPeAssembly = _assemblyReflectionService.IsPeAssembly(assemblyPath);
+            if (!isPeAssembly)
+            {
+                return;
+            }
+
+            _runtimeAssemblyResolverService.RegisterAssembly(assemblyPath);
+
+            // Important: all types already in the app domain should be included as well
+            var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
+
+            resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths(assemblyPath));
+
+            var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
+
+            using (var metadataLoadContext = new MetadataLoadContext(resolver))
+            {
+                var assembly = metadataLoadContext.LoadFromAssemblyPath(assemblyPath);
+                FindPluginsInAssembly(context, assembly);
+            }
+        }
+
+        protected virtual void FindPluginsInAssembly(PluginProbingContext context, Assembly assembly)
+        {
+            foreach (var type in assembly.GetTypes())
+            {
+                try
+                {
+                    if (!type.IsClassEx())
                     {
                         continue;
                     }
 
-                    var reflectionOnlyAssembly = LoadAssemblyForReflectionOnly(assemblyPath);
-                    if (reflectionOnlyAssembly != null)
+                    if (type.IsAbstractEx())
                     {
-                        plugins.AddRange(FindPluginsInAssembly(reflectionOnlyAssembly));
+                        continue;
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to search for plugins");
-            }
 
-            return plugins;
-        }
-
-        protected virtual Assembly LoadAssemblyForReflectionOnly(string assemblyPath)
-        {
-            try
-            {
-                // Step 1: try to load from file
-                try
-                {
-                    var assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
-                    return assembly;
-                }
-                catch (FileLoadException)
-                {
-                    // Ignore, assembly already loaded, we'll retry
-                }
-
-                // Step 2: try to match assembly name (but can be a miss!)
-                var fileName = Path.GetFileName(assemblyPath);
-                var reflectionOnlyAssemblies = AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies();
-                var reflectionOnlyAssembly = (from x in reflectionOnlyAssemblies
-                                              where x.Location.EndsWithIgnoreCase(fileName)
-                                              select x).FirstOrDefault();
-
-                if (reflectionOnlyAssembly != null)
-                {
-                    Log.Debug($"Failed to load assembly from '{assemblyPath}', but found a potential fallback at '{reflectionOnlyAssembly.Location}'");
-                }
-
-                return reflectionOnlyAssembly;
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to load assembly '{0}' for reflection, ignoring as possible plugin container", assemblyPath);
-                return null;
-            }
-        }
-
-        [Time]
-        protected IEnumerable<IPluginInfo> FindPluginsInAssembly(Assembly assembly)
-        {
-            var plugins = new List<IPluginInfo>();
-
-            Log.Debug("Searching for plugins in assembly '{0}'", assembly.FullName);
-
-            try
-            {
-                var allTypes = assembly.GetAllTypesSafely();
-                var pluginTypes = (from type in allTypes
-                                   where !type.IsAbstractEx() && IsPlugin(type)
-                                   select type).ToList();
-
-                foreach (var type in pluginTypes)
-                {
-                    var pluginInfo = _pluginInfoProvider.GetPluginInfo(type);
-                    if (pluginInfo != null)
+                    // Don't support nested private classes as plugins. Developers should
+                    // expose their plugins, not nest them as private. This saves a lot of 
+                    // generated classes to investigate. If someone really need this, they can
+                    // override this method and implement their own
+                    if (type.IsNestedPrivate)
                     {
-                        plugins.Add(pluginInfo);
+                        continue;
                     }
-                }
 
-                Log.Debug("Found '{0}' plugins in assembly '{1}'", plugins.Count, assembly.FullName);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to search for plugins in assembly '{0}'", assembly.FullName);
-            }
-
-            return plugins;
-        }
-
-        private Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs e)
-        {
-            var requestingAssemblyDirectory = e.RequestingAssembly.GetDirectory();
-
-            var assemblyName = TypeHelper.GetAssemblyNameWithoutOverhead(e.Name);
-            var possibleDirectories = new[] { requestingAssemblyDirectory, AssemblyHelper.GetEntryAssembly().GetDirectory() };
-            var possibleExtensions = new[] { "dll", "exe" };
-
-            foreach (var possibleDirectory in possibleDirectories)
-            {
-                foreach (var possibleExtension in possibleExtensions)
-                {
-                    var expectedPath = Path.Combine(possibleDirectory, $"{assemblyName}.{possibleExtension}");
-                    if (_fileService.Exists(expectedPath))
+                    // ignore compiler specific classes (such as <>c_displayclass, etc)
+                    if (type.Name.Contains("<>c"))
                     {
-                        try
+                        continue;
+                    }
+
+                    if (IsPlugin(context, type))
+                    {
+                        var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
+                        if (pluginInfo != null)
                         {
-                            var assembly = Assembly.ReflectionOnlyLoadFrom(expectedPath);
-                            if (assembly != null)
-                            {
-                                return assembly;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning(ex, $"Failed to load assembly '{expectedPath}' for reflection only");
+                            Log.Debug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
+
+                            context.Plugins.Add(pluginInfo);
                         }
                     }
                 }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
+        }
+
+        protected virtual List<string> FindResolvableAssemblyPaths(string assemblyPath)
+        {
+            if (_appDomainResolvablePaths.Count == 0)
+            {
+                foreach (var loadedAssembly in AppDomain.CurrentDomain.GetLoadedAssemblies())
+                {
+                    if (loadedAssembly.IsDynamic)
+                    {
+                        continue;
+                    }
+
+                    var location = loadedAssembly.Location;
+                    if (string.IsNullOrWhiteSpace(location) || !_fileService.Exists(location))
+                    {
+                        continue;
+                    }
+
+                    var isPeAssembly = _assemblyReflectionService.IsPeAssembly(location);
+                    if (!isPeAssembly)
+                    {
+                        continue;
+                    }
+
+                    _appDomainResolvablePaths.Add(location);
+                }
             }
 
-            // As a last result, try to load the assembly automatically
-            var autoAssembly = Assembly.ReflectionOnlyLoad(e.Name);
-            return autoAssembly;
+            var paths = new List<string>(_appDomainResolvablePaths);
+
+            // Always add runtime assemblies, they could be changed. We could (should?) maybe do this *per assembly*
+            var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                                     where x.PluginLocation.EqualsIgnoreCase(assemblyPath)
+                                     select x).FirstOrDefault();
+            if (pluginLoadContext is null == false)
+            {
+                foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
+                {
+                    paths.Add(runtimeAssembly.Location);
+                }
+            }
+
+            return paths;
         }
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)
@@ -368,6 +436,6 @@ namespace Orc.Extensibility
             return false;
         }
 
-        protected abstract bool IsPlugin(Type type);
+        protected abstract bool IsPlugin(PluginProbingContext context, Type type);
     }
 }

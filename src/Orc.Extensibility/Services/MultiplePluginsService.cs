@@ -50,13 +50,13 @@ namespace Orc.Extensibility
         /// <param name="requestedPlugins">The requested plugins.</param>
         /// <returns>IEnumerable&lt;IPlugin&gt;.</returns>
         [Time]
-        public IEnumerable<IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins)
+        public virtual IEnumerable<IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins)
         {
             var plugins = _pluginManager.GetPlugins();
 
             Log.Info("Found '{0}' plugins", plugins.Count());
 
-            var pluginsToLoad = new List<IPluginInfo>();
+            var pluginsToLoad = new Queue<IPluginInfo>();
 
             foreach (var plugin in plugins)
             {
@@ -64,37 +64,68 @@ namespace Orc.Extensibility
 
                 if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.FullTypeName))
                 {
-                    pluginsToLoad.Add(plugin);
+                    pluginsToLoad.Enqueue(plugin);
                 }
             }
 
+            var pluginTryCount = new Dictionary<string, int>();
             var pluginInstances = new List<Plugin>();
 
-            foreach (var pluginToLoad in pluginsToLoad)
+            while (pluginsToLoad.Count > 0)
             {
-                try
+                var pluginToLoad = pluginsToLoad.Dequeue();
+
+                if (!pluginTryCount.ContainsKey(pluginToLoad.FullTypeName))
                 {
-                    Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
-
-                    var pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
-                    var plugin = new Plugin(pluginInstance, pluginToLoad);
-                    pluginInstances.Add(plugin);
-
-                    _loadedPluginService.AddPlugin(pluginToLoad);
-
-                    PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+                    pluginTryCount[pluginToLoad.FullTypeName] = 0;
                 }
-                catch (Exception ex)
+
+                pluginTryCount[pluginToLoad.FullTypeName]++;
+                var isLastRetry = pluginTryCount[pluginToLoad.FullTypeName] == pluginsToLoad.Count;
+
+                var plugin = ConfigureAndLoadPlugin(pluginToLoad, isLastRetry);
+                if (plugin is null)
                 {
-                    var message = $"Plugin '{pluginToLoad.Name}' could not be loaded";
-
-                    Log.Warning(ex, message);
-
-                    PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
+                    // Try again once other plugins have been loaded
+                    pluginsToLoad.Enqueue(pluginToLoad);
+                }
+                else
+                {
+                    pluginInstances.Add(plugin);
                 }
             }
 
             return pluginInstances;
+        }
+        
+        protected virtual Plugin ConfigureAndLoadPlugin(IPluginInfo pluginToLoad, bool isLastTry)
+        {
+            try
+            {
+                Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+
+                var pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
+                var plugin = new Plugin(pluginInstance, pluginToLoad);
+
+                _loadedPluginService.AddPlugin(pluginToLoad);
+
+                PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+                
+                return plugin;
+            }
+            catch (Exception ex)
+            {
+                var message = $"Plugin '{pluginToLoad.Name}' could not be loaded, is last retry: '{isLastTry}'";
+
+                Log.Warning(ex, message);
+
+                if (isLastTry)
+                {
+                    PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
+                }
+                
+                return null;
+            }
         }
         #endregion
     }

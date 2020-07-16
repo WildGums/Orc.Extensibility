@@ -1,38 +1,23 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginInfo.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Reflection.Metadata;
     using Catel;
     using Catel.Reflection;
 
     public class PluginInfo : IPluginInfo
     {
-        public PluginInfo(Type type)
+        public PluginInfo(string location, Type type)
         {
+            Argument.IsNotNull(() => location);
             Argument.IsNotNull(() => type);
 
-            var assembly = type.Assembly;
-
-            // Note: since reflection only, we need to have a custom reflection mechanism
-            var customAssemblyAttributes = assembly.GetCustomAttributesData();
-
-            Name = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyTitleAttribute>() as string ?? assembly.Title();
-            Version = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? assembly.Version();
-            Company = customAssemblyAttributes.GetReflectionOnlyAttributeValue<AssemblyCompanyAttribute>() as string;
-
-            Location = assembly.Location;
-            ReflectionOnlyType = type;
-            FullTypeName = type.FullName;
-
+            Location = location;
             Aliases = new List<string>();
+
+            InitializeData(type);
         }
 
         public string Name { get; set; }
@@ -49,7 +34,7 @@ namespace Orc.Extensibility
 
         public string FullTypeName { get; private set; }
 
-        public Type ReflectionOnlyType { get; private set; }
+        public string AssemblyName { get; private set; }
 
         public List<string> Aliases { get; private set; }
 
@@ -65,6 +50,21 @@ namespace Orc.Extensibility
             }
 
             return value;
+        }
+
+        private void InitializeData(Type type)
+        {
+            FullTypeName = type.FullName;
+            AssemblyName = type.Assembly.GetName().Name;
+
+            Name = AssemblyName;
+            Version = type.Assembly.Version();
+
+            var customAttributes = type.Assembly.GetCustomAttributesData();
+
+            Name = customAttributes.GetAttributeValue<AssemblyTitleAttribute>() as string ?? Name;
+            Version = customAttributes.GetAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? Version;
+            Company = customAttributes.GetAttributeValue<AssemblyCompanyAttribute>() as string;
         }
     }
 }

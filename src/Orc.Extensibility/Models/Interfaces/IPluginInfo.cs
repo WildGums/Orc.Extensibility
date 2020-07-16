@@ -1,17 +1,10 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IPluginInfo.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
 
     public interface IPluginInfo
     {
-        #region Properties
         string Name { get; set; }
         string Description { get; set; }
         string Version { get; set; }
@@ -20,9 +13,8 @@ namespace Orc.Extensibility
 
         string Location { get; }
         string FullTypeName { get; }
-        Type ReflectionOnlyType { get; }
+        string AssemblyName { get; }
 
         List<string> Aliases { get; }
-        #endregion
     }
 }

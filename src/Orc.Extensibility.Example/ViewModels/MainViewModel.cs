@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MainViewModel.cs" company="WildGums">
 //   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
 // </copyright>
@@ -17,6 +17,7 @@ namespace Orc.Extensibility.Example.ViewModels
     using Catel.MVVM;
     using Catel.Services;
     using Example.Services;
+    using Orc.Extensibility;
 
     public class MainViewModel : ViewModelBase
     {
@@ -26,21 +27,24 @@ namespace Orc.Extensibility.Example.ViewModels
         private readonly IDispatcherService _dispatcherService;
         private readonly IPluginManager _pluginManager;
         private readonly IConfigurationService _configurationService;
+        private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
 
         private bool _isInitialized;
 
-        public MainViewModel(IHostService hostService, IDispatcherService dispatcherService,
-            IPluginManager pluginManager, IConfigurationService configurationService)
+        public MainViewModel(IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
+            IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
             Argument.IsNotNull(() => hostService);
             Argument.IsNotNull(() => dispatcherService);
             Argument.IsNotNull(() => pluginManager);
             Argument.IsNotNull(() => configurationService);
+            Argument.IsNotNull(() => runtimeAssemblyResolverService);
 
             _hostService = hostService;
             _dispatcherService = dispatcherService;
             _pluginManager = pluginManager;
             _configurationService = configurationService;
+            _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
 
             Title = "Orc.Extensibility example";
         }
@@ -50,10 +54,9 @@ namespace Orc.Extensibility.Example.ViewModels
 
         public IPluginInfo SelectedPlugin { get; set; }
 
-        public Color Color { get; private set; }
-        #endregion
+        public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
 
-        #region Commands
+        public Color Color { get; private set; }
         #endregion
 
         #region Methods
@@ -80,6 +83,10 @@ namespace Orc.Extensibility.Example.ViewModels
 
                 await plugin.InitializeAsync();
             }
+
+            RuntimeAssemblies = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                                 from runtimeAssembly in pluginLoadContext.RuntimeAssemblies
+                                 select runtimeAssembly).ToList();
 
             _isInitialized = true;
         }

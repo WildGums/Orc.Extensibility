@@ -1,53 +1,44 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>net46;net47;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net47;netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <AssemblyName>Orc.Extensibility</AssemblyName>
     <RootNamespace>Orc.Extensibility</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageId>Orc.Extensibility</PackageId>
-    <PackageVersion>1.0.0-alpha0001</PackageVersion>
+    <PackageVersion>4.0.0-alpha0204</PackageVersion>
     <Description>Extensibility library.</Description>
     <PackageTags>orc;extensibility;extension;plugin;add-in;addin;add-on;addon</PackageTags>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
+  
+  <!-- Used for DotNetCorePlugins part -->
+  <PropertyGroup>
+    <!--<DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);FEATURE_UNLOAD</DefineConstants>-->
+    <DefineConstants Condition="'$(TargetFramework)' == 'netcoreapp3.1'">$(DefineConstants);FEATURE_NATIVE_RESOLVER</DefineConstants>
+  </PropertyGroup>
+  
   <PropertyGroup>
     <!-- SonarQube requires a project guid -->
     <ProjectGuid>504F9E8E-1463-4A1A-BB66-A1B791ABCCF8</ProjectGuid>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Catel.Analyzers" Version="1.0.0" PrivateAssets="all" />
-    <PackageReference Include="Catel.Core" Version="5.12.0" />
-    <PackageReference Include="Catel.Fody" Version="4.3.0" PrivateAssets="all" />
-    <PackageReference Include="Fody" Version="6.0.5" PrivateAssets="all">
+    <PackageReference Include="Catel.Core" Version="5.12.7" />
+    <PackageReference Include="Catel.Fody" Version="4.4.4" PrivateAssets="all" />
+    <PackageReference Include="Fody" Version="6.2.0" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MethodTimer.Fody" Version="3.1.2" PrivateAssets="all" />
     <PackageReference Include="ModuleInit.Fody" Version="2.1.0" PrivateAssets="all" />
-    <PackageReference Include="Obsolete.Fody" Version="5.2.0" PrivateAssets="all" />
-    <PackageReference Include="Orc.FileSystem" Version="3.2.0" />
-    <PackageReference Include="WpfAnalyzers" Version="2.2.0.2" PrivateAssets="all" />
+    <PackageReference Include="Obsolete.Fody" Version="5.2.1" PrivateAssets="all" />
+    <PackageReference Include="Orc.FileSystem" Version="4.0.0" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="4.7.2" />
   </ItemGroup>
-
+  
   <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
+    <PackageReference Update="NETStandard.Library" Version="2.0.3" />
   </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="NETStandard.Library" Version="2.0.1" />
-  </ItemGroup>
-
+  
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props')" />
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.mat.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.mat.props')" />
 </Project>

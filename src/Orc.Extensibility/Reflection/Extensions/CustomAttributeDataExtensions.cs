@@ -1,10 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CustomAttributeDataExtensions.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
@@ -14,7 +8,7 @@ namespace Orc.Extensibility
 
     public static class CustomAttributeDataExtensions
     {
-        public static object GetReflectionOnlyAttributeValue<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
+        public static object GetAttributeValue<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
             where TAttribute : Attribute
         {
             var attribute = FilterCustomAttributes<TAttribute>(customAttributes).FirstOrDefault();
@@ -26,7 +20,7 @@ namespace Orc.Extensibility
             return null;
         }
 
-        public static List<object> GetReflectionOnlyAttributeValues<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
+        public static List<object> GetAttributeValues<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
             where TAttribute : Attribute
         {
             var values = new List<object>();

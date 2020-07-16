@@ -1,0 +1,16 @@
+<Project>
+  <!-- 
+    This file applies to projects when it gets imported explicitly using the line below:
+
+    <Import Project="$(MSBuildProjectDirectory)\..\Directory.Build.shared.plugins.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.Build.shared.plugins.props')" />
+  -->
+
+  <PropertyGroup>
+    <!-- Required for plugins to copy all dependencies to the output folder -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Debug'">
+    <Exec Command="xcopy /s /f /y &quot;$(TargetDir)\$(TargetName).dll&quot; &quot;%25AppData%25\WildGums\Orc.Extensibility.Example\plugins\$(TargetName)\&quot;" />
+  </Target>
+</Project>

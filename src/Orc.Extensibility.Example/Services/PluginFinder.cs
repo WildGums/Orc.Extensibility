@@ -1,40 +1,29 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginFinder.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example.Services
+﻿namespace Orc.Extensibility.Example.Services
 {
     using System;
-    using System.Linq;
     using Catel;
-    using Catel.Reflection;
+    using Catel.Logging;
     using FileSystem;
 
     public class PluginFinder : Orc.Extensibility.PluginFinderBase
     {
-        private readonly string _pluginName = typeof(ICustomPlugin).Name;
+        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-        public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider,
-            IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService)
-            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService)
+        public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider, IPluginCleanupService pluginCleanupService,
+            IDirectoryService directoryService, IFileService fileService, IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
+            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService, assemblyReflectionService, runtimeAssemblyResolverService)
         {
         }
 
-        protected override bool IsPlugin(Type type)
+        protected override bool IsPlugin(PluginProbingContext context, Type type)
         {
-            // Note: since we are in a reflection-only context here, you can't compare actual types, but need to use string names
-            return (from iface in type.GetInterfacesEx()
-                    where iface.Name.Equals(_pluginName)
-                    select iface).Any();
+            return type.ImplementsInterface<ICustomPlugin>();
         }
 
         protected override bool ShouldIgnoreAssembly(string assemblyPath)
         {
-            // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here
-            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example"))
+            // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here (ExtensionA and ExtensionB)
+            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension"))
             {
                 return false;
             }

@@ -12,11 +12,6 @@ namespace Orc.Extensibility
 
     public interface ILoadedPluginService
     {
-        #region Properties
-        [ObsoleteEx(ReplacementTypeOrMember = "GetLoadedPlugins", TreatAsErrorFromVersion = "3.0", RemoveInVersion = "4.0")]
-        List<IPluginInfo> LoadedPlugins { get; }
-        #endregion
-
         #region Events
         event EventHandler<PluginEventArgs> PluginLoaded;
         #endregion

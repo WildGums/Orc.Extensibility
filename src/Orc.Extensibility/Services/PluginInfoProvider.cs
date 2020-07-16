@@ -1,12 +1,7 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginInfoProvider.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
+    using System.Reflection.Metadata;
 
     public class PluginInfoProvider : IPluginInfoProvider
     {
@@ -14,9 +9,9 @@ namespace Orc.Extensibility
         {
         }
 
-        public virtual IPluginInfo GetPluginInfo(Type pluginType)
+        public virtual IPluginInfo GetPluginInfo(string location, Type type)
         {
-            return new PluginInfo(pluginType);
+            return new PluginInfo(location, type);
         }
     }
 }

@@ -52,6 +52,7 @@ namespace Orc.Extensibility
             "system.",
             "uiautomationprovider",
             "uiautomationtypes",
+            "unins0",
             "windowsbase",
             "windowsformsintegration"
         });

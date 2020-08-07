@@ -122,6 +122,31 @@ namespace Orc.Extensibility
             comparableVersion = comparableVersion.Replace("rc", "04");
             comparableVersion = comparableVersion.Replace("releasecandidate", "04");
 
+            // HOTFIX --- HOTFIX --- HOTFIX
+            // 
+            // Note: obviously this should maybe be improved in the future, but we needed to release without any breaking change
+            // 
+            // Find the dash (-)
+            var dashIndex = comparableVersion.IndexOf("-");
+            if (dashIndex > 0)
+            {
+                // We need to prefix versioning (so pad against 4 zeros):
+                // 2.0.0-alpha.16
+                // 2.0.0-alpha.1016
+
+                var specialPart = comparableVersion.Substring(dashIndex + 1);
+                var dotIndex = specialPart.IndexOf(".");
+                if (dotIndex > 0)
+                {
+                    var dotPart = specialPart.Substring(dotIndex + 1);
+                    if (int.TryParse(dotPart, out var integer))
+                    {
+                        comparableVersion = $"{comparableVersion.Substring(0, dashIndex)}-{specialPart.Substring(0, dotIndex)}.{integer:D6}";
+                    }
+                }
+            }
+            // HOTFIX END
+
             return comparableVersion;
         }
 

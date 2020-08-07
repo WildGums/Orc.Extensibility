@@ -159,6 +159,7 @@ namespace Orc.Extensibility
                                   select plugin).ToList();
                 if (duplicates.Count > 1)
                 {
+                    // Find the older ones so we keep 1
                     var oldDuplicates = GetOldestDuplicates(duplicates);
 
                     foreach (var oldDuplicate in oldDuplicates)
@@ -170,13 +171,11 @@ namespace Orc.Extensibility
                                 pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
                             {
                                 context.Plugins.RemoveAt(j);
-
-                                // Stop processing, we must keep at least one
-                                break;
                             }
                         }
                     }
 
+                    // Reset
                     i = 0;
                 }
             }

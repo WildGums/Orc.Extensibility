@@ -126,25 +126,34 @@ namespace Orc.Extensibility
             // 
             // Note: obviously this should maybe be improved in the future, but we needed to release without any breaking change
             // 
-            // Find the dash (-)
-            var dashIndex = comparableVersion.IndexOf("-");
-            if (dashIndex > 0)
-            {
-                // We need to prefix versioning (so pad against 4 zeros):
-                // 2.0.0-alpha.16
-                // 2.0.0-alpha.1016
 
-                var specialPart = comparableVersion.Substring(dashIndex + 1);
-                var dotIndex = specialPart.IndexOf(".");
-                if (dotIndex > 0)
+            try
+            {
+                // Find the dash (-)
+                var dashIndex = comparableVersion.IndexOf("-");
+                if (dashIndex > 0)
                 {
-                    var dotPart = specialPart.Substring(dotIndex + 1);
-                    if (int.TryParse(dotPart, out var integer))
+                    // We need to prefix versioning (so pad against 4 zeros):
+                    // 2.0.0-alpha.16
+                    // 2.0.0-alpha.1016
+
+                    var specialPart = comparableVersion.Substring(dashIndex + 1);
+                    var dotIndex = specialPart.IndexOf(".");
+                    if (dotIndex > 0)
                     {
-                        comparableVersion = $"{comparableVersion.Substring(0, dashIndex)}-{specialPart.Substring(0, dotIndex)}.{integer:D6}";
+                        var dotPart = specialPart.Substring(dotIndex + 1);
+                        if (int.TryParse(dotPart, out var integer))
+                        {
+                            comparableVersion = $"{comparableVersion.Substring(0, dashIndex)}-{specialPart.Substring(0, dotIndex)}.{integer:D6}";
+                        }
                     }
                 }
             }
+            catch (Exception)
+            {
+                // At least ensure old behavior
+            }
+
             // HOTFIX END
 
             return comparableVersion;

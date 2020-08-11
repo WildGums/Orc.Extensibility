@@ -11,7 +11,6 @@ namespace Orc.Extensibility
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Xml;
     using Catel;
     using Catel.Logging;
     using Catel.Reflection;
@@ -164,14 +163,34 @@ namespace Orc.Extensibility
 
                     foreach (var oldDuplicate in oldDuplicates)
                     {
-                        for (int j = 0; j < context.Plugins.Count; j++)
+                        var oldDuplicateLocation = oldDuplicate.Location;
+
+                        for (var j = 0; j < context.Plugins.Count; j++)
                         {
                             var pluginInfo = context.Plugins[j];
-                            if (pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName) &&
-                                pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
+
+                            // Version must always match
+                            if (!pluginInfo.Version.EqualsIgnoreCase(oldDuplicate.Version))
                             {
-                                context.Plugins.RemoveAt(j);
+                                continue;
                             }
+
+                            // Type must always match
+                            if (!pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName))
+                            {
+                                continue;
+                            }
+
+                            // If we have a location, location must match
+                            if (!string.IsNullOrWhiteSpace(oldDuplicateLocation))
+                            {
+                                if (!pluginInfo.Location.EqualsIgnoreCase(oldDuplicate.Location))
+                                {
+                                    continue;
+                                }
+                            }
+
+                            context.Plugins.RemoveAt(j);
                         }
                     }
 

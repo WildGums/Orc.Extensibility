@@ -84,9 +84,10 @@
 
             // Load context, ignore the requesting assembly for now
             var runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-                                    from reference in pluginLoadContext.RuntimeAssemblies
-                                    where Path.GetFileName(reference.Location).EqualsIgnoreCase(libraryName)
-                                    select reference).FirstOrDefault();
+                from reference in pluginLoadContext.RuntimeAssemblies
+                where Path.GetFileName(reference.Location).EqualsIgnoreCase(libraryName) ||
+                      Path.GetFileNameWithoutExtension(reference.Location).EqualsIgnoreCase(libraryName)
+                select reference).FirstOrDefault();
             if (runtimeReference is null == false)
             {
                 Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{libraryName}'");

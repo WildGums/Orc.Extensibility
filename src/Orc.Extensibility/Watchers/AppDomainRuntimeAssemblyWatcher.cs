@@ -11,6 +11,8 @@
     using System.IO;
     using System.Reflection;
     using System.Linq;
+    using System.Linq.Expressions;
+    using Catel.Reflection;
 #endif
 
     public class AppDomainRuntimeAssemblyWatcher
@@ -71,7 +73,27 @@
                 {
                     Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{arg2.FullName}'");
 
-                    return Assembly.LoadFrom(runtimeReference.Location);
+                    try
+                    {
+                        var loadedAssembly = Assembly.LoadFrom(runtimeReference.Location);
+                        return loadedAssembly;
+                    }
+                    catch (Exception ex)
+                    {
+                        var loadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
+                                              where x.GetName().Name.EqualsIgnoreCase(arg2.Name)
+                                              select x).FirstOrDefault();
+                        if (loadedAssembly is null == false)
+                        {
+                            Log.Error(ex, $"Failed to load assembly from '{runtimeReference.Location}', a different version '{loadedAssembly.Version()}' is already loaded");
+                        }
+                        else
+                        {
+                            Log.Error(ex, $"Failed to load assembly from '{runtimeReference.Location}'");
+                        }
+
+                        throw ex;
+                    }
                 }
             }
 
@@ -84,16 +106,17 @@
 
             // Load context, ignore the requesting assembly for now
             var runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-                from reference in pluginLoadContext.RuntimeAssemblies
-                where Path.GetFileName(reference.Location).EqualsIgnoreCase(libraryName) ||
-                      Path.GetFileNameWithoutExtension(reference.Location).EqualsIgnoreCase(libraryName)
-                select reference).FirstOrDefault();
+                                    from reference in pluginLoadContext.RuntimeAssemblies
+                                    where Path.GetFileName(reference.Location).EqualsIgnoreCase(libraryName) ||
+                                          Path.GetFileNameWithoutExtension(reference.Location).EqualsIgnoreCase(libraryName)
+                                    select reference).FirstOrDefault();
             if (runtimeReference is null == false)
             {
                 Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{libraryName}'");
 
                 // In very rare cases, this could not work, see https://github.com/dotnet/runtime/issues/13819
-                return System.Runtime.InteropServices.NativeLibrary.Load(runtimeReference.Location);
+                var loadedAssembly = System.Runtime.InteropServices.NativeLibrary.Load(runtimeReference.Location);
+                return loadedAssembly;
             }
 
             return IntPtr.Zero;

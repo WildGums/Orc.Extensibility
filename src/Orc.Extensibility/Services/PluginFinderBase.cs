@@ -11,6 +11,7 @@ namespace Orc.Extensibility
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Security.Cryptography.X509Certificates;
     using Catel;
     using Catel.Logging;
     using Catel.Reflection;
@@ -27,32 +28,44 @@ namespace Orc.Extensibility
         private static readonly HashSet<string> KnownAssemblyPrefixesToIgnore = new HashSet<string>(new[]
         {
             "accessibility",
+            "api-ms",
             "catel.",
+            "clr", // should ignore clretwrc, clrcor, clrcompression, clrjit, etc
             "costura.",
             "controlzex",
+            "coreclr",
+            "dbgshim",
+            "d3dcompiler",
             "directwriteforwarder",
             "dotnetzip",
             "fluent.",
+            "host", // should ignore hostpolicy, hostfxr, etc
+            "libskiasharp",
             "ionic.zip.",
             "mahapps.",
             "methodtimer.",
             "microsoft.",
             "moduleinit.",
+            "mscor", // should ignore mscorrc, mscordbi, mscordaccore, etc
             "mono.cecil.",
             "mscorlib",
+	        "netstandard",
+			"newtonsoft.",
             "nuget.",
             "obsolete.",
             "orc.",
             "orchestra.",
-            "presentationcore",
-            "presentationframework",
-            "presentationui",
+			"penimc",
+            "presentation", // should ignore PresentationFramework, PresentationNative, etc
             "reachframework",
+            "skiasharp",
             "system.",
-            "uiautomationprovider",
-            "uiautomationtypes",
+            "ucrtbase",
+            "uiautomation", // should ignore multiple times
+            "vcruntime140",
             "windowsbase",
-            "windowsformsintegration"
+            "windowsformsintegration",
+            "wpfgfx"
         });
 
         private readonly IPluginLocationsProvider _pluginLocationsProvider;
@@ -452,6 +465,36 @@ namespace Orc.Extensibility
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks whether the specified file is signed.
+        /// </summary>
+        /// <param name="fileName">The file name to check.</param>
+        /// <param name="subjectName">If not <c>null</c>, the certificate must match this subject name.</param>
+        /// <returns></returns>
+        protected virtual bool IsSigned(string fileName, string subjectName = null)
+        {
+            try
+            {
+                var certificate = X509Certificate.CreateFromSignedFile(fileName);
+
+                if (!string.IsNullOrWhiteSpace(subjectName))
+                {
+                    if (!certificate.Subject.ContainsIgnoreCase(subjectName))
+                    {
+                        Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, $"File '{fileName}' is not signed, not allowing loading of assembly");
+                return false;
+            }
         }
 
         protected abstract bool IsPlugin(PluginProbingContext context, Type type);

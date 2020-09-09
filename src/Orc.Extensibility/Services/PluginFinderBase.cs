@@ -27,32 +27,44 @@ namespace Orc.Extensibility
         private static readonly HashSet<string> KnownAssemblyPrefixesToIgnore = new HashSet<string>(new[]
         {
             "accessibility",
+            "api-ms",
             "catel.",
+            "clr", // should ignore clretwrc, clrcor, clrcompression, clrjit, etc
             "costura.",
             "controlzex",
+            "coreclr",
+            "dbgshim",
+            "d3dcompiler",
             "directwriteforwarder",
             "dotnetzip",
             "fluent.",
+            "host", // should ignore hostpolicy, hostfxr, etc
+            "libskiasharp",
             "ionic.zip.",
             "mahapps.",
             "methodtimer.",
             "microsoft.",
             "moduleinit.",
+            "mscor", // should ignore mscorrc, mscordbi, mscordaccore, etc
             "mono.cecil.",
             "mscorlib",
+	        "netstandard",
+			"newtonsoft.",
             "nuget.",
             "obsolete.",
             "orc.",
             "orchestra.",
-            "presentationcore",
-            "presentationframework",
-            "presentationui",
+			"penimc",
+            "presentation", // should ignore PresentationFramework, PresentationNative, etc
             "reachframework",
+            "skiasharp",
             "system.",
-            "uiautomationprovider",
-            "uiautomationtypes",
+            "ucrtbase",
+            "uiautomation", // should ignore multiple times
+            "vcruntime140",
             "windowsbase",
-            "windowsformsintegration"
+            "windowsformsintegration",
+            "wpfgfx"
         });
 
         private readonly IPluginLocationsProvider _pluginLocationsProvider;

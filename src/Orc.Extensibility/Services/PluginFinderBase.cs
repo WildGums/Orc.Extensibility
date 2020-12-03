@@ -62,6 +62,7 @@ namespace Orc.Extensibility
             "system.",
             "ucrtbase",
             "uiautomation", // should ignore multiple times
+			"unins0",
             "vcruntime140",
             "windowsbase",
             "windowsformsintegration",
@@ -288,6 +289,11 @@ namespace Orc.Extensibility
 
         protected virtual bool CanInvestigateAssembly(PluginProbingContext context, string assemblyPath)
         {
+            if (string.IsNullOrWhiteSpace(assemblyPath))
+            {
+                return false;
+            }
+
             if (context.Locations.Contains(assemblyPath))
             {
                 return false;

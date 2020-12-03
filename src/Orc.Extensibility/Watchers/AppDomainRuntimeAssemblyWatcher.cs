@@ -92,7 +92,7 @@
                             Log.Error(ex, $"Failed to load assembly from '{runtimeReference.Location}'");
                         }
 
-                        throw ex;
+                        throw;
                     }
                 }
             }

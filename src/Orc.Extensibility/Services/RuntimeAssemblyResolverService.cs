@@ -375,7 +375,7 @@
 
             //using (var symbolStream = LoadStream(symbolNames, text))
             //{
-            //    if (symbolStream is null == false)
+            //    if (symbolStream is not null)
             //    {
             //        byte[] rawSymbolStore = ReadStream(symbolStream);
             //        return Assembly.Load(rawAssembly, rawSymbolStore);

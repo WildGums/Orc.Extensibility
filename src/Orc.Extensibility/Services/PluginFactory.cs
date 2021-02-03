@@ -111,22 +111,22 @@
             if (modules.Length > 0)
             {
                 var firstModule = modules.FirstOrDefault();
-                if (firstModule is null == false)
+                if (firstModule is not null)
                 {
                     if (_runtimeTypePropertyInfo is null)
                     {
                         _runtimeTypePropertyInfo = firstModule.GetType().GetPropertyEx("RuntimeType");
                     }
 
-                    if (_runtimeTypePropertyInfo is null == false)
+                    if (_runtimeTypePropertyInfo is not null)
                     {
                         var runtimeType = _runtimeTypePropertyInfo.GetValue(firstModule) as Type;
-                        if (runtimeType is null == false)
+                        if (runtimeType is not null)
                         {
                             Log.Debug("Found module runtime type, force preloading assembly now");
 
                             var staticConstructor = runtimeType.GetConstructor(BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, Array.Empty<Type>(), Array.Empty<ParameterModifier>());
-                            if (staticConstructor is null == false)
+                            if (staticConstructor is not null)
                             {
                                 staticConstructor.Invoke(null, Array.Empty<object>());
                             }

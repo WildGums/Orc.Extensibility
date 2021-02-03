@@ -69,7 +69,7 @@
                                         from reference in pluginLoadContext.RuntimeAssemblies
                                         where reference.Name.EqualsIgnoreCase(arg2.Name)
                                         select reference).FirstOrDefault();
-                if (runtimeReference is null == false)
+                if (runtimeReference is not null)
                 {
                     Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{arg2.FullName}'");
 
@@ -83,7 +83,7 @@
                         var loadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
                                               where x.GetName().Name.EqualsIgnoreCase(arg2.Name)
                                               select x).FirstOrDefault();
-                        if (loadedAssembly is null == false)
+                        if (loadedAssembly is not null)
                         {
                             Log.Error(ex, $"Failed to load assembly from '{runtimeReference.Location}', a different version '{loadedAssembly.Version()}' is already loaded");
                         }
@@ -110,7 +110,7 @@
                                     where Path.GetFileName(reference.Location).EqualsIgnoreCase(libraryName) ||
                                           Path.GetFileNameWithoutExtension(reference.Location).EqualsIgnoreCase(libraryName)
                                     select reference).FirstOrDefault();
-            if (runtimeReference is null == false)
+            if (runtimeReference is not null)
             {
                 Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{libraryName}'");
 

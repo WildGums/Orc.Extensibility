@@ -8,6 +8,7 @@
 namespace Orc.Extensibility.Example.ViewModels
 {
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Media;
@@ -28,23 +29,28 @@ namespace Orc.Extensibility.Example.ViewModels
         private readonly IPluginManager _pluginManager;
         private readonly IConfigurationService _configurationService;
         private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
-
+        private readonly AppDomainRuntimeAssemblyWatcher _appDomainRuntimeAssemblyWatcher;
         private bool _isInitialized;
 
         public MainViewModel(IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
-            IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
+            IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
+            AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher)
         {
             Argument.IsNotNull(() => hostService);
             Argument.IsNotNull(() => dispatcherService);
             Argument.IsNotNull(() => pluginManager);
             Argument.IsNotNull(() => configurationService);
             Argument.IsNotNull(() => runtimeAssemblyResolverService);
+            Argument.IsNotNull(() => appDomainRuntimeAssemblyWatcher);
 
             _hostService = hostService;
             _dispatcherService = dispatcherService;
             _pluginManager = pluginManager;
             _configurationService = configurationService;
             _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
+            _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
+
+            RuntimeResolvedAssemblies = new ObservableCollection<RuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
             Title = "Orc.Extensibility example";
         }
@@ -55,6 +61,8 @@ namespace Orc.Extensibility.Example.ViewModels
         public IPluginInfo SelectedPlugin { get; set; }
 
         public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
+
+        public ObservableCollection<RuntimeAssembly> RuntimeResolvedAssemblies { get; private set; }
 
         public Color Color { get; private set; }
         #endregion
@@ -72,6 +80,7 @@ namespace Orc.Extensibility.Example.ViewModels
                               select plugin).FirstOrDefault();
 
             _hostService.ColorChanged += OnHostServiceColorChanged;
+            _appDomainRuntimeAssemblyWatcher.AssemblyLoaded += OnRuntimeAssemblyWatcherAssemblyLoaded;
 
             // In an orchestra environment, this could go into the bootstrappers
 
@@ -94,6 +103,7 @@ namespace Orc.Extensibility.Example.ViewModels
         protected override async Task CloseAsync()
         {
             _hostService.ColorChanged -= OnHostServiceColorChanged;
+            _appDomainRuntimeAssemblyWatcher.AssemblyLoaded -= OnRuntimeAssemblyWatcherAssemblyLoaded;
 
             await base.CloseAsync();
 
@@ -103,6 +113,11 @@ namespace Orc.Extensibility.Example.ViewModels
         private void OnHostServiceColorChanged(object sender, ColorEventArgs e)
         {
             _dispatcherService.BeginInvokeIfRequired(() => Color = e.Color);
+        }
+
+        private void OnRuntimeAssemblyWatcherAssemblyLoaded(object sender, RuntimeLoadedAssemblyEventArgs e)
+        {
+            _dispatcherService.BeginInvokeIfRequired(() => RuntimeResolvedAssemblies.Add(e.ResolvedRuntimeAssembly));
         }
 
         private void OnSelectedPluginChanged()

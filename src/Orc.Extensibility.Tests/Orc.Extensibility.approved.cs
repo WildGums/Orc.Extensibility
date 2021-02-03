@@ -10,6 +10,8 @@ namespace Orc.Extensibility
     public class AppDomainRuntimeAssemblyWatcher
     {
         public AppDomainRuntimeAssemblyWatcher(Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
+        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> LoadedAssemblies { get; }
+        public event System.EventHandler<Orc.Extensibility.RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
         public void Attach() { }
         public void Attach(System.Runtime.Loader.AssemblyLoadContext assemblyLoadContext) { }
     }
@@ -264,6 +266,13 @@ namespace Orc.Extensibility
             public unsafe byte* Start { get; set; }
             public override string ToString() { }
         }
+    }
+    public class RuntimeLoadedAssemblyEventArgs : System.EventArgs
+    {
+        public RuntimeLoadedAssemblyEventArgs(System.Reflection.AssemblyName requestedAssemblyName, Orc.Extensibility.RuntimeAssembly resolvedRuntimeAssembly, System.Reflection.Assembly resolvedAssembly) { }
+        public System.Reflection.AssemblyName RequestedAssemblyName { get; }
+        public System.Reflection.Assembly ResolvedAssembly { get; }
+        public Orc.Extensibility.RuntimeAssembly ResolvedRuntimeAssembly { get; }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

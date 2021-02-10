@@ -57,13 +57,20 @@
             </Rectangle.Fill>
         </Rectangle>
 
-        <orccontrols:StackGrid>
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <GroupBox Header="Runtime extracted assemblies">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <GroupBox Grid.Row="0" 
+                      Grid.Column="0"
+                      Header="Runtime extracted assemblies">
                 <ItemsControl ItemsSource="{Binding RuntimeAssemblies}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -73,10 +80,24 @@
                 </ItemsControl>
             </GroupBox>
 
-            <GroupBox Header="Logging">
+            <GroupBox Grid.Row="1" 
+                      Grid.Column="0"
+                      Header="Runtime resolved assemblies">
+                <ItemsControl ItemsSource="{Binding RuntimeResolvedAssemblies}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Location}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </GroupBox>
+
+            <GroupBox Grid.RowSpan="2" 
+                      Grid.Column="1"
+                      Header="Logging">
                 <TextBox x:Name="loggingTextBox" IsReadOnly="True" AcceptsReturn="True" />
             </GroupBox>
-        </orccontrols:StackGrid>
+        </Grid>
     </orccontrols:StackGrid>
 
 </catel:Window>

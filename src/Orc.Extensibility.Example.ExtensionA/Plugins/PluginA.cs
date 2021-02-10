@@ -16,19 +16,20 @@ namespace Orc.Extensibility.Example.ExtensionA.Plugins
     {
         private readonly IMessageService _messageService;
         private readonly IHostService _hostService;
+        private readonly ILanguageService _languageService;
 
-        public PluginA(IMessageService messageService, IHostService hostService)
+        public PluginA(IMessageService messageService, IHostService hostService, ILanguageService languageService)
         {
-            Argument.IsNotNull(() => messageService);
-            Argument.IsNotNull(() => hostService);
-
             _messageService = messageService;
             _hostService = hostService;
+            _languageService = languageService;
         }
 
         public async Task InitializeAsync()
         {
-            await _messageService.ShowAsync("Plugin A has been loaded, setting color to red");
+            var value = _languageService.GetString("TestResource");
+
+            await _messageService.ShowAsync($"Plugin A has been loaded, setting color to red. Resource value: '{value}'");
 
             _hostService.SetColor(System.Windows.Media.Colors.Red);
         }

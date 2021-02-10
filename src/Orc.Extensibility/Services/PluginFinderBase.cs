@@ -437,7 +437,7 @@ namespace Orc.Extensibility
             var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
                                      where x.PluginLocation.EqualsIgnoreCase(assemblyPath)
                                      select x).FirstOrDefault();
-            if (pluginLoadContext is null == false)
+            if (pluginLoadContext is not null)
             {
                 foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
                 {

@@ -39,6 +39,7 @@ namespace Orc.Extensibility
             "directwriteforwarder",
             "dotnetzip",
             "fluent.",
+            "google",
             "host", // should ignore hostpolicy, hostfxr, etc
             "libskiasharp",
             "ionic.zip.",
@@ -55,8 +56,10 @@ namespace Orc.Extensibility
             "obsolete.",
             "orc.",
             "orchestra.",
+            "ozcode.",
 			"penimc",
             "presentation", // should ignore PresentationFramework, PresentationNative, etc
+            "protobuf-net",
             "reachframework",
             "skiasharp",
             "system.",
@@ -460,12 +463,17 @@ namespace Orc.Extensibility
                 }
             }
 
-            if (fileName.Contains(".resources.dll"))
+            if (fileName.ContainsIgnoreCase(".resources.dll"))
             {
                 return true;
             }
 
-            if (fileName.EndsWith(".vshost.exe"))
+            if (fileName.ContainsIgnoreCase("update.exe"))
+            {
+                return true;
+            }
+
+            if (fileName.EndsWithIgnoreCase(".vshost.exe"))
             {
                 return true;
             }

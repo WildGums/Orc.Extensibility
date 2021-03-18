@@ -1,9 +1,11 @@
 ﻿namespace Orc.Extensibility
 {
+    using System.Threading.Tasks;
+
     public interface IRuntimeAssemblyResolverService
     {
         string TargetDirectory { get; }
         PluginLoadContext[] GetPluginLoadContexts();
-        void RegisterAssembly(string assemblyLocation);
+        Task RegisterAssemblyAsync(string assemblyLocation);
     }
 }

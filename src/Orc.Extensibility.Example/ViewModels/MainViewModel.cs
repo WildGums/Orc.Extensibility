@@ -73,8 +73,9 @@ namespace Orc.Extensibility.Example.ViewModels
             await base.InitializeAsync();
 
             var selectedPlugin = _configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            var plugins = await _pluginManager.GetPluginsAsync();
 
-            AvailablePlugins = _pluginManager.GetPlugins().ToList();
+            AvailablePlugins = plugins.ToList();
             SelectedPlugin = (from plugin in AvailablePlugins
                               where plugin.FullTypeName.Contains(selectedPlugin)
                               select plugin).FirstOrDefault();

@@ -4,12 +4,10 @@
   <Catel />
   <Costura>
     <IncludeAssemblies>
-      Orc.CommandLine
     </IncludeAssemblies>
   </Costura>
   <LoadAssembliesOnStartup>
     <IncludeAssemblies>
-      Orc.CommandLine
     </IncludeAssemblies>
   </LoadAssembliesOnStartup>
 </Weavers>

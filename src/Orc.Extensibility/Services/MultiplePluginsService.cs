@@ -10,6 +10,7 @@ namespace Orc.Extensibility
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Catel;
     using Catel.Logging;
     using MethodTimer;
@@ -50,9 +51,9 @@ namespace Orc.Extensibility
         /// <param name="requestedPlugins">The requested plugins.</param>
         /// <returns>IEnumerable&lt;IPlugin&gt;.</returns>
         [Time]
-        public virtual IEnumerable<IPlugin> ConfigureAndLoadPlugins(params string[] requestedPlugins)
+        public virtual async Task<IEnumerable<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins)
         {
-            var plugins = _pluginManager.GetPlugins();
+            var plugins = await _pluginManager.GetPluginsAsync();
 
             Log.Info("Found '{0}' plugins", plugins.Count());
 
@@ -83,7 +84,7 @@ namespace Orc.Extensibility
                 pluginTryCount[pluginToLoad.FullTypeName]++;
                 var isLastRetry = pluginTryCount[pluginToLoad.FullTypeName] == pluginsToLoad.Count;
 
-                var plugin = ConfigureAndLoadPlugin(pluginToLoad, isLastRetry);
+                var plugin = await ConfigureAndLoadPluginAsync(pluginToLoad, isLastRetry);
                 if (plugin is null)
                 {
                     // Try again once other plugins have been loaded
@@ -98,7 +99,7 @@ namespace Orc.Extensibility
             return pluginInstances;
         }
         
-        protected virtual Plugin ConfigureAndLoadPlugin(IPluginInfo pluginToLoad, bool isLastTry)
+        protected virtual async Task<Plugin> ConfigureAndLoadPluginAsync(IPluginInfo pluginToLoad, bool isLastTry)
         {
             try
             {

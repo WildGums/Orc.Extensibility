@@ -5,13 +5,11 @@
   <Costura>
     <IncludeAssemblies>
       Newtonsoft.Json
-      Orc.CommandLine
     </IncludeAssemblies>
   </Costura>
   <LoadAssembliesOnStartup>
     <IncludeAssemblies>
       Newtonsoft.Json
-      Orc.CommandLine
     </IncludeAssemblies>
   </LoadAssembliesOnStartup>
 </Weavers>

@@ -1,15 +1,9 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ISinglePluginService.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
+    using System.Threading.Tasks;
+
     public interface ISinglePluginService : IPluginService
     {
-        #region Methods
-        IPlugin ConfigureAndLoadPlugin(string expectedPlugin, string defaultPlugin);
-        #endregion
+        Task<IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin);
     }
 }

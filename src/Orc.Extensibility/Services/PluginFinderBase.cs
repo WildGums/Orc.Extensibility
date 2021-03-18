@@ -12,6 +12,7 @@ namespace Orc.Extensibility
     using System.Linq;
     using System.Reflection;
     using System.Security.Cryptography.X509Certificates;
+    using System.Threading.Tasks;
     using Catel;
     using Catel.Logging;
     using Catel.Reflection;
@@ -103,15 +104,15 @@ namespace Orc.Extensibility
         }
 
         [Time]
-        public IEnumerable<IPluginInfo> FindPlugins()
+        public async Task<IEnumerable<IPluginInfo>> FindPluginsAsync()
         {
             var pluginProbingContext = new PluginProbingContext();
 
             // Step 1: Check plugins already in the current AppDomain
-            FindPluginsInLoadedAssemblies(pluginProbingContext);
+            await FindPluginsInLoadedAssembliesAsync(pluginProbingContext);
 
             // Step 2: Check for plugins outside AppDomain
-            FindPluginsInUnloadedAssemblies(pluginProbingContext);
+            await FindPluginsInUnloadedAssembliesAsync(pluginProbingContext);
 
             RemoveDuplicates(pluginProbingContext);
 
@@ -119,19 +120,19 @@ namespace Orc.Extensibility
         }
 
         [Time]
-        protected virtual void FindPluginsInLoadedAssemblies(PluginProbingContext context)
+        protected virtual async Task FindPluginsInLoadedAssembliesAsync(PluginProbingContext context)
         {
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (CanInvestigateAssembly(context, assembly))
                 {
-                    FindPluginsInAssembly(context, assembly);
+                    await FindPluginsInAssemblyAsync(context, assembly);
                 }
             }
         }
 
         [Time]
-        protected virtual void FindPluginsInUnloadedAssemblies(PluginProbingContext context)
+        protected virtual async Task FindPluginsInUnloadedAssembliesAsync(PluginProbingContext context)
         {
             var pluginDirectories = _pluginLocationsProvider.GetPluginDirectories();
 
@@ -149,7 +150,7 @@ namespace Orc.Extensibility
                                                 orderby File.GetLastWriteTime(file) descending
                                                 select file).ToList();
 
-                    FindPluginsInAssemblies(context, potentialPluginFiles.ToArray());
+                    await FindPluginsInAssembliesAsync(context, potentialPluginFiles.ToArray());
                 }
 
                 // Step 2: treat each subdirectory separately
@@ -159,7 +160,7 @@ namespace Orc.Extensibility
 
                 foreach (var directory in directories)
                 {
-                    FindPluginsInDirectory(context, directory);
+                    await FindPluginsInDirectoryAsync(context, directory);
                 }
             }
         }
@@ -248,7 +249,7 @@ namespace Orc.Extensibility
         }
 
         [Time]
-        protected virtual void FindPluginsInDirectory(PluginProbingContext context, string pluginDirectory)
+        protected virtual async Task FindPluginsInDirectoryAsync(PluginProbingContext context, string pluginDirectory)
         {
             if (_pluginCleanupService.IsCleanupRequired(pluginDirectory))
             {
@@ -271,7 +272,7 @@ namespace Orc.Extensibility
                 {
                     var assemblies = _directoryService.GetFiles(pluginDirectory, pluginFileFilter, SearchOption.AllDirectories);
 
-                    FindPluginsInAssemblies(context, assemblies);
+                    await FindPluginsInAssembliesAsync(context, assemblies);
                 }
             }
             catch (Exception ex)
@@ -312,13 +313,13 @@ namespace Orc.Extensibility
             return true;
         }
 
-        protected void FindPluginsInAssemblies(PluginProbingContext context, params string[] assemblyPaths)
+        protected async Task FindPluginsInAssembliesAsync(PluginProbingContext context, params string[] assemblyPaths)
         {
             foreach (var assemblyPath in assemblyPaths)
             {
                 try
                 {
-                    FindPluginsInAssembly(context, assemblyPath);
+                    await FindPluginsInAssemblyAsync(context, assemblyPath);
                 }
                 catch (Exception ex)
                 {
@@ -328,7 +329,7 @@ namespace Orc.Extensibility
         }
 
         [Time("{assemblyPath}")]
-        protected virtual void FindPluginsInAssembly(PluginProbingContext context, string assemblyPath)
+        protected virtual async Task FindPluginsInAssemblyAsync(PluginProbingContext context, string assemblyPath)
         {
             if (!CanInvestigateAssembly(context, assemblyPath))
             {
@@ -342,7 +343,7 @@ namespace Orc.Extensibility
                 return;
             }
 
-            _runtimeAssemblyResolverService.RegisterAssembly(assemblyPath);
+            await _runtimeAssemblyResolverService.RegisterAssemblyAsync(assemblyPath);
 
             // Important: all types already in the app domain should be included as well
             var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
@@ -354,11 +355,11 @@ namespace Orc.Extensibility
             using (var metadataLoadContext = new MetadataLoadContext(resolver))
             {
                 var assembly = metadataLoadContext.LoadFromAssemblyPath(assemblyPath);
-                FindPluginsInAssembly(context, assembly);
+                await FindPluginsInAssemblyAsync(context, assembly);
             }
         }
 
-        protected virtual void FindPluginsInAssembly(PluginProbingContext context, Assembly assembly)
+        protected virtual async Task FindPluginsInAssemblyAsync(PluginProbingContext context, Assembly assembly)
         {
             foreach (var type in assembly.GetTypes())
             {

@@ -50,14 +50,14 @@ namespace Orc.Extensibility
             "mscor", // should ignore mscorrc, mscordbi, mscordaccore, etc
             "mono.cecil.",
             "mscorlib",
-	        "netstandard",
-			"newtonsoft.",
+            "netstandard",
+            "newtonsoft.",
             "nuget.",
             "obsolete.",
             "orc.",
             "orchestra.",
             "ozcode.",
-			"penimc",
+            "penimc",
             "presentation", // should ignore PresentationFramework, PresentationNative, etc
             "protobuf-net",
             "reachframework",
@@ -364,7 +364,13 @@ namespace Orc.Extensibility
             {
                 try
                 {
-                    if (!type.IsClassEx())
+                    // Try fastest ways out first, the sooner we exit, the better
+
+                    // ************************************************************************************
+                    // NON-FIRST CHANCE EXCEPTION THROWING CHECKS
+                    // ************************************************************************************
+
+                    if (type.IsInterfaceEx())
                     {
                         continue;
                     }
@@ -385,6 +391,20 @@ namespace Orc.Extensibility
 
                     // ignore compiler specific classes (such as <>c_displayclass, etc)
                     if (type.Name.Contains("<>c"))
+                    {
+                        continue;
+                    }
+
+                    if (!IsPluginFastPreCheck(context, type))
+                    {
+                        continue;
+                    }
+
+                    // ************************************************************************************
+                    // FIRST CHANCE EXCEPTION THROWING CHECKS
+                    // ************************************************************************************
+
+                    if (!type.IsClassEx())
                     {
                         continue;
                     }
@@ -509,6 +529,21 @@ namespace Orc.Extensibility
                 Log.Debug(ex, $"File '{fileName}' is not signed, not allowing loading of assembly");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Very fast way of checking whether a type should be checked for plugin materials.
+        /// <para />
+        /// This method should return as fast as possible. This code will be executed before any actual type
+        /// checking takes place and could prevent first-chance exceptions when checking specific type elements
+        /// such as <c>IsClass</c> or <c>IsValueType</c>.
+        /// </summary>
+        /// <param name="context">The plugin probing context.</param>
+        /// <param name="type">The type to investigate.</param>
+        /// <returns><c>true</c> if the code should continue checking for plugin materials for this type; otherwise, <c>false</c>.</returns>
+        protected virtual bool IsPluginFastPreCheck(PluginProbingContext context, Type type)
+        {
+            return true;
         }
 
         protected abstract bool IsPlugin(PluginProbingContext context, Type type);

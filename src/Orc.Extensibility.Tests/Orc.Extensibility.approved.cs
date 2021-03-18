@@ -10,6 +10,7 @@ namespace Orc.Extensibility
     public class AppDomainRuntimeAssemblyWatcher
     {
         public AppDomainRuntimeAssemblyWatcher(Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
+        public bool AllowAssemblyResolvingFromOtherLoadContexts { get; set; }
         public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> LoadedAssemblies { get; }
         public event System.EventHandler<Orc.Extensibility.RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
         public void Attach() { }
@@ -169,6 +170,7 @@ namespace Orc.Extensibility
         protected virtual System.Collections.Generic.List<string> FindResolvableAssemblyPaths(string assemblyPath) { }
         protected virtual System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetOldestDuplicates(System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> duplicates) { }
         protected abstract bool IsPlugin(Orc.Extensibility.PluginProbingContext context, System.Type type);
+        protected virtual bool IsPluginFastPreCheck(Orc.Extensibility.PluginProbingContext context, System.Type type) { }
         protected virtual bool IsSigned(string fileName, string subjectName = null) { }
         protected virtual void RemoveDuplicates(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }

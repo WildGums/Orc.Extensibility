@@ -28,9 +28,18 @@
             _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
 
             LoadedAssemblies = new List<RuntimeAssembly>();
+            AllowAssemblyResolvingFromOtherLoadContexts = true;
         }
 
         public event EventHandler<RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
+
+        /// <summary>
+        /// Gets or sets a value whether assembly resolving from other load contexts is permitted.
+        /// <para />
+        /// This value should be enabled when multiple plugins can have dependencies on other plugins. Otherwise
+        /// it should be disabled.
+        /// </summary>
+        public bool AllowAssemblyResolvingFromOtherLoadContexts { get; set; }
 
         public List<RuntimeAssembly> LoadedAssemblies { get; private set; }
 
@@ -72,6 +81,14 @@
             {
                 RuntimeAssembly runtimeReference = null;
 
+                var loadContexts = _runtimeAssemblyResolverService.GetPluginLoadContexts().ToList();
+
+                if (!AllowAssemblyResolvingFromOtherLoadContexts)
+                {
+                    // TODO: How to load from this assembly only?
+                    //loadContexts.Clear();
+                }
+
                 // Special case for resource assemblies: respect the current culture
                 if (arg2.Name.EndsWithIgnoreCase(".resources"))
                 {
@@ -84,7 +101,7 @@
                         var locationWithBackslash = $"{culture.Name}\\{arg2.Name}.dll";
                         var locationWithForwardslash = $"{culture.Name}/{arg2.Name}.dll";
 
-                        runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                        runtimeReference = (from pluginLoadContext in loadContexts
                                             from reference in pluginLoadContext.RuntimeAssemblies
                                             where reference.Location.ContainsIgnoreCase(locationWithBackslash) ||
                                                   reference.Location.ContainsIgnoreCase(locationWithForwardslash)
@@ -102,7 +119,7 @@
 
                 if (runtimeReference is null)
                 {
-                    runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
+                    runtimeReference = (from pluginLoadContext in loadContexts
                                         from reference in pluginLoadContext.RuntimeAssemblies
                                         where reference.Name.EqualsIgnoreCase(arg2.Name)
                                         select reference).FirstOrDefault();

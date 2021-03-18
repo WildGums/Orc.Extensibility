@@ -267,6 +267,7 @@
             return embeddedResources;
         }
 
+        [Time]
         protected virtual void ExtractAssemblyFromEmbeddedResource(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly)
         {
             // TODO: Support resource names
@@ -386,6 +387,7 @@
             RegisterAssembly(pluginLoadContext, runtimeAssembly, targetFileName);
         }
 
+        [Time]
         protected virtual string CalculateChecksum(Stream stream)
         {
             using (var bs = new BufferedStream(stream))

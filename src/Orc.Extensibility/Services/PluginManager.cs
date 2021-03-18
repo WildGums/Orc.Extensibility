@@ -8,6 +8,7 @@ namespace Orc.Extensibility
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Catel;
 
     public class PluginManager : IPluginManager
@@ -23,24 +24,26 @@ namespace Orc.Extensibility
             _pluginFinder = pluginFinder;
         }
 
-        public IEnumerable<IPluginInfo> GetPlugins(bool forceRefresh = false)
+        public async Task<IEnumerable<IPluginInfo>> GetPluginsAsync(bool forceRefresh = false)
         {
+            if (_plugins is null || forceRefresh)
+            {
+                await RefreshAsync();
+            }
+
             lock (_lock)
             {
-                if (_plugins is null || forceRefresh)
-                {
-                    Refresh();
-                }
-
                 return _plugins.ToArray();
             }
         }
 
-        public void Refresh()
+        public async Task RefreshAsync()
         {
+            var plugins = await _pluginFinder.FindPluginsAsync();
+
             lock (_lock)
             {
-                _plugins = new List<IPluginInfo>(_pluginFinder.FindPlugins().OrderBy(x => x.Name));
+                _plugins = new List<IPluginInfo>(plugins.OrderBy(x => x.Name));
             }
         }
     }

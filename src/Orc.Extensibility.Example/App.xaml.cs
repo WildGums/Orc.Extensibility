@@ -27,7 +27,7 @@ namespace Orc.Extensibility.Example
 #endif
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             var serviceLocator = ServiceLocator.Default;
 
@@ -52,7 +52,7 @@ namespace Orc.Extensibility.Example
             var activePlugin = configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
 
             var singlePluginService = serviceLocator.ResolveType<ISinglePluginService>();
-            var plugin = singlePluginService.ConfigureAndLoadPlugin(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            var plugin = await singlePluginService.ConfigureAndLoadPluginAsync(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);
             if (plugin != null)
             {
                 serviceLocator.RegisterInstance(typeof(ICustomPlugin), plugin.Instance);

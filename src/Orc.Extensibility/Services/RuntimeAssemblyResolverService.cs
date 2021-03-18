@@ -17,6 +17,7 @@
     using System.Security.Cryptography;
     using System.Text;
     using System.Diagnostics;
+    using System.Threading.Tasks;
 
     public class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
     {
@@ -51,7 +52,7 @@
             return _pluginLoadContexts.Values.ToArray();
         }
 
-        public void RegisterAssembly(string assemblyLocation)
+        public async Task RegisterAssemblyAsync(string assemblyLocation)
         {
             var fileName = Path.GetFileNameWithoutExtension(assemblyLocation);
             var targetDirectory = Path.Combine(TargetDirectory, fileName);
@@ -64,13 +65,13 @@
             var pluginLoadContext = new PluginLoadContext(assemblyLocation, targetDirectory);
             _pluginLoadContexts[assemblyLocation] = pluginLoadContext;
 
-            RegisterAssembly(pluginLoadContext, null, assemblyLocation);
+            await RegisterAssemblyAsync(pluginLoadContext, null, assemblyLocation);
         }
 
-        protected void RegisterAssembly(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyLocation)
+        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyLocation)
         {
             // TODO: We *could* consider lazy-loading, but let's pre-load for now
-            UnpackCosturaEmbeddedAssemblies(pluginLoadContext, originatingAssembly, assemblyLocation);
+            await UnpackCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, assemblyLocation);
         }
 
         protected virtual string DetermineTargetDirectory()
@@ -79,7 +80,7 @@
         }
 
         [Time]
-        protected virtual void UnpackCosturaEmbeddedAssemblies(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
+        protected virtual async Task UnpackCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
         {
             Log.Debug($"Unpacking all Costura embedded assemblies from '{assemblyPath}' to '{pluginLoadContext.RuntimeDirectory}'");
 
@@ -92,14 +93,14 @@
                         return;
                     }
 
-                    var embeddedResources = FindEmbeddedResources(peReader, assemblyPath);
+                    var embeddedResources = await FindEmbeddedResourcesAsync(peReader, assemblyPath);
                     if (embeddedResources.Count == 0)
                     {
                         // Not using Costura
                         return;
                     }
 
-                    var costuraEmbeddedAssembliesFromMetadata = FindEmbeddedAssembliesViaMetadata(embeddedResources);
+                    var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
                     if (costuraEmbeddedAssembliesFromMetadata is null)
                     {
                         Log.Warning($"Files are embedded with an older version of Costura (< 5.x). It's recommended to update so metadata is embedded by Costura");
@@ -119,7 +120,7 @@
                             costuraEmbeddedAssembly.RelativeFileName = embeddedResource.Name.Replace("costura.", string.Empty).Replace(".compressed", string.Empty);
                             costuraEmbeddedAssembly.AssemblyName = costuraEmbeddedAssembly.RelativeFileName.Replace(".dll", string.Empty).Replace(".exe", string.Empty);
 
-                            ExtractAssemblyFromEmbeddedResource(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
+                            await ExtractAssemblyFromEmbeddedResourceAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
                         }
                     }
                     else
@@ -127,14 +128,14 @@
                         // Extract only what is included (we know exactly what)
                         foreach (var costuraEmbeddedAssembly in costuraEmbeddedAssembliesFromMetadata)
                         {
-                            ExtractAssemblyFromEmbeddedResource(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
+                            await ExtractAssemblyFromEmbeddedResourceAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
                         }
                     }
                 }
             }
         }
 
-        protected List<EmbeddedResource> FindEmbeddedResources(PEReader peReader, string assemblyPath)
+        protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, string assemblyPath)
         {
             var embeddedResources = new List<EmbeddedResource>();
 
@@ -221,7 +222,7 @@
             return embeddedResources;
         }
 
-        protected List<CosturaEmbeddedAssembly> FindEmbeddedAssembliesViaMetadata(IEnumerable<EmbeddedResource> resources)
+        protected async Task<List<CosturaEmbeddedAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
         {
             var metadataResource = (from x in resources
                                     where x.Name.EqualsIgnoreCase("costura.metadata")
@@ -242,7 +243,9 @@
 
                     while (streamReader.Peek() >= 0)
                     {
+#pragma warning disable CL0001 // Use async overload inside this async method
                         var line = streamReader.ReadLine();
+#pragma warning restore CL0001 // Use async overload inside this async method
                         if (!string.IsNullOrEmpty(line))
                         {
                             var costuraEmbeddedResource = new CosturaEmbeddedAssembly(line);
@@ -268,7 +271,7 @@
         }
 
         [Time]
-        protected virtual void ExtractAssemblyFromEmbeddedResource(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly)
+        protected virtual async Task ExtractAssemblyFromEmbeddedResourceAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly)
         {
             // TODO: Support resource names
             // TODO: Support pdb files
@@ -307,25 +310,45 @@
 
             if (_fileService.Exists(targetFileName))
             {
-                // Check md5 hash
-                var checksum = string.Empty;
+                var clearFile = false;
 
-                using (var existingFileStream = _fileService.OpenRead(targetFileName))
+                // Step 1: check size
+                if (costuraEmbeddedAssembly.Size.HasValue &&
+                    new FileInfo(targetFileName).Length != costuraEmbeddedAssembly.Size)
                 {
-                    checksum = CalculateChecksum(existingFileStream);
+                    Log.Debug($"File '{targetFileName}' has incorrect size, deleting file and re-extracting...");
+
+                    clearFile = true;
                 }
 
-                if (checksum.EqualsIgnoreCase(costuraEmbeddedAssembly.Checksum))
+                if (!clearFile)
                 {
-                    // Already extracted
-                    extract = false;
+                    // Step 2: check sha1 hash
+                    var checksum = string.Empty;
+
+                    using (var existingFileStream = _fileService.OpenRead(targetFileName))
+                    {
+                        checksum = await CalculateSha1ChecksumAsync(existingFileStream);
+                    }
+
+                    if (!checksum.EqualsIgnoreCase(costuraEmbeddedAssembly.Sha1Checksum))
+                    {
+                        Log.Debug($"File '{targetFileName}' has incorrect size, deleting file and re-extracting...");
+
+                        clearFile = true;
+                    }
+                }
+
+                if (clearFile)
+                {
+                    _fileService.Delete(targetFileName);
                 }
                 else
                 {
-                    Log.Warning($"File '{targetFileName}' does not have correct hash, deleting file and re-extracting...");
-
-                    _fileService.Delete(targetFileName);
+                    Log.Debug($"File '{targetFileName}' has correct size and hash, no need for re-extracting");
                 }
+
+                extract = clearFile;
             }
 
             var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
@@ -353,8 +376,8 @@
 
                             using (var targetStream = _fileService.Create(targetFileName))
                             {
-                                targetStream.Write(rawAssembly, 0, rawAssembly.Length);
-                                targetStream.Flush();
+                                targetStream.WriteAsync(rawAssembly, 0, rawAssembly.Length);
+                                targetStream.FlushAsync();
                             }
                         }
                     }
@@ -384,17 +407,21 @@
             //}
 
             // Could be nested, extract this one
-            RegisterAssembly(pluginLoadContext, runtimeAssembly, targetFileName);
+            await RegisterAssemblyAsync(pluginLoadContext, runtimeAssembly, targetFileName);
         }
 
         [Time]
-        protected virtual string CalculateChecksum(Stream stream)
+        protected virtual async Task<string> CalculateSha1ChecksumAsync(Stream stream)
         {
             using (var bs = new BufferedStream(stream))
             {
                 using (var sha1 = new SHA1CryptoServiceProvider())
                 {
+#if NETCOREAPP3_1
                     var hash = sha1.ComputeHash(bs);
+#else
+                    var hash = await sha1.ComputeHashAsync(bs);
+#endif
                     var formatted = new StringBuilder(2 * hash.Length);
 
                     foreach (var b in hash)
@@ -471,7 +498,14 @@
                 Version = splitted[1];
                 AssemblyName = splitted[2];
                 RelativeFileName = splitted[3];
-                Checksum = splitted[4];
+                Sha1Checksum = splitted[4];
+
+                // Requires newer version of Costura
+                if (splitted.Length > 5 &&
+                    long.TryParse(splitted[5], out var size))
+                {
+                    Size = size;
+                }
             }
 
             public string ResourceName { get; set; }
@@ -482,7 +516,9 @@
 
             public string RelativeFileName { get; set; }
 
-            public string Checksum { get; set; }
+            public string Sha1Checksum { get; set; }
+
+            public long? Size { get; set; }
 
             public bool IsRuntime
             {
@@ -502,7 +538,7 @@
 
             public override string ToString()
             {
-                return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Checksum}";
+                return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Sha1Checksum}|{Size}";
             }
         }
     }

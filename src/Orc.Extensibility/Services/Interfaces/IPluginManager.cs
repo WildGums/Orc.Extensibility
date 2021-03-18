@@ -7,12 +7,11 @@
 namespace Orc.Extensibility
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface IPluginManager
     {
-        #region Methods
-        IEnumerable<IPluginInfo> GetPlugins(bool forceRefresh = false);
-        public void Refresh();
-        #endregion
+        Task<IEnumerable<IPluginInfo>> GetPluginsAsync(bool forceRefresh = false);
+        Task RefreshAsync();
     }
 }

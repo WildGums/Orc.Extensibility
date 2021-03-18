@@ -9,6 +9,7 @@ namespace Orc.Extensibility
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using Catel;
     using Catel.Logging;
 
@@ -42,9 +43,9 @@ namespace Orc.Extensibility
         #endregion
 
         #region Methods
-        public IPlugin ConfigureAndLoadPlugin(string expectedPlugin, string defaultPlugin)
+        public async Task<IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin)
         {
-            var plugins = _pluginManager.GetPlugins();
+            var plugins = await _pluginManager.GetPluginsAsync();
 
             Log.Debug("Found '{0}' plugins", plugins.Count());
 

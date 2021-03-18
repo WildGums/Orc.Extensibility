@@ -13,7 +13,7 @@
 
         private readonly IFileService _fileService;
 
-        private readonly Dictionary<string, bool> _isPeAssembly = new Dictionary<string, bool>(StringComparer.CurrentCulture);
+        private readonly Dictionary<string, bool> _isPeAssembly = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         public AssemblyReflectionService(IFileService fileService)
         {

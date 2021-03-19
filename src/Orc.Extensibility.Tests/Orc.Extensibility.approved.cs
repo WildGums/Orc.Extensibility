@@ -249,6 +249,7 @@ namespace Orc.Extensibility
         public Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts() { }
         public System.Threading.Tasks.Task RegisterAssemblyAsync(string assemblyLocation) { }
         protected System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyLocation) { }
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyPath) { }
         protected virtual System.Threading.Tasks.Task UnpackCosturaEmbeddedAssembliesAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyPath) { }
         public class CosturaEmbeddedAssembly
         {

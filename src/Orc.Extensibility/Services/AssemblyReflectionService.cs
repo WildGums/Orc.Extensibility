@@ -5,6 +5,7 @@
     using System.Reflection.PortableExecutable;
     using Catel;
     using Catel.Logging;
+    using MethodTimer;
     using Orc.FileSystem;
 
     public class AssemblyReflectionService : IAssemblyReflectionService
@@ -22,6 +23,9 @@
             _fileService = fileService;
         }
 
+#if DEBUG
+        [Time]
+#endif
         public virtual bool IsPeAssembly(string assemblyPath)
         {
             if (!_isPeAssembly.TryGetValue(assemblyPath, out var isPeAssembly))

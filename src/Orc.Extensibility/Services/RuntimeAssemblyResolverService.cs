@@ -355,33 +355,7 @@
 
             if (extract)
             {
-                Log.Debug($"Extracting embedded assembly '{costuraEmbeddedAssembly.ResourceName}' to '{targetFileName}'");
-
-                unsafe
-                {
-                    using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
-                    {
-                        using (var assemblyStream = LoadStream(resourceStream, embeddedResource.Name))
-                        {
-                            if (assemblyStream is null)
-                            {
-                                return;
-                            }
-
-                            var rawAssembly = ReadStream(assemblyStream);
-
-                            var fileDirectory = Path.GetDirectoryName(targetFileName);
-
-                            _directoryService.Create(fileDirectory);
-
-                            using (var targetStream = _fileService.Create(targetFileName))
-                            {
-                                targetStream.WriteAsync(rawAssembly, 0, rawAssembly.Length);
-                                targetStream.FlushAsync();
-                            }
-                        }
-                    }
-                }
+                await ExtractAssemblyFromEmbeddedResourceUncachedAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly, targetFileName);
             }
 
             var assemblyName = !string.IsNullOrWhiteSpace(costuraEmbeddedAssembly.AssemblyName) ?
@@ -411,8 +385,52 @@
         }
 
         [Time]
+        protected virtual async Task ExtractAssemblyFromEmbeddedResourceUncachedAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly, string targetFileName)
+        {
+            Log.Debug($"Extracting embedded assembly '{costuraEmbeddedAssembly.ResourceName}' to '{targetFileName}'");
+
+            var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
+
+            Stream resourceStream = null;
+
+            unsafe
+            {
+                resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size);
+            }
+
+            try
+            {
+                using (var assemblyStream = await LoadStreamAsync(resourceStream, embeddedResource.Name))
+                {
+                    if (assemblyStream is null)
+                    {
+                        return;
+                    }
+
+                    var rawAssembly = await ReadStreamAsync(assemblyStream);
+
+                    var fileDirectory = Path.GetDirectoryName(targetFileName);
+
+                    _directoryService.Create(fileDirectory);
+
+                    using (var targetStream = _fileService.Create(targetFileName))
+                    {
+                        await targetStream.WriteAsync(rawAssembly, 0, rawAssembly.Length);
+                        await targetStream.FlushAsync();
+                    }
+                }
+            }
+            finally
+            {
+                resourceStream?.Dispose();
+            }
+        }
+
+        [Time]
         protected virtual async Task<string> CalculateSha1ChecksumAsync(Stream stream)
         {
+            // Performance idea: do we want to cache hashes for already extracted assemblies?
+
             using (var bs = new BufferedStream(stream))
             {
                 using (var sha1 = new SHA1CryptoServiceProvider())
@@ -420,7 +438,9 @@
 #if NETCOREAPP3_1
                     var hash = sha1.ComputeHash(bs);
 #else
-                    var hash = await sha1.ComputeHashAsync(bs);
+                    // Note: don't use ComputeHasAsync, is very slow!
+                    //var hash = await sha1.ComputeHashAsync(bs);
+                    var hash = sha1.ComputeHash(bs);
 #endif
                     var formatted = new StringBuilder(2 * hash.Length);
 
@@ -434,14 +454,16 @@
             }
         }
 
-        private Stream LoadStream(Stream existingStream, string resourceName)
+        private async Task<Stream> LoadStreamAsync(Stream existingStream, string resourceName)
         {
             if (resourceName.EndsWith(".compressed"))
             {
                 using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
                 {
                     var memoryStream = new MemoryStream();
-                    CopyTo(source, memoryStream);
+
+                    await CopyToAsync(source, memoryStream);
+
                     memoryStream.Position = 0L;
                     return memoryStream;
                 }
@@ -450,20 +472,23 @@
             return existingStream;
         }
 
-        private void CopyTo(Stream source, Stream destination)
+        private async Task CopyToAsync(Stream source, Stream destination)
         {
-            byte[] array = new byte[81920];
+            var array = new byte[81920];
             int count;
+
             while ((count = source.Read(array, 0, array.Length)) != 0)
             {
-                destination.Write(array, 0, count);
+                await destination.WriteAsync(array, 0, count);
             }
+
+            await destination.FlushAsync();
         }
 
-        private byte[] ReadStream(Stream stream)
+        private async Task<byte[]> ReadStreamAsync(Stream stream)
         {
-            byte[] array = new byte[stream.Length];
-            stream.Read(array, 0, array.Length);
+            var array = new byte[stream.Length];
+            await stream.ReadAsync(array, 0, array.Length);
             return array;
         }
 

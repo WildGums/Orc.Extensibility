@@ -89,10 +89,13 @@ namespace Orc.Extensibility
     }
     public interface IPluginManager
     {
-        System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo>> GetPluginsAsync(bool forceRefresh = false);
+        System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins();
         System.Threading.Tasks.Task RefreshAsync();
     }
-    public static class IPluginManagerExtensions { }
+    public static class IPluginManagerExtensions
+    {
+        public static System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo>> RefreshAndGetPluginsAsync(this Orc.Extensibility.IPluginManager pluginManager) { }
+    }
     public interface IPluginService
     {
         event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
@@ -211,7 +214,7 @@ namespace Orc.Extensibility
     public class PluginManager : Orc.Extensibility.IPluginManager
     {
         public PluginManager(Orc.Extensibility.IPluginFinder pluginFinder) { }
-        public System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo>> GetPluginsAsync(bool forceRefresh = false) { }
+        public System.Collections.Generic.IEnumerable<Orc.Extensibility.IPluginInfo> GetPlugins() { }
         public System.Threading.Tasks.Task RefreshAsync() { }
     }
     public class PluginProbingContext

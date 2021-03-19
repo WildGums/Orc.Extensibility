@@ -53,7 +53,7 @@ namespace Orc.Extensibility
         [Time]
         public virtual async Task<IEnumerable<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins)
         {
-            var plugins = await _pluginManager.GetPluginsAsync();
+            var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
             Log.Info("Found '{0}' plugins", plugins.Count());
 

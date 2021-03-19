@@ -248,7 +248,7 @@ namespace Orc.Extensibility
             return oldDuplicates;
         }
 
-        [Time]
+        [Time("{pluginDirectory}")]
         protected virtual async Task FindPluginsInDirectoryAsync(PluginProbingContext context, string pluginDirectory)
         {
             if (_pluginCleanupService.IsCleanupRequired(pluginDirectory))
@@ -319,7 +319,10 @@ namespace Orc.Extensibility
             {
                 try
                 {
-                    await FindPluginsInAssemblyAsync(context, assemblyPath);
+                    if (CanInvestigateAssembly(context, assemblyPath))
+                    {
+                        await FindPluginsInAssemblyAsync(context, assemblyPath);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -331,11 +334,6 @@ namespace Orc.Extensibility
         [Time("{assemblyPath}")]
         protected virtual async Task FindPluginsInAssemblyAsync(PluginProbingContext context, string assemblyPath)
         {
-            if (!CanInvestigateAssembly(context, assemblyPath))
-            {
-                return;
-            }
-
             // Double check that this is a resolvable app (exe don't seem to be resolvable)
             var isPeAssembly = _assemblyReflectionService.IsPeAssembly(assemblyPath);
             if (!isPeAssembly)

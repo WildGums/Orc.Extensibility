@@ -24,7 +24,7 @@
         }
 
 #if DEBUG
-        [Time]
+        [Time("{assemblyPath}")]
 #endif
         public virtual bool IsPeAssembly(string assemblyPath)
         {

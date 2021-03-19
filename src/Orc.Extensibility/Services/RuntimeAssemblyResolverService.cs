@@ -79,9 +79,15 @@
             return System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), "runtime");
         }
 
-        [Time]
+        [Time("{assemblyPath}")]
         protected virtual async Task UnpackCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
         {
+            // Ignore specific assemblies
+            if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, assemblyPath))
+            {
+                return;
+            }
+
             Log.Debug($"Unpacking all Costura embedded assemblies from '{assemblyPath}' to '{pluginLoadContext.RuntimeDirectory}'");
 
             using (var fileStream = _fileService.OpenRead(assemblyPath))
@@ -133,6 +139,16 @@
                     }
                 }
             }
+        }
+
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
+        {
+            if (assemblyPath.ContainsIgnoreCase(".resources.dll"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, string assemblyPath)
@@ -298,6 +314,8 @@
             {
                 if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
                 {
+                    Log.Debug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
+
                     // Not for this platform
                     return;
                 }

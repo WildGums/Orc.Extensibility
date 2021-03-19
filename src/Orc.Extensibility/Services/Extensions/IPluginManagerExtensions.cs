@@ -7,16 +7,23 @@
 
 namespace Orc.Extensibility
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
+    using System.Threading.Tasks;
     using Catel;
     using Catel.Logging;
-    using Catel.Reflection;
 
     public static class IPluginManagerExtensions
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+
+        public static async Task<IEnumerable<IPluginInfo>> RefreshAndGetPluginsAsync(this IPluginManager pluginManager)
+        {
+            Argument.IsNotNull(() => pluginManager);
+
+            await pluginManager.RefreshAsync();
+
+            return pluginManager.GetPlugins();
+        }
 
         //public static List<IPluginInfo> FindPluginImplementations<TPlugin>(this IPluginManager pluginManager)
         //{

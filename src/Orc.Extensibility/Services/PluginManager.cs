@@ -6,15 +6,20 @@
 
 namespace Orc.Extensibility
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Catel;
+    using Catel.Logging;
 
     public class PluginManager : IPluginManager
     {
+        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+
         private readonly object _lock = new object();
         private readonly IPluginFinder _pluginFinder;
+
         private List<IPluginInfo> _plugins;
 
         public PluginManager(IPluginFinder pluginFinder)
@@ -24,15 +29,15 @@ namespace Orc.Extensibility
             _pluginFinder = pluginFinder;
         }
 
-        public async Task<IEnumerable<IPluginInfo>> GetPluginsAsync(bool forceRefresh = false)
+        public IEnumerable<IPluginInfo> GetPlugins()
         {
-            if (_plugins is null || forceRefresh)
-            {
-                await RefreshAsync();
-            }
-
             lock (_lock)
             {
+                if (_plugins is null)
+                {
+                    throw Log.ErrorAndCreateException<InvalidOperationException>("Make sure to call RefreshAsync method at least once before using this method");
+                }
+
                 return _plugins.ToArray();
             }
         }

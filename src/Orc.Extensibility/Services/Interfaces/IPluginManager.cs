@@ -11,7 +11,7 @@ namespace Orc.Extensibility
 
     public interface IPluginManager
     {
-        Task<IEnumerable<IPluginInfo>> GetPluginsAsync(bool forceRefresh = false);
+        IEnumerable<IPluginInfo> GetPlugins();
         Task RefreshAsync();
     }
 }

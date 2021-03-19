@@ -45,7 +45,7 @@ namespace Orc.Extensibility
         #region Methods
         public async Task<IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin)
         {
-            var plugins = await _pluginManager.GetPluginsAsync();
+            var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
             Log.Debug("Found '{0}' plugins", plugins.Count());
 

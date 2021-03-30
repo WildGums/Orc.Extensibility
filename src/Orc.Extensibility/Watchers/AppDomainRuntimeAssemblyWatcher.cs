@@ -21,6 +21,8 @@
         private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
         private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>();
 
+        private PluginLoadContext _activeSingleLoadContext;
+
         public AppDomainRuntimeAssemblyWatcher(IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
             Argument.IsNotNull(() => runtimeAssemblyResolverService);
@@ -85,8 +87,44 @@
 
                 if (!AllowAssemblyResolvingFromOtherLoadContexts)
                 {
-                    // TODO: How to load from this assembly only?
-                    //loadContexts.Clear();
+                    if (_activeSingleLoadContext is null)
+                    {
+                        Log.Debug($"Single load context is enabled, trying to find the current load context");
+
+                        foreach (var loadContext in loadContexts)
+                        {
+                            var valid = false;
+                            var pluginLocation = loadContext.PluginLocation;
+
+                            // Important: the plugin is probably the last loaded assembly, load descending
+                            var assemblies = arg1.Assemblies.ToList();
+
+                            for (var i = assemblies.Count - 1; i >= 0; i--)
+                            {
+                                var potentialPluginAssembly = assemblies[i];
+                                if (potentialPluginAssembly.Location.EqualsIgnoreCase(pluginLocation))
+                                {
+                                    Log.Debug($"Found load context, caching result for all future assembly load actions to single load context of '{loadContext}'");
+
+                                    _activeSingleLoadContext = loadContext;
+                                    valid = true;
+                                    break;
+                                }
+                            }
+
+                            if (valid)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    var activeSingleLoadContext = _activeSingleLoadContext;
+                    if (activeSingleLoadContext is not null)
+                    {
+                        loadContexts.Clear();
+                        loadContexts.Add(activeSingleLoadContext);
+                    }
                 }
 
                 // Special case for resource assemblies: respect the current culture

@@ -21,5 +21,10 @@
         public bool IsRuntime { get; set; }
 
         public List<RuntimeAssembly> Dependencies { get; private set; }
+
+        public override string ToString()
+        {
+            return $"{Name} ({Location})";
+        }
     }
 }

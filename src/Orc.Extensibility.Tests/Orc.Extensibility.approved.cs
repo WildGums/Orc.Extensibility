@@ -204,6 +204,7 @@ namespace Orc.Extensibility
         public string PluginLocation { get; }
         public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> RuntimeAssemblies { get; }
         public string RuntimeDirectory { get; }
+        public override string ToString() { }
     }
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
     {
@@ -235,6 +236,7 @@ namespace Orc.Extensibility
         public string Location { get; }
         public string Name { get; }
         public string Source { get; }
+        public override string ToString() { }
     }
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService
     {

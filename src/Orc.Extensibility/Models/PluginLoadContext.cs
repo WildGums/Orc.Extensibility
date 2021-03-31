@@ -19,5 +19,10 @@
         public string DependenciesFilePath { get; }
 
         public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
+
+        public override string ToString()
+        {
+            return $"{PluginLocation}";
+        }
     }
 }

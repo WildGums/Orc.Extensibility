@@ -97,7 +97,7 @@
                             var pluginLocation = loadContext.PluginLocation;
 
                             // Important: the plugin is probably the last loaded assembly, load descending
-                            var assemblies = arg1.Assemblies.ToList();
+                            var assemblies = arg1.Assemblies.Where(p => !p.IsDynamic).ToList();
 
                             for (var i = assemblies.Count - 1; i >= 0; i--)
                             {

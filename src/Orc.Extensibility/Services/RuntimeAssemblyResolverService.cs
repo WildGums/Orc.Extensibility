@@ -29,6 +29,7 @@
         private readonly IAppDataService _appDataService;
 
         private readonly Dictionary<string, PluginLoadContext> _pluginLoadContexts = new Dictionary<string, PluginLoadContext>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _processedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public RuntimeAssemblyResolverService(IFileService fileService, IDirectoryService directoryService,
             IAssemblyReflectionService assemblyReflectionService, IAppDataService appDataService)
@@ -144,6 +145,11 @@
         protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
         {
             if (assemblyPath.ContainsIgnoreCase(".resources.dll"))
+            {
+                return true;
+            }
+
+            if (_processedAssemblies.Contains(assemblyPath))
             {
                 return true;
             }

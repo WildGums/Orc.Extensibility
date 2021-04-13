@@ -110,6 +110,12 @@
                 {
                     foreach (var fileName in _directoryService.GetFiles(pluginLoadContext.RuntimeDirectory, searchOption: SearchOption.AllDirectories))
                     {
+                        if (pluginLoadContext.RuntimeAssemblies.Any(x => x.Location is not null && x.Location.EqualsAnyIgnoreCase(fileName)))
+                        {
+                            // Ignore if already loaded
+                            continue;
+                        }
+
                         assembliesToRemove.Add(fileName);
                     }
                 }

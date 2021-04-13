@@ -46,7 +46,7 @@ namespace Orc.Extensibility.Example
 
             // Support Costura embedded runtime assemblies
             var appDomainWatcher = serviceLocator.RegisterTypeAndInstantiate<AppDomainRuntimeAssemblyWatcher>();
-            appDomainWatcher.AllowAssemblyResolvingFromOtherLoadContexts = false;
+            //appDomainWatcher.AllowAssemblyResolvingFromOtherLoadContexts = false;
             appDomainWatcher.Attach();
 
             // In an Orchestra environment, this would go into the bootstrapper

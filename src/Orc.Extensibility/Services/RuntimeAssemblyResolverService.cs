@@ -57,8 +57,16 @@
 
         public async Task RegisterAssemblyAsync(string assemblyLocation)
         {
+            var fileNameWithExtension = Path.GetFileName(assemblyLocation);
             var fileName = Path.GetFileNameWithoutExtension(assemblyLocation);
             var targetDirectory = Path.Combine(TargetDirectory, fileName);
+
+            var refAssemblyPath = $"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}{fileNameWithExtension}";
+            if (assemblyLocation.EndsWithIgnoreCase(refAssemblyPath))
+            {
+                // Ignore ref assemblies
+                return;
+            }
 
             if (_pluginLoadContexts.ContainsKey(assemblyLocation))
             {
@@ -102,6 +110,12 @@
                 {
                     foreach (var fileName in _directoryService.GetFiles(pluginLoadContext.RuntimeDirectory, searchOption: SearchOption.AllDirectories))
                     {
+                        if (pluginLoadContext.RuntimeAssemblies.Any(x => x.Location is not null && x.Location.EqualsAnyIgnoreCase(fileName)))
+                        {
+                            // Ignore if already loaded
+                            continue;
+                        }
+
                         assembliesToRemove.Add(fileName);
                     }
                 }

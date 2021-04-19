@@ -106,6 +106,7 @@ namespace Orc.Extensibility
         string TargetDirectory { get; }
         Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts();
         System.Threading.Tasks.Task RegisterAssemblyAsync(string assemblyLocation);
+        System.Threading.Tasks.Task UnregisterAssemblyAsync(string assemblyLocation);
     }
     public interface ISinglePluginService : Orc.Extensibility.IPluginService
     {
@@ -175,7 +176,7 @@ namespace Orc.Extensibility
         protected abstract bool IsPlugin(Orc.Extensibility.PluginProbingContext context, System.Type type);
         protected virtual bool IsPluginFastPreCheck(Orc.Extensibility.PluginProbingContext context, System.Type type) { }
         protected virtual bool IsSigned(string fileName, string subjectName = null) { }
-        protected virtual void RemoveDuplicates(Orc.Extensibility.PluginProbingContext context) { }
+        protected virtual System.Threading.Tasks.Task RemoveDuplicatesAsync(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath) { }
     }
     public class PluginInfo : Orc.Extensibility.IPluginInfo
@@ -253,6 +254,7 @@ namespace Orc.Extensibility
         protected System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyLocation) { }
         protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyPath) { }
         protected virtual System.Threading.Tasks.Task UnpackCosturaEmbeddedAssembliesAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, string assemblyPath) { }
+        public System.Threading.Tasks.Task UnregisterAssemblyAsync(string assemblyLocation) { }
         public class CosturaEmbeddedAssembly
         {
             public CosturaEmbeddedAssembly(Orc.Extensibility.RuntimeAssemblyResolverService.EmbeddedResource embeddedResource) { }

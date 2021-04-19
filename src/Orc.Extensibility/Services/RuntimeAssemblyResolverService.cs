@@ -73,6 +73,30 @@
                 return;
             }
 
+            // Note: hash the assembly location in case multiple "versions" (e.g. '1.0.0-alpha0023' vs. '1.0.0-alpha0026') of the same assembly are being loaded:
+            // %LocalAppdata%\MyCompany\MyProduct\MyExtension\[special hash]\[runtime assemblies]
+
+            var hash = string.Empty;
+
+            // Note: we are using MD5 because we don't expect any clashes on the contents. The file name
+            // including the hash needs to be a short as possible and MD5 is half the no. of characters
+            using (var hashAlgorithm = MD5.Create())
+            {
+                var bytes = UTF8Encoding.UTF8.GetBytes(assemblyLocation);
+                var hashBytes = hashAlgorithm.ComputeHash(bytes);
+
+                var stringBuilder = new StringBuilder();
+
+                foreach (var hashByte in hashBytes)
+                {
+                    stringBuilder.Append($"{hashByte:X2}");
+                }
+
+                hash = stringBuilder.ToString();
+            }
+
+            targetDirectory = Path.Combine(targetDirectory, hash);
+
             var pluginLoadContext = new PluginLoadContext(assemblyLocation, targetDirectory);
             _pluginLoadContexts[assemblyLocation] = pluginLoadContext;
 

@@ -114,7 +114,7 @@ namespace Orc.Extensibility
             // Step 2: Check for plugins outside AppDomain
             await FindPluginsInUnloadedAssembliesAsync(pluginProbingContext);
 
-            RemoveDuplicates(pluginProbingContext);
+            await RemoveDuplicatesAsync(pluginProbingContext);
 
             return pluginProbingContext.Plugins;
         }
@@ -165,7 +165,7 @@ namespace Orc.Extensibility
             }
         }
 
-        protected virtual void RemoveDuplicates(PluginProbingContext context)
+        protected virtual async Task RemoveDuplicatesAsync(PluginProbingContext context)
         {
             for (var i = 0; i < context.Plugins.Count; i++)
             {
@@ -209,6 +209,8 @@ namespace Orc.Extensibility
                             }
 
                             context.Plugins.RemoveAt(j);
+
+                            await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(oldDuplicateLocation);
                         }
                     }
 

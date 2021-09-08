@@ -96,10 +96,9 @@ namespace Orc.Extensibility
                 }
             }
 
-            var fallbackPlugin = _defaultPlugin is not null ? _defaultPlugin :
-                (from plugin in plugins
-                 where string.Equals(plugin.FullTypeName, defaultPlugin)
-                 select plugin).FirstOrDefault();
+            var fallbackPlugin = _defaultPlugin ?? (from plugin in plugins
+                                                    where string.Equals(plugin.FullTypeName, defaultPlugin)
+                                                    select plugin).FirstOrDefault();
 
             if (pluginToLoad is null)
             {

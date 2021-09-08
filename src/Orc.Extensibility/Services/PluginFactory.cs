@@ -86,7 +86,7 @@
 
                 var plugin = _typeFactory.CreateInstance(type);
 
-                Log.Debug($"Plugin creation resulted in an instance: '{plugin != null}'");
+                Log.Debug($"Plugin creation resulted in an instance: '{plugin is not null}'");
 
                 // Workaround for loading assemblies
                 TypeCache.InitializeTypes(type.GetAssemblyEx(), true);

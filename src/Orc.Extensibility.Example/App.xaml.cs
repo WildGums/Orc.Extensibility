@@ -55,7 +55,7 @@ namespace Orc.Extensibility.Example
 
             var singlePluginService = serviceLocator.ResolveType<ISinglePluginService>();
             var plugin = await singlePluginService.ConfigureAndLoadPluginAsync(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);
-            if (plugin != null)
+            if (plugin is not null)
             {
                 serviceLocator.RegisterInstance(typeof(ICustomPlugin), plugin.Instance);
             }

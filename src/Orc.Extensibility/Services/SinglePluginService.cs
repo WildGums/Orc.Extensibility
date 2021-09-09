@@ -21,7 +21,7 @@ namespace Orc.Extensibility
         private readonly IPluginFactory _pluginFactory;
         private readonly ILoadedPluginService _loadedPluginService;
         private readonly IPluginManager _pluginManager;
-        private IPluginInfo _defaultPlugin;
+        private IPluginInfo _fallbackPlugin;
         #endregion
 
         #region Constructors
@@ -96,9 +96,10 @@ namespace Orc.Extensibility
                 }
             }
 
-            var fallbackPlugin = _defaultPlugin ?? (from plugin in plugins
-                                                    where string.Equals(plugin.FullTypeName, defaultPlugin)
-                                                    select plugin).FirstOrDefault();
+            var fallbackPlugin = (from plugin in plugins
+                                  where string.Equals(plugin.FullTypeName, defaultPlugin)
+                                  select plugin).FirstOrDefault() ??
+                                  _fallbackPlugin;
 
             if (pluginToLoad is null)
             {
@@ -148,9 +149,9 @@ namespace Orc.Extensibility
             return new Plugin(pluginInstance, pluginToLoad);
         }
 
-        public void SetDefaultPlugin(IPluginInfo defaultPlugin)
+        public async Task SetFallbackPluginAsync(IPluginInfo fallbackPlugin)
         {
-            _defaultPlugin = defaultPlugin;
+            _fallbackPlugin = fallbackPlugin;
         }
 
         #endregion

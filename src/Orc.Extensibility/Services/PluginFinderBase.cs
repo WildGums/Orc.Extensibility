@@ -382,7 +382,7 @@ namespace Orc.Extensibility
                     }
 
                     // Don't support nested private classes as plugins. Developers should
-                    // expose their plugins, not nest them as private. This saves a lot of 
+                    // expose their plugins, not nest them as private. This saves a lot of
                     // generated classes to investigate. If someone really need this, they can
                     // override this method and implement their own
                     if (type.IsNestedPrivate)
@@ -413,7 +413,7 @@ namespace Orc.Extensibility
                     if (IsPlugin(context, type))
                     {
                         var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
-                        if (pluginInfo != null)
+                        if (pluginInfo is not null)
                         {
                             Log.Debug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
 

@@ -21,6 +21,7 @@ namespace Orc.Extensibility
         private readonly IPluginFactory _pluginFactory;
         private readonly ILoadedPluginService _loadedPluginService;
         private readonly IPluginManager _pluginManager;
+        private IPluginInfo _fallbackPlugin;
         #endregion
 
         #region Constructors
@@ -97,7 +98,9 @@ namespace Orc.Extensibility
 
             var fallbackPlugin = (from plugin in plugins
                                   where string.Equals(plugin.FullTypeName, defaultPlugin)
-                                  select plugin).FirstOrDefault();
+                                  select plugin).FirstOrDefault() ??
+                                  _fallbackPlugin;
+
             if (pluginToLoad is null)
             {
                 const string message = "Plugin could not be found, using default plugin";
@@ -145,6 +148,12 @@ namespace Orc.Extensibility
 
             return new Plugin(pluginInstance, pluginToLoad);
         }
+
+        public async Task SetFallbackPluginAsync(IPluginInfo fallbackPlugin)
+        {
+            _fallbackPlugin = fallbackPlugin;
+        }
+
         #endregion
     }
 }

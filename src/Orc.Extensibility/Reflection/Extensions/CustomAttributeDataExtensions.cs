@@ -12,7 +12,7 @@
             where TAttribute : Attribute
         {
             var attribute = FilterCustomAttributes<TAttribute>(customAttributes).FirstOrDefault();
-            if (attribute != null)
+            if (attribute is not null)
             {
                 return attribute.ConstructorArguments[0].Value;
             }
@@ -28,7 +28,7 @@
             foreach (var attribute in FilterCustomAttributes<TAttribute>(customAttributes))
             {
                 var value = attribute.ConstructorArguments[0].Value;
-                if (value != null)
+                if (value is not null)
                 {
                     values.Add(value);
                 }

@@ -128,7 +128,7 @@ namespace Orc.Extensibility.Example.ViewModels
                 return;
             }
 
-            _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin != null ? SelectedPlugin.FullTypeName : null);
+            _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin is not null ? SelectedPlugin.FullTypeName : null);
         }
         #endregion
     }

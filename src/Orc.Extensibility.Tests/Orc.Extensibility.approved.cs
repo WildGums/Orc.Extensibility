@@ -111,6 +111,7 @@ namespace Orc.Extensibility
     public interface ISinglePluginService : Orc.Extensibility.IPluginService
     {
         System.Threading.Tasks.Task<Orc.Extensibility.IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin);
+        System.Threading.Tasks.Task SetFallbackPluginAsync(Orc.Extensibility.IPluginInfo fallbackPlugin);
     }
     public class LoadedPluginService : Orc.Extensibility.ILoadedPluginService
     {
@@ -292,5 +293,6 @@ namespace Orc.Extensibility
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
         public System.Threading.Tasks.Task<Orc.Extensibility.IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin) { }
+        public System.Threading.Tasks.Task SetFallbackPluginAsync(Orc.Extensibility.IPluginInfo fallbackPlugin) { }
     }
 }

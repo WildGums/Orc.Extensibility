@@ -8,6 +8,7 @@ namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -485,12 +486,14 @@ namespace Orc.Extensibility
                     {
                         if (existingVersion != version)
                         {
+                            // Important: just log, but still add the path
                             Log.Warning($"Already loaded '{fileName}' version '{existingVersion}', but also found runtime assembly '{version}'. The already loaded assembly will be used to investigate '{assemblyPath}'");
-                            continue;
                         }
                     }
-
-                    assemblyVersions[fileName] = version;
+                    else
+                    {
+                        assemblyVersions[fileName] = version;
+                    }
 
                     paths.Add(runtimeAssembly.Location);
                 }
@@ -501,7 +504,25 @@ namespace Orc.Extensibility
 
         protected virtual Version GetFileVersion(string fileName)
         {
-            return AssemblyName.GetAssemblyName(fileName)?.Version ?? new Version("0.0.0");
+            try
+            {
+                return AssemblyName.GetAssemblyName(fileName)?.Version ?? new Version("0.0.0");
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    // Fall back to file version
+                    var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
+                    var fileVersion = fileVersionInfo?.FileVersion ?? "0.0.0";
+                    return new Version(fileVersion);
+                }
+                catch (Exception)
+                {
+                    // Aware of Argument Exception and other possible
+                    return new Version("0.0.0");
+                }
+            }
         }
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)

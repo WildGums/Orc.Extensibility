@@ -486,12 +486,14 @@ namespace Orc.Extensibility
                     {
                         if (existingVersion != version)
                         {
+                            // Important: just log, but still add the path
                             Log.Warning($"Already loaded '{fileName}' version '{existingVersion}', but also found runtime assembly '{version}'. The already loaded assembly will be used to investigate '{assemblyPath}'");
-                            continue;
                         }
                     }
-
-                    assemblyVersions[fileName] = version;
+                    else
+                    {
+                        assemblyVersions[fileName] = version;
+                    }
 
                     paths.Add(runtimeAssembly.Location);
                 }
@@ -522,8 +524,6 @@ namespace Orc.Extensibility
                 }
             }
         }
-
-
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)
         {

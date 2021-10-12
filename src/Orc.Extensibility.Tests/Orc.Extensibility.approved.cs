@@ -173,6 +173,7 @@ namespace Orc.Extensibility
         protected virtual System.Threading.Tasks.Task FindPluginsInLoadedAssembliesAsync(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual System.Threading.Tasks.Task FindPluginsInUnloadedAssembliesAsync(Orc.Extensibility.PluginProbingContext context) { }
         protected virtual System.Collections.Generic.List<string> FindResolvableAssemblyPaths(string assemblyPath) { }
+        protected virtual System.Version GetFileVersion(string fileName) { }
         protected virtual System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetOldestDuplicates(System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> duplicates) { }
         protected abstract bool IsPlugin(Orc.Extensibility.PluginProbingContext context, System.Type type);
         protected virtual bool IsPluginFastPreCheck(Orc.Extensibility.PluginProbingContext context, System.Type type) { }

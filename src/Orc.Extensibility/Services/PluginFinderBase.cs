@@ -343,6 +343,7 @@ namespace Orc.Extensibility
                 return;
             }
 
+            // Register assembly in their own plugin load context
             await _runtimeAssemblyResolverService.RegisterAssemblyAsync(assemblyPath);
 
             // Important: all types already in the app domain should be included as well
@@ -430,6 +431,8 @@ namespace Orc.Extensibility
 
         protected virtual List<string> FindResolvableAssemblyPaths(string assemblyPath)
         {
+            var assemblyVersions = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+
             if (_appDomainResolvablePaths.Count == 0)
             {
                 foreach (var loadedAssembly in AppDomain.CurrentDomain.GetLoadedAssemblies())
@@ -452,6 +455,11 @@ namespace Orc.Extensibility
                     }
 
                     _appDomainResolvablePaths.Add(location);
+
+                    var fileName = Path.GetFileNameWithoutExtension(location);
+                    var version = GetFileVersion(location);
+
+                    assemblyVersions[fileName] = version;
                 }
             }
 
@@ -465,11 +473,35 @@ namespace Orc.Extensibility
             {
                 foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
                 {
+                    if (!_fileService.Exists(runtimeAssembly.Location))
+                    {
+                        continue;
+                    }
+
+                    var fileName = Path.GetFileNameWithoutExtension(runtimeAssembly.Location);
+                    var version = GetFileVersion(runtimeAssembly.Location);
+
+                    if (assemblyVersions.TryGetValue(fileName, out var existingVersion))
+                    {
+                        if (existingVersion != version)
+                        {
+                            Log.Warning($"Already loaded '{fileName}' version '{existingVersion}', but also found runtime assembly '{version}'. The already loaded assembly will be used to investigate '{assemblyPath}'");
+                            continue;
+                        }
+                    }
+
+                    assemblyVersions[fileName] = version;
+
                     paths.Add(runtimeAssembly.Location);
                 }
             }
 
             return paths;
+        }
+
+        protected virtual Version GetFileVersion(string fileName)
+        {
+            return AssemblyName.GetAssemblyName(fileName)?.Version ?? new Version("0.0.0");
         }
 
         protected virtual bool ShouldIgnoreAssembly(string assemblyPath)

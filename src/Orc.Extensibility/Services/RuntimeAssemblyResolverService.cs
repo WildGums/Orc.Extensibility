@@ -551,7 +551,7 @@
 
             using (var bs = new BufferedStream(stream))
             {
-                using (var sha1 = new SHA1CryptoServiceProvider())
+                using (var sha1 = SHA1.Create())
                 {
 #if NETCOREAPP3_1
                     var hash = sha1.ComputeHash(bs);

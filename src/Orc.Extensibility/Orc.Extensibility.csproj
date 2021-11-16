@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <AssemblyName>Orc.Extensibility</AssemblyName>
     <RootNamespace>Orc.Extensibility</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
@@ -32,7 +32,7 @@
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
     <PackageReference Include="Obsolete.Fody" Version="5.2.1" PrivateAssets="all" />
     <PackageReference Include="Orc.FileSystem" Version="4.1.4" />
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="5.0.1" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="6.0.0" />
   </ItemGroup>
   
   <ItemGroup>

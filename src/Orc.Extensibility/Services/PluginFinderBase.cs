@@ -24,6 +24,8 @@ namespace Orc.Extensibility
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
+        private static readonly Version DefaultFallbackVersion = new Version("0.0.0");
+
         private static readonly string[] PluginFileFilters = { "*.dll", "*.exe" };
 
         // Note: make sure these are lowercase & alphabetically sorted
@@ -506,7 +508,7 @@ namespace Orc.Extensibility
         {
             try
             {
-                return AssemblyName.GetAssemblyName(fileName)?.Version ?? new Version("0.0.0");
+                return AssemblyName.GetAssemblyName(fileName)?.Version ?? DefaultFallbackVersion;
             }
             catch (Exception)
             {
@@ -515,12 +517,18 @@ namespace Orc.Extensibility
                     // Fall back to file version
                     var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
                     var fileVersion = fileVersionInfo?.FileVersion ?? "0.0.0";
-                    return new Version(fileVersion);
+
+                    if (Version.TryParse(fileVersion, out var version))
+                    {
+                        return version;
+                    }
+
+                    return DefaultFallbackVersion;
                 }
                 catch (Exception)
                 {
                     // Aware of Argument Exception and other possible
-                    return new Version("0.0.0");
+                    return DefaultFallbackVersion;
                 }
             }
         }

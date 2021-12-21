@@ -23,7 +23,8 @@
         private readonly IAppDataService _appDataService;
         private readonly IDirectoryService _directoryService;
         private readonly IFileService _fileService;
-        private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>();
+        private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _loadedUmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private PluginLoadContext _activeSingleLoadContext;
 
@@ -181,8 +182,7 @@
                     {
                         using (var stream = runtimeReference.GetStream())
                         {
-                            var loadedAssembly = AssemblyLoadContext.Default.LoadFromStream(stream);
-                            // Assembly.LoadFrom(runtimeReference.Location);
+                            var loadedAssembly = assemblyLoadContext.LoadFromStream(stream);
 
                             LoadedAssemblies.Add(runtimeReference);
 
@@ -228,25 +228,34 @@
             {
                 // Note: unmanaged assemblies *must* be loaded from disk
 
-                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), "runtime");
+                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), 
+                    "runtime", runtimeReference.Checksum);
                 _directoryService.Create(targetDirectory);
 
-                var targetFileName = Path.Combine(targetDirectory, $"{runtimeReference.Checksum}.dll");
+                var targetFileName = Path.Combine(targetDirectory, runtimeReference.Name);
 
                 Log.Debug($"Trying to provide '{runtimeReference}' as resolution for '{libraryName}', temp file is '{targetFileName}'");
 
-                // Note: maybe we could optimize by checking the hash? Or maybe just writing is faster than checking
-                using (var sourceStream = runtimeReference.GetStream())
+                // Only load what we extracted ourselves and immediately took into use (blocked)
+                if (!_loadedUmanagedAssemblies.Contains(targetFileName))
                 {
-                    using (var targetStream = _fileService.Create(targetFileName))
+                    // Note: maybe we could optimize by checking the hash? Or maybe just writing is faster than checking
+                    using (var sourceStream = runtimeReference.GetStream())
                     {
-                        sourceStream.CopyTo(targetStream);
-                        targetStream.Flush();
+                        using (var targetStream = _fileService.Create(targetFileName))
+                        {
+                            sourceStream.CopyTo(targetStream);
+                            targetStream.Flush();
+                        }
                     }
                 }
 
                 // In very rare cases, this could not work, see https://github.com/dotnet/runtime/issues/13819
                 var loadedAssembly = System.Runtime.InteropServices.NativeLibrary.Load(targetFileName);
+
+                // Only ones we have loaded the assembly, we are sure we don't want to overwrite it again
+                _loadedUmanagedAssemblies.Add(targetFileName);
+
                 return loadedAssembly;
             }
 

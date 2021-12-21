@@ -103,34 +103,69 @@
 
             var indexedCosturaAssemblies = new List<RuntimeAssembly>();
 
-            using (var runtimeAssemblyStream = runtimeAssembly.GetStream())
+            try
             {
-                using (var peReader = new PEReader(runtimeAssemblyStream))
+                using (var runtimeAssemblyStream = runtimeAssembly.GetStream())
                 {
-                    if (peReader.HasMetadata)
+                    using (var peReader = new PEReader(runtimeAssemblyStream))
                     {
-                        var embeddedResources = await FindEmbeddedResourcesAsync(peReader, runtimeAssembly);
-                        if (embeddedResources.Count > 0)
+                        if (peReader.HasMetadata)
                         {
-                            var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
-                            if (costuraEmbeddedAssembliesFromMetadata is null)
+                            var embeddedResources = await FindEmbeddedResourcesAsync(peReader, runtimeAssembly);
+                            if (embeddedResources.Count > 0)
                             {
-                                Log.Error($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
-                                return indexedCosturaAssemblies;
-                            }
+                                var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
+                                if (costuraEmbeddedAssembliesFromMetadata is null)
+                                {
+                                    Log.Error($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
+                                    return indexedCosturaAssemblies;
+                                }
 
-                            indexedCosturaAssemblies.AddRange(costuraEmbeddedAssembliesFromMetadata);
+                                // Extract only what is included (we know exactly what)
+                                foreach (var costuraEmbeddedAssembly in costuraEmbeddedAssembliesFromMetadata)
+                                {
+                                    if (costuraEmbeddedAssembly.IsRuntime)
+                                    {
+                                        // Check if correct platform
+                                        if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
+                                        {
+                                            Log.Debug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
 
-                            // Extract only what is included (we know exactly what)
-                            foreach (var costuraEmbeddedAssembly in costuraEmbeddedAssembliesFromMetadata)
-                            {
-                                // Recursive indexing
-                                var recursiveRuntimeAssemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
-                                indexedCosturaAssemblies.AddRange(recursiveRuntimeAssemblies);
+                                            // Not for this platform
+                                            continue;
+                                        }
+
+                                        // Preload stream for assemblies that are not being checked
+                                        costuraEmbeddedAssembly.PreloadStream();
+
+                                        // Runtimes never contain embedded assemblies, so only add
+                                        indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+                                        continue;
+                                    }
+
+                                    if (costuraEmbeddedAssembly.RelativeFileName.EndsWithIgnoreCase(".pdb"))
+                                    {
+                                        // Ignore pdb files
+                                        continue;
+                                    }
+
+                                    indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+
+                                    // Recursive indexing
+                                    var recursiveRuntimeAssemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
+                                    if (recursiveRuntimeAssemblies.Any())
+                                    {
+                                        indexedCosturaAssemblies.AddRange(recursiveRuntimeAssemblies);
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"Failed to index Costura assemblies for '{runtimeAssembly}'");
             }
 
             return indexedCosturaAssemblies;

@@ -31,7 +31,15 @@
                 Size = size;
             }
 
-            Name = TypeHelper.GetAssemblyNameWithoutOverhead(AssemblyName);
+            if (!string.IsNullOrWhiteSpace(AssemblyName))
+            {
+                Name = TypeHelper.GetAssemblyNameWithoutOverhead(AssemblyName);
+            }
+            else
+            {
+                Name = Path.GetFileName(RelativeFileName);
+            }
+
             Source = AssemblyName;
         }
 

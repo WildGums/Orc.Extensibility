@@ -35,6 +35,10 @@ namespace Orc.Extensibility
         public override System.IO.Stream GetStream() { }
         public override string ToString() { }
     }
+    public static class CosturaRuntimeAssemblyExtensions
+    {
+        public static void PreloadStream(this Orc.Extensibility.CosturaRuntimeAssembly runtimeAssembly) { }
+    }
     public static class CustomAttributeDataExtensions
     {
         public static object GetAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)

@@ -573,18 +573,19 @@ namespace Orc.Extensibility
         {
             try
             {
-                var certificate = X509Certificate.CreateFromSignedFile(fileName);
-
-                if (!string.IsNullOrWhiteSpace(subjectName))
+                using (var certificate = X509Certificate.CreateFromSignedFile(fileName))
                 {
-                    if (!certificate.Subject.ContainsIgnoreCase(subjectName))
+                    if (!string.IsNullOrWhiteSpace(subjectName))
                     {
-                        Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
-                        return false;
+                        if (!certificate.Subject.ContainsIgnoreCase(subjectName))
+                        {
+                            Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
+                            return false;
+                        }
                     }
-                }
 
-                return true;
+                    return true;
+                }
             }
             catch (Exception ex)
             {

@@ -350,7 +350,9 @@
             {
                 using (var resourceStream = new UnmanagedMemoryStream(metadataResource.Start, metadataResource.Size))
                 {
+#pragma warning disable IDISP001 // Dispose created
                     var streamReader = new StreamReader(resourceStream);
+#pragma warning restore IDISP001 // Dispose created
 
                     while (streamReader.Peek() >= 0)
                     {
@@ -572,7 +574,9 @@
             }
         }
 
+#pragma warning disable IDISP015 // Member should not return created and cached instance
         private async Task<Stream> LoadStreamAsync(Stream existingStream, string resourceName)
+#pragma warning restore IDISP015 // Member should not return created and cached instance
         {
             if (resourceName.EndsWith(".compressed"))
             {

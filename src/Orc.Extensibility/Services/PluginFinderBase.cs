@@ -517,6 +517,13 @@ namespace Orc.Extensibility
                 }
             }
 
+            var refAssemblyPath = $"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}{fileName}";
+            if (assemblyPath.EndsWithIgnoreCase(refAssemblyPath))
+            {
+                // Ignore ref assemblies
+                return true;
+            }
+ 
             if (fileName.ContainsIgnoreCase(".resources.dll"))
             {
                 return true;

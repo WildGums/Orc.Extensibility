@@ -1,6 +1,7 @@
 ﻿namespace Orc.Extensibility.Example.Services
 {
     using System;
+    using System.IO;
     using Catel;
     using Catel.Logging;
     using FileSystem;
@@ -23,7 +24,8 @@
         protected override bool ShouldIgnoreAssembly(string assemblyPath)
         {
             // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here (ExtensionA and ExtensionB)
-            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension"))
+            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension") &&
+                !assemblyPath.ContainsIgnoreCase($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}"))
             {
                 return false;
             }

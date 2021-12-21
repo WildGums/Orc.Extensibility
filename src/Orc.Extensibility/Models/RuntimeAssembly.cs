@@ -6,19 +6,24 @@
 
     public abstract class RuntimeAssembly
     {
+        protected RuntimeAssembly()
+        {
+            Dependencies = new List<RuntimeAssembly>();
+        }
+
         protected RuntimeAssembly(string name, string source, string checksum)
+            : this()
         {
             Name = name;
             Source = source;
             Checksum = checksum;
-            Dependencies = new List<RuntimeAssembly>();
         }
 
-        public string Name { get; private set; }
+        public string Name { get; protected set; }
 
-        public string Source { get; private set; }
+        public string Source { get; protected set; }
 
-        public bool IsRuntime { get; set; }
+        public virtual bool IsRuntime { get; set; }
 
         public string Checksum { get; set; }
 

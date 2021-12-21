@@ -1,15 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers VerifyAssembly="true" VerifyIgnoreCodes="0x80131869" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
-  <ModuleInit />
-  <Catel />
-  <Costura>
-    <IncludeAssemblies>
-      Newtonsoft.Json
-    </IncludeAssemblies>
-  </Costura>
-  <LoadAssembliesOnStartup>
-    <IncludeAssemblies>
-      Newtonsoft.Json
-    </IncludeAssemblies>
-  </LoadAssembliesOnStartup>
+    <ModuleInit />
+    <Catel />
+    <Costura>
+        <IncludeAssemblies>
+            Newtonsoft.Json
+            YamlDotNet
+        </IncludeAssemblies>
+    </Costura>
+    <LoadAssembliesOnStartup>
+        <IncludeAssemblies>
+            Newtonsoft.Json
+        </IncludeAssemblies>
+    </LoadAssembliesOnStartup>
 </Weavers>

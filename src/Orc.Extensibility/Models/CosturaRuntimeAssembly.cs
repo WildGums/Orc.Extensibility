@@ -1,10 +1,14 @@
 ﻿namespace Orc.Extensibility
 {
     using System.IO;
+    using System.IO.Compression;
     using Catel;
+    using Catel.Reflection;
 
     public class CosturaRuntimeAssembly : RuntimeAssembly
     {
+        private byte[] _cachedData;
+
         public CosturaRuntimeAssembly(EmbeddedResource embeddedResource)
         {
             EmbeddedResource = embeddedResource;
@@ -27,7 +31,7 @@
                 Size = size;
             }
 
-            Name = AssemblyName;
+            Name = TypeHelper.GetAssemblyNameWithoutOverhead(AssemblyName);
             Source = AssemblyName;
         }
 
@@ -59,12 +63,74 @@
 
         public override Stream GetStream()
         {
-            throw new System.NotImplementedException();
+            if (_cachedData is null)
+            {
+                // Note: we preferred not to cache, but we can't read the same stream twice it seems
+                var embeddedResource = EmbeddedResource;
+
+                unsafe
+                {
+                    using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
+                    {
+                        using (var stream = LoadStream(resourceStream, embeddedResource.Name))
+                        {
+                            _cachedData = ReadStream(stream);
+                        }
+                    }
+                }
+            }
+
+            return new MemoryStream(_cachedData);
         }
 
         public override string ToString()
         {
             return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Checksum}|{Size}";
+        }
+
+#pragma warning disable IDISP015 // Member should not return created and cached instance
+        private Stream LoadStream(Stream existingStream, string resourceName)
+#pragma warning restore IDISP015 // Member should not return created and cached instance
+        {
+            if (resourceName.EndsWith(".compressed"))
+            {
+                var originalPosition = existingStream.Position;
+
+                using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
+                {
+                    var memoryStream = new MemoryStream();
+
+                    CopyTo(source, memoryStream);
+
+                    memoryStream.Position = 0L;
+                    existingStream.Position = originalPosition;
+
+                    return memoryStream;
+                }
+
+            }
+
+            return existingStream;
+        }
+
+        private void CopyTo(Stream source, Stream destination)
+        {
+            var array = new byte[81920];
+            int count;
+
+            while ((count = source.Read(array, 0, array.Length)) != 0)
+            {
+                destination.Write(array, 0, count);
+            }
+
+            destination.Flush();
+        }
+
+        private byte[] ReadStream(Stream stream)
+        {
+            var array = new byte[stream.Length];
+            stream.Read(array, 0, array.Length);
+            return array;
         }
     }
 }

@@ -86,7 +86,8 @@
 
         protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
-            await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
+            var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
+            pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
         }
 
         [Time("{runtimeAssembly}")]
@@ -112,7 +113,7 @@
                         if (embeddedResources.Count > 0)
                         {
                             var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
-                            if (costuraEmbeddedAssembliesFromMetadata is not null)
+                            if (costuraEmbeddedAssembliesFromMetadata is null)
                             {
                                 Log.Error($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
                                 return indexedCosturaAssemblies;
@@ -134,47 +135,6 @@
 
             return indexedCosturaAssemblies;
         }
-
-        //    Log.Debug($"Indexing embedded assembly '{costuraEmbeddedAssembly.ResourceName}'");
-
-        //    var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
-
-        //    Stream resourceStream = null;
-
-        //    unsafe
-        //    {
-        //        resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size);
-        //    }
-
-        //    try
-        //    {
-        //        using (var assemblyStream = await LoadStreamAsync(resourceStream, embeddedResource.Name))
-        //        {
-        //            if (assemblyStream is null)
-        //            {
-        //                return null;
-        //            }
-
-        //            return new 
-
-        //            var rawAssembly = await ReadStreamAsync(assemblyStream);
-
-        //            var fileDirectory = Path.GetDirectoryName(targetFileName);
-
-        //            _directoryService.Create(fileDirectory);
-
-        //            using (var targetStream = _fileService.Create(targetFileName))
-        //            {
-        //                await targetStream.WriteAsync(rawAssembly, 0, rawAssembly.Length);
-        //                await targetStream.FlushAsync();
-        //            }
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        resourceStream?.Dispose();
-        //    }
-        //}
 
         protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
@@ -326,74 +286,6 @@
             }
 
             return embeddedResources;
-        }
-
-        [Time]
-        protected virtual async Task<string> CalculateSha1ChecksumAsync(Stream stream)
-        {
-            // Performance idea: do we want to cache hashes for already extracted assemblies?
-
-            using (var bs = new BufferedStream(stream))
-            {
-                using (var sha1 = SHA1.Create())
-                {
-#if NETCOREAPP3_1
-                    var hash = sha1.ComputeHash(bs);
-#else
-                    // Note: don't use ComputeHasAsync, is very slow!
-                    //var hash = await sha1.ComputeHashAsync(bs);
-                    var hash = sha1.ComputeHash(bs);
-#endif
-                    var formatted = new StringBuilder(2 * hash.Length);
-
-                    foreach (var b in hash)
-                    {
-                        formatted.AppendFormat("{0:X2}", b);
-                    }
-
-                    return formatted.ToString();
-                }
-            }
-        }
-
-#pragma warning disable IDISP015 // Member should not return created and cached instance
-        private async Task<Stream> LoadStreamAsync(Stream existingStream, string resourceName)
-#pragma warning restore IDISP015 // Member should not return created and cached instance
-        {
-            if (resourceName.EndsWith(".compressed"))
-            {
-                using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
-                {
-                    var memoryStream = new MemoryStream();
-
-                    await CopyToAsync(source, memoryStream);
-
-                    memoryStream.Position = 0L;
-                    return memoryStream;
-                }
-            }
-
-            return existingStream;
-        }
-
-        private async Task CopyToAsync(Stream source, Stream destination)
-        {
-            var array = new byte[81920];
-            int count;
-
-            while ((count = source.Read(array, 0, array.Length)) != 0)
-            {
-                await destination.WriteAsync(array, 0, count);
-            }
-
-            await destination.FlushAsync();
-        }
-
-        private async Task<byte[]> ReadStreamAsync(Stream stream)
-        {
-            var array = new byte[stream.Length];
-            await stream.ReadAsync(array, 0, array.Length);
-            return array;
         }
     }
 }

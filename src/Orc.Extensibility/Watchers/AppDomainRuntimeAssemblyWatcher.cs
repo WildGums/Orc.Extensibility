@@ -12,6 +12,7 @@
     using System.Linq;
     using Catel.Reflection;
     using System.Globalization;
+    using MethodTimer;
 #endif
 
     public class AppDomainRuntimeAssemblyWatcher
@@ -76,10 +77,16 @@
 #if NETCORE
         private Assembly OnLoadContextResolving(AssemblyLoadContext arg1, AssemblyName arg2)
         {
-            Log.Debug($"Requesting to load '{arg2.FullName}'");
+            return LoadManagedAssembly(arg1, arg2, arg2.FullName);
+        }
+
+        [Time("{assemblyFullName}")]
+        private Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
+        {
+            Log.Debug($"Requesting to load '{assemblyName.FullName}'");
 
             // Load context, ignore the requesting assembly for now
-            if (!string.IsNullOrWhiteSpace(arg2.Name))
+            if (!string.IsNullOrWhiteSpace(assemblyName.Name))
             {
                 RuntimeAssembly runtimeReference = null;
 
@@ -97,7 +104,7 @@
                             var pluginLocation = loadContext.PluginLocation;
 
                             // Important: the plugin is probably the last loaded assembly, load descending
-                            var assemblies = arg1.Assemblies.Where(p => !p.IsDynamic).ToList();
+                            var assemblies = assemblyLoadContext.Assemblies.Where(p => !p.IsDynamic).ToList();
 
                             for (var i = assemblies.Count - 1; i >= 0; i--)
                             {
@@ -128,16 +135,16 @@
                 }
 
                 // Special case for resource assemblies: respect the current culture
-                if (arg2.Name.EndsWithIgnoreCase(".resources"))
+                if (assemblyName.Name.EndsWithIgnoreCase(".resources"))
                 {
-                    var culture = arg2.CultureInfo ?? CultureInfo.CurrentUICulture;
+                    var culture = assemblyName.CultureInfo ?? CultureInfo.CurrentUICulture;
 
                     // Step 1: try specific culture (nl-NL)
                     // Step 2: try larger culture (nl)
                     while (culture is not null && !string.IsNullOrWhiteSpace(culture.Name))
                     {
-                        var locationWithBackslash = $"{culture.Name}\\{arg2.Name}.dll";
-                        var locationWithForwardslash = $"{culture.Name}/{arg2.Name}.dll";
+                        var locationWithBackslash = $"{culture.Name}\\{assemblyName.Name}.dll";
+                        var locationWithForwardslash = $"{culture.Name}/{assemblyName.Name}.dll";
 
                         runtimeReference = (from pluginLoadContext in loadContexts
                                             from reference in pluginLoadContext.RuntimeAssemblies
@@ -159,13 +166,13 @@
                 {
                     runtimeReference = (from pluginLoadContext in loadContexts
                                         from reference in pluginLoadContext.RuntimeAssemblies
-                                        where reference.Name.EqualsIgnoreCase(arg2.Name)
+                                        where reference.Name.EqualsIgnoreCase(assemblyName.Name)
                                         select reference).FirstOrDefault();
                 }
 
                 if (runtimeReference is not null)
                 {
-                    Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{arg2.FullName}'");
+                    Log.Debug($"Trying to provide '{runtimeReference.Location}' as resolution for '{assemblyName.FullName}'");
 
                     try
                     {
@@ -173,14 +180,14 @@
 
                         LoadedAssemblies.Add(runtimeReference);
 
-                        AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(arg2, runtimeReference, loadedAssembly));
+                        AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(assemblyName, runtimeReference, loadedAssembly));
 
                         return loadedAssembly;
                     }
                     catch (Exception ex)
                     {
                         var loadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
-                                              where x.GetName().Name.EqualsIgnoreCase(arg2.Name)
+                                              where x.GetName().Name.EqualsIgnoreCase(assemblyName.Name)
                                               select x).FirstOrDefault();
                         if (loadedAssembly is not null)
                         {
@@ -199,6 +206,7 @@
             return null;
         }
 
+        [Time("{libraryName}")]
         private IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
         {
             Log.Debug($"Requesting to load '{libraryName}', requested by '{assembly.FullName}'");

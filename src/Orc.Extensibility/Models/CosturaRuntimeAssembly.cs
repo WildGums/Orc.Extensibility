@@ -1,5 +1,6 @@
 ﻿namespace Orc.Extensibility
 {
+    using System;
     using System.IO;
     using System.IO.Compression;
     using Catel;
@@ -8,6 +9,7 @@
     public class CosturaRuntimeAssembly : RuntimeAssembly
     {
         private byte[] _cachedData;
+        private bool _markedLoaded;
 
         public CosturaRuntimeAssembly(EmbeddedResource embeddedResource)
         {
@@ -71,6 +73,11 @@
 
         public override Stream GetStream()
         {
+            if (_markedLoaded)
+            {
+                throw new NotSupportedException($"{this} is marked as loaded, stream is no longer available");
+            }
+
             if (_cachedData is null)
             {
                 // Note: we preferred not to cache, but we can't read the same stream twice it seems
@@ -89,6 +96,16 @@
             }
 
             return new MemoryStream(_cachedData);
+        }
+
+        public override void MarkLoaded()
+        {
+            _markedLoaded = true;
+
+            if (_cachedData is not null)
+            {
+                _cachedData = null;
+            }
         }
 
         public override string ToString()

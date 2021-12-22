@@ -180,16 +180,20 @@
 
                     try
                     {
+                        Assembly loadedAssembly = null;
+
                         using (var stream = runtimeReference.GetStream())
                         {
-                            var loadedAssembly = assemblyLoadContext.LoadFromStream(stream);
-
-                            LoadedAssemblies.Add(runtimeReference);
-
-                            AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(assemblyName, runtimeReference, loadedAssembly));
-
-                            return loadedAssembly;
+                            loadedAssembly = assemblyLoadContext.LoadFromStream(stream);
                         }
+
+                        runtimeReference.MarkLoaded();
+
+                        LoadedAssemblies.Add(runtimeReference);
+
+                        AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(assemblyName, runtimeReference, loadedAssembly));
+
+                        return loadedAssembly;
                     }
                     catch (Exception ex)
                     {
@@ -248,6 +252,8 @@
                             targetStream.Flush();
                         }
                     }
+
+                    runtimeReference.MarkLoaded();
                 }
 
                 // In very rare cases, this could not work, see https://github.com/dotnet/runtime/issues/13819

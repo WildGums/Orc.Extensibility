@@ -213,7 +213,7 @@ namespace Orc.Extensibility
 
                             context.Plugins.RemoveAt(j);
 
-                            var fileRuntimeAssembly = new FileRuntimeAssembly(oldDuplicateLocation, oldDuplicateLocation, oldDuplicateLocation, oldDuplicateLocation);
+                            var fileRuntimeAssembly = new FileRuntimeAssembly(oldDuplicateLocation);
 
                             await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(fileRuntimeAssembly);
                         }
@@ -349,7 +349,7 @@ namespace Orc.Extensibility
             }
 
             // Just use file name as checksum, it will make it unique as well
-            var fileRuntimeAssembly = new FileRuntimeAssembly(assemblyPath, assemblyPath, assemblyPath, assemblyPath);
+            var fileRuntimeAssembly = new FileRuntimeAssembly(assemblyPath);
 
             // Register assembly in their own plugin load context
             await _runtimeAssemblyResolverService.RegisterAssemblyAsync(fileRuntimeAssembly);

@@ -7,6 +7,10 @@
     using System.Reflection;
     using System.Text;
 
+    /// <summary>
+    /// This class is written in preparation in case we need to lazy-load dynamic assemblies for assembly resolving. For
+    /// now it provides the same behavior as the <see cref="PathAssemblyResolver"/>, but can be improved in the future.
+    /// </summary>
     internal class RuntimeAssemblyMetadataAssemblyResolver : PathAssemblyResolver
     {
         private readonly List<RuntimeAssembly> _runtimeAssemblies = new List<RuntimeAssembly>();
@@ -14,7 +18,6 @@
         public RuntimeAssemblyMetadataAssemblyResolver(IEnumerable<string> assemblyPaths)
             : base(assemblyPaths)
         {
-
         }
 
         public void RegisterAssembly(RuntimeAssembly runtimeAssembly)
@@ -24,13 +27,15 @@
 
         public override Assembly Resolve(MetadataLoadContext context, AssemblyName assemblyName)
         {
-            var runtimeAssembly = (from x in _runtimeAssemblies
-                                  where x.Name == assemblyName.Name
-                                  select x).FirstOrDefault();
-            if (runtimeAssembly is not null)
-            {
+            // Note: 
 
-            }
+            //var runtimeAssembly = (from x in _runtimeAssemblies
+            //                      where x.Name == assemblyName.Name
+            //                      select x).FirstOrDefault();
+            //if (runtimeAssembly is not null)
+            //{
+
+            //}
 
             // fallback to base
             return base.Resolve(context, assemblyName);

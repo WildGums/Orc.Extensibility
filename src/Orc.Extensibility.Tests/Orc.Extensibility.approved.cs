@@ -33,6 +33,7 @@ namespace Orc.Extensibility
         public long? Size { get; set; }
         public string Version { get; set; }
         public override System.IO.Stream GetStream() { }
+        public override void MarkLoaded() { }
         public override string ToString() { }
     }
     public static class CosturaRuntimeAssemblyExtensions
@@ -57,9 +58,11 @@ namespace Orc.Extensibility
     }
     public class FileRuntimeAssembly : Orc.Extensibility.RuntimeAssembly
     {
+        public FileRuntimeAssembly(string location) { }
         public FileRuntimeAssembly(string name, string source, string checksum, string location) { }
         public string Location { get; }
         public override System.IO.Stream GetStream() { }
+        public override void MarkLoaded() { }
         public override string ToString() { }
     }
     public interface IAssemblyReflectionService
@@ -152,14 +155,6 @@ namespace Orc.Extensibility
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         public void AddPlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
         public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> GetLoadedPlugins() { }
-    }
-    public class MemoryRuntimeAssembly : Orc.Extensibility.RuntimeAssembly
-    {
-        public MemoryRuntimeAssembly(string name, string source, string checksum, System.Reflection.Assembly containerAssembly, string resourceName) { }
-        public System.Reflection.Assembly ContainerAssembly { get; }
-        public string ResourceName { get; }
-        public override System.IO.Stream GetStream() { }
-        public override string ToString() { }
     }
     public class MultiplePluginsService : Orc.Extensibility.IMultiplePluginsService, Orc.Extensibility.IPluginService
     {
@@ -276,10 +271,11 @@ namespace Orc.Extensibility
         protected RuntimeAssembly(string name, string source, string checksum) { }
         public string Checksum { get; set; }
         public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> Dependencies { get; }
+        public virtual bool IsRuntime { get; set; }
         public string Name { get; set; }
         public string Source { get; set; }
-        public virtual bool IsRuntime { get; set; }
         public abstract System.IO.Stream GetStream();
+        public abstract void MarkLoaded();
         public override string ToString() { }
     }
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService

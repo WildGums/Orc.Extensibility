@@ -4,10 +4,13 @@
     using System.IO;
     using System.IO.Compression;
     using Catel;
+    using Catel.Logging;
     using Catel.Reflection;
 
     public class CosturaRuntimeAssembly : RuntimeAssembly
     {
+        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+
         private byte[] _cachedData;
         private bool _markedLoaded;
 
@@ -104,6 +107,8 @@
 
             if (_cachedData is not null)
             {
+                Log.Debug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
+
                 _cachedData = null;
             }
         }

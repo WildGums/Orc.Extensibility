@@ -143,6 +143,16 @@
                                         continue;
                                     }
 
+                                    if (costuraEmbeddedAssembly.RelativeFileName.EndsWithIgnoreCase(".resources.dll"))
+                                    {
+                                        // Preload stream for assemblies that are not being checked
+                                        costuraEmbeddedAssembly.PreloadStream();
+
+                                        // Resources never contain embedded assemblies, so only add
+                                        indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+                                        continue;
+                                    }
+
                                     if (costuraEmbeddedAssembly.RelativeFileName.EndsWithIgnoreCase(".pdb"))
                                     {
                                         // Ignore pdb files

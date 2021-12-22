@@ -9,10 +9,8 @@
     using Catel.Reflection;
     using MethodTimer;
 
-#if NETCORE
     using System.Runtime.InteropServices;
     using System.Runtime.Loader;
-#endif
 
     public class PluginFactory : IPluginFactory
     {
@@ -61,11 +59,9 @@
                 //var assembly = Assembly.Load(assemblyName);
                 var assembly = Assembly.LoadFrom(pluginInfo.Location);
 
-#if NETCORE
                 //// NOTE: when using separate load context per assembly, this becomes important
                 //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
                 //loadContext.Resolving += OnLoadContextResolving;
-#endif
 
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 

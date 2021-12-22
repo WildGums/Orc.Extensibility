@@ -4,9 +4,8 @@
 
     public interface IRuntimeAssemblyResolverService
     {
-        string TargetDirectory { get; }
         PluginLoadContext[] GetPluginLoadContexts();
-        Task RegisterAssemblyAsync(string assemblyLocation);
-        Task UnregisterAssemblyAsync(string assemblyLocation);
+        Task RegisterAssemblyAsync(RuntimeAssembly runtimeAssembly);
+        Task UnregisterAssemblyAsync(RuntimeAssembly runtimeAssembly);
     }
 }

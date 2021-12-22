@@ -213,7 +213,9 @@ namespace Orc.Extensibility
 
                             context.Plugins.RemoveAt(j);
 
-                            await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(oldDuplicateLocation);
+                            var fileRuntimeAssembly = new FileRuntimeAssembly(oldDuplicateLocation);
+
+                            await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(fileRuntimeAssembly);
                         }
                     }
 
@@ -346,15 +348,19 @@ namespace Orc.Extensibility
                 return;
             }
 
+            // Just use file name as checksum, it will make it unique as well
+            var fileRuntimeAssembly = new FileRuntimeAssembly(assemblyPath);
+
             // Register assembly in their own plugin load context
-            await _runtimeAssemblyResolverService.RegisterAssemblyAsync(assemblyPath);
+            await _runtimeAssemblyResolverService.RegisterAssemblyAsync(fileRuntimeAssembly);
 
             // Important: all types already in the app domain should be included as well
-            var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
+            var resolvableAssemblyPaths = new List<string>();
+            resolvableAssemblyPaths.Add(assemblyPath);
 
             resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths(assemblyPath));
 
-            var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
+            var resolver = new RuntimeAssemblyMetadataAssemblyResolver(resolvableAssemblyPaths);
 
             using (var metadataLoadContext = new MetadataLoadContext(resolver))
             {
@@ -467,40 +473,6 @@ namespace Orc.Extensibility
             }
 
             var paths = new List<string>(_appDomainResolvablePaths);
-
-            // Always add runtime assemblies, they could be changed. We could (should?) maybe do this *per assembly*
-            var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-                                     where x.PluginLocation.EqualsIgnoreCase(assemblyPath)
-                                     select x).FirstOrDefault();
-            if (pluginLoadContext is not null)
-            {
-                foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
-                {
-                    if (!_fileService.Exists(runtimeAssembly.Location))
-                    {
-                        continue;
-                    }
-
-                    var fileName = Path.GetFileNameWithoutExtension(runtimeAssembly.Location);
-                    var version = GetFileVersion(runtimeAssembly.Location);
-
-                    if (assemblyVersions.TryGetValue(fileName, out var existingVersion))
-                    {
-                        if (existingVersion != version)
-                        {
-                            // Important: just log, but still add the path
-                            Log.Warning($"Already loaded '{fileName}' version '{existingVersion}', but also found runtime assembly '{version}'. The already loaded assembly will be used to investigate '{assemblyPath}'");
-                        }
-                    }
-                    else
-                    {
-                        assemblyVersions[fileName] = version;
-                    }
-
-                    paths.Add(runtimeAssembly.Location);
-                }
-            }
-
             return paths;
         }
 
@@ -545,6 +517,13 @@ namespace Orc.Extensibility
                 }
             }
 
+            var refAssemblyPath = $"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}{fileName}";
+            if (assemblyPath.EndsWithIgnoreCase(refAssemblyPath))
+            {
+                // Ignore ref assemblies
+                return true;
+            }
+ 
             if (fileName.ContainsIgnoreCase(".resources.dll"))
             {
                 return true;

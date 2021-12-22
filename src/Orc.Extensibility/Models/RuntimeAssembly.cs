@@ -1,30 +1,41 @@
 ﻿namespace Orc.Extensibility
 {
     using System.Collections.Generic;
+    using System.IO;
+    using System.Threading.Tasks;
 
-    public class RuntimeAssembly
+    public abstract class RuntimeAssembly
     {
-        public RuntimeAssembly(string name, string location, string source)
+        protected RuntimeAssembly()
         {
-            Name = name;
-            Location = location;
-            Source = source;
             Dependencies = new List<RuntimeAssembly>();
         }
 
-        public string Name { get; private set; }
+        protected RuntimeAssembly(string name, string source, string checksum)
+            : this()
+        {
+            Name = name;
+            Source = source;
+            Checksum = checksum;
+        }
 
-        public string Location { get; private set; }
+        public string Name { get; protected set; }
 
-        public string Source { get; private set; }
+        public string Source { get; protected set; }
 
-        public bool IsRuntime { get; set; }
+        public virtual bool IsRuntime { get; protected set; }
+
+        public string Checksum { get; set; }
 
         public List<RuntimeAssembly> Dependencies { get; private set; }
 
+        public abstract Stream GetStream();
+
+        public abstract void MarkLoaded();
+
         public override string ToString()
         {
-            return $"{Name} ({Location})";
+            return $"{Name}";
         }
     }
 }

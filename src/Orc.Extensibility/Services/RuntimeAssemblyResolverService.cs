@@ -19,7 +19,7 @@
     using System.Diagnostics;
     using System.Threading.Tasks;
 
-    public class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
+    public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
@@ -40,181 +40,132 @@
             _directoryService = directoryService;
             _assemblyReflectionService = assemblyReflectionService;
             _appDataService = appDataService;
-
-            TargetDirectory = DetermineTargetDirectory();
-
-            // Note: deleting might fail when files are in use, that should be possible, 
-            // we will only overwrite
-            _directoryService.Create(TargetDirectory);
         }
-
-        public string TargetDirectory { get; private set; }
 
         public PluginLoadContext[] GetPluginLoadContexts()
         {
             return _pluginLoadContexts.Values.ToArray();
         }
 
-        public async Task RegisterAssemblyAsync(string assemblyLocation)
+        public async Task RegisterAssemblyAsync(RuntimeAssembly runtimeAssembly)
         {
-            var fileNameWithExtension = Path.GetFileName(assemblyLocation);
-            var fileName = Path.GetFileNameWithoutExtension(assemblyLocation);
-            var targetDirectory = Path.Combine(TargetDirectory, fileName);
+            var fileNameWithExtension = Path.GetFileName(runtimeAssembly.Source);
 
             var refAssemblyPath = $"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}{fileNameWithExtension}";
-            if (assemblyLocation.EndsWithIgnoreCase(refAssemblyPath))
+            if (runtimeAssembly.Source.EndsWithIgnoreCase(refAssemblyPath))
             {
                 // Ignore ref assemblies
                 return;
             }
 
-            if (_pluginLoadContexts.ContainsKey(assemblyLocation))
+            if (_pluginLoadContexts.ContainsKey(runtimeAssembly.Checksum))
             {
                 return;
             }
 
-            Log.Debug($"Registering runtime assembly resolving for '{assemblyLocation}'");
+            Log.Debug($"Registering runtime assembly resolving for '{runtimeAssembly}'");
 
-            // Note: hash the assembly location in case multiple "versions" (e.g. '1.0.0-alpha0023' vs. '1.0.0-alpha0026') of the same assembly are being loaded:
-            // %LocalAppdata%\MyCompany\MyProduct\MyExtension\[special hash]\[runtime assemblies]
+            var pluginLoadContext = new PluginLoadContext(runtimeAssembly);
+            _pluginLoadContexts[runtimeAssembly.Checksum] = pluginLoadContext;
 
-            var hash = string.Empty;
-
-            // Note: we are using MD5 because we don't expect any clashes on the contents. The file name
-            // including the hash needs to be a short as possible and MD5 is half the no. of characters
-            using (var hashAlgorithm = MD5.Create())
-            {
-                var bytes = UTF8Encoding.UTF8.GetBytes(assemblyLocation);
-                var hashBytes = hashAlgorithm.ComputeHash(bytes);
-
-                var stringBuilder = new StringBuilder();
-
-                foreach (var hashByte in hashBytes)
-                {
-                    stringBuilder.Append($"{hashByte:X2}");
-                }
-
-                hash = stringBuilder.ToString();
-            }
-
-            targetDirectory = Path.Combine(targetDirectory, hash);
-
-            var pluginLoadContext = new PluginLoadContext(assemblyLocation, targetDirectory);
-            _pluginLoadContexts[assemblyLocation] = pluginLoadContext;
-
-            await RegisterAssemblyAsync(pluginLoadContext, null, assemblyLocation);
+            await RegisterAssemblyAsync(pluginLoadContext, null, runtimeAssembly);
         }
 
-        public async Task UnregisterAssemblyAsync(string assemblyLocation)
+        public async Task UnregisterAssemblyAsync(RuntimeAssembly runtimeAssembly)
         {
-            if (string.IsNullOrWhiteSpace(assemblyLocation))
+            if (runtimeAssembly is null)
             {
                 return;
             }
 
-            Log.Debug($"Unregistering runtime assembly resolving for '{assemblyLocation}'");
-
-            var contextKey = (from x in _pluginLoadContexts
-                              where x.Value.PluginLocation.EqualsIgnoreCase(assemblyLocation)
-                              select x.Key).FirstOrDefault();
-            if (contextKey is null)
+            if (_pluginLoadContexts.Remove(runtimeAssembly.Checksum))
             {
-                Log.Debug("Load context not found, no need to unregister runtime assembly");
-                return;
+                Log.Debug("Unregistered runtime assembly");
             }
-
-            // Note: don't delete the files, it will require re-extracting them at each startup
-
-            _pluginLoadContexts.Remove(contextKey);
         }
 
-        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyLocation)
+        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
-            // TODO: We *could* consider lazy-loading, but let's pre-load for now
-            await UnpackCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, assemblyLocation);
+            var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
+            pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
         }
 
-        protected virtual string DetermineTargetDirectory()
-        {
-            return System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), "runtime");
-        }
-
-        [Time("{assemblyPath}")]
-        protected virtual async Task UnpackCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
+        [Time("{runtimeAssembly}")]
+        protected virtual async Task<IEnumerable<RuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
             // Ignore specific assemblies
-            if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, assemblyPath))
+            if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, runtimeAssembly))
             {
-                return;
+                return Array.Empty<RuntimeAssembly>();
             }
 
-            Log.Debug($"Unpacking all Costura embedded assemblies from '{assemblyPath}' to '{pluginLoadContext.RuntimeDirectory}'");
+            Log.Debug($"Indexing all Costura embedded assemblies from '{runtimeAssembly}'");
 
-            var assembliesToRemove = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var indexedCosturaAssemblies = new List<RuntimeAssembly>();
 
-            // Only remove if originating assembly is null
-            if (originatingAssembly is null)
+            try
             {
-                if (_directoryService.Exists(pluginLoadContext.RuntimeDirectory))
+                using (var runtimeAssemblyStream = runtimeAssembly.GetStream())
                 {
-                    foreach (var fileName in _directoryService.GetFiles(pluginLoadContext.RuntimeDirectory, searchOption: SearchOption.AllDirectories))
+                    using (var peReader = new PEReader(runtimeAssemblyStream))
                     {
-                        if (pluginLoadContext.RuntimeAssemblies.Any(x => x.Location is not null && x.Location.EqualsAnyIgnoreCase(fileName)))
+                        if (peReader.HasMetadata)
                         {
-                            // Ignore if already loaded
-                            continue;
-                        }
-
-                        assembliesToRemove.Add(fileName);
-                    }
-                }
-            }
-
-            using (var fileStream = _fileService.OpenRead(assemblyPath))
-            {
-                using (var peReader = new PEReader(fileStream))
-                {
-                    if (peReader.HasMetadata)
-                    {
-                        var embeddedResources = await FindEmbeddedResourcesAsync(peReader, assemblyPath);
-                        if (embeddedResources.Count > 0)
-                        {
-                            var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
-                            if (costuraEmbeddedAssembliesFromMetadata is null)
+                            var embeddedResources = await FindEmbeddedResourcesAsync(peReader, runtimeAssembly);
+                            if (embeddedResources.Count > 0)
                             {
-                                Log.Warning($"Files are embedded with an older version of Costura (< 5.x). It's recommended to update so metadata is embedded by Costura");
-
-                                // Old version of Costura, just extract everything
-                                foreach (var embeddedResource in embeddedResources)
+                                var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
+                                if (costuraEmbeddedAssembliesFromMetadata is null)
                                 {
-                                    if (!embeddedResource.Name.StartsWith("costura."))
-                                    {
-                                        continue;
-                                    }
-
-                                    // Dynamically create the info
-                                    var costuraEmbeddedAssembly = new CosturaEmbeddedAssembly(embeddedResource);
-
-                                    costuraEmbeddedAssembly.ResourceName = embeddedResource.Name;
-                                    costuraEmbeddedAssembly.RelativeFileName = embeddedResource.Name.Replace("costura.", string.Empty).Replace(".compressed", string.Empty);
-                                    costuraEmbeddedAssembly.AssemblyName = costuraEmbeddedAssembly.RelativeFileName.Replace(".dll", string.Empty).Replace(".exe", string.Empty);
-
-                                    var targetFileName = await ExtractAssemblyFromEmbeddedResourceAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
-                                    if (!string.IsNullOrWhiteSpace(targetFileName))
-                                    {
-                                        assembliesToRemove.Remove(targetFileName);
-                                    }
+                                    Log.Error($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
+                                    return indexedCosturaAssemblies;
                                 }
-                            }
-                            else
-                            {
+
                                 // Extract only what is included (we know exactly what)
                                 foreach (var costuraEmbeddedAssembly in costuraEmbeddedAssembliesFromMetadata)
                                 {
-                                    var targetFileName = await ExtractAssemblyFromEmbeddedResourceAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
-                                    if (!string.IsNullOrWhiteSpace(targetFileName))
+                                    if (costuraEmbeddedAssembly.IsRuntime)
                                     {
-                                        assembliesToRemove.Remove(targetFileName);
+                                        // Check if correct platform
+                                        if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
+                                        {
+                                            Log.Debug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
+
+                                            // Not for this platform
+                                            continue;
+                                        }
+
+                                        // Preload stream for assemblies that are not being checked
+                                        costuraEmbeddedAssembly.PreloadStream();
+
+                                        // Runtimes never contain embedded assemblies, so only add
+                                        indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+                                        continue;
+                                    }
+
+                                    if (costuraEmbeddedAssembly.RelativeFileName.EndsWithIgnoreCase(".resources.dll"))
+                                    {
+                                        // Preload stream for assemblies that are not being checked
+                                        costuraEmbeddedAssembly.PreloadStream();
+
+                                        // Resources never contain embedded assemblies, so only add
+                                        indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+                                        continue;
+                                    }
+
+                                    if (costuraEmbeddedAssembly.RelativeFileName.EndsWithIgnoreCase(".pdb"))
+                                    {
+                                        // Ignore pdb files
+                                        continue;
+                                    }
+
+                                    indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
+
+                                    // Recursive indexing
+                                    var recursiveRuntimeAssemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
+                                    if (recursiveRuntimeAssemblies.Any())
+                                    {
+                                        indexedCosturaAssemblies.AddRange(recursiveRuntimeAssemblies);
                                     }
                                 }
                             }
@@ -222,23 +173,22 @@
                     }
                 }
             }
-
-            foreach (var assemblyToRemove in assembliesToRemove)
+            catch (Exception ex)
             {
-                Log.Debug($"Removing '{assemblyToRemove}' because it's not longer embedded");
-
-                _fileService.Delete(assemblyToRemove);
+                Log.Warning(ex, $"Failed to index Costura assemblies for '{runtimeAssembly}'");
             }
+
+            return indexedCosturaAssemblies;
         }
 
-        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, string assemblyPath)
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
-            if (assemblyPath.ContainsIgnoreCase(".resources.dll"))
+            if (runtimeAssembly.Name.ContainsIgnoreCase(".resources.dll"))
             {
                 return true;
             }
 
-            if (_processedAssemblies.Contains(assemblyPath))
+            if (_processedAssemblies.Contains(runtimeAssembly.Checksum))
             {
                 return true;
             }
@@ -246,7 +196,7 @@
             return false;
         }
 
-        protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, string assemblyPath)
+        protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, RuntimeAssembly containerAssembly)
         {
             var embeddedResources = new List<EmbeddedResource>();
 
@@ -322,7 +272,7 @@
 
                     embeddedResources.Add(new EmbeddedResource
                     {
-                        SourceAssemblyPath = assemblyPath,
+                        ContainerAssembly = containerAssembly,
                         Name = resourceName,
                         Start = resourceStart,
                         Size = size
@@ -333,7 +283,7 @@
             return embeddedResources;
         }
 
-        protected async Task<List<CosturaEmbeddedAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
+        protected virtual async Task<List<CosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
         {
             var metadataResource = (from x in resources
                                     where x.Name.EqualsIgnoreCase("costura.metadata")
@@ -344,13 +294,15 @@
                 return null;
             }
 
-            var embeddedResources = new List<CosturaEmbeddedAssembly>();
+            var embeddedResources = new List<CosturaRuntimeAssembly>();
 
             unsafe
             {
                 using (var resourceStream = new UnmanagedMemoryStream(metadataResource.Start, metadataResource.Size))
                 {
+#pragma warning disable IDISP001 // Dispose created
                     var streamReader = new StreamReader(resourceStream);
+#pragma warning restore IDISP001 // Dispose created
 
                     while (streamReader.Peek() >= 0)
                     {
@@ -359,7 +311,7 @@
 #pragma warning restore CL0001 // Use async overload inside this async method
                         if (!string.IsNullOrEmpty(line))
                         {
-                            var costuraEmbeddedResource = new CosturaEmbeddedAssembly(line);
+                            var costuraEmbeddedResource = new CosturaRuntimeAssembly(line);
 
                             var embeddedResource = (from x in resources
                                                     where x.Name == costuraEmbeddedResource.ResourceName
@@ -379,310 +331,6 @@
             }
 
             return embeddedResources;
-        }
-
-        [Time]
-        protected virtual async Task<string> ExtractAssemblyFromEmbeddedResourceAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly)
-        {
-            // TODO: Support resource names
-            // TODO: Support pdb files
-
-            //if (requestedAssemblyName.CultureInfo != null && !string.IsNullOrEmpty(requestedAssemblyName.CultureInfo.Name))
-            //{
-            //    text = requestedAssemblyName.CultureInfo.Name + "." + text;
-            //}
-
-            if (costuraEmbeddedAssembly.ResourceName.Contains(".pdb"))
-            {
-                // Ignore for now
-                return null;
-            }
-
-            var existingLocation = (from x in pluginLoadContext.RuntimeAssemblies
-                                    where x.Location.EndsWith(costuraEmbeddedAssembly.RelativeFileName)
-                                    select x.Location).FirstOrDefault();
-            if (!string.IsNullOrEmpty(existingLocation))
-            {
-                // Already extracted
-                return existingLocation;
-            }
-
-#if NETCORE
-            if (costuraEmbeddedAssembly.IsRuntime)
-            {
-                if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
-                {
-                    Log.Debug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
-
-                    // Not for this platform
-                    return null;
-                }
-            }
-#endif
-
-            var extract = true;
-            var targetDirectory = pluginLoadContext.RuntimeDirectory;
-            var targetFileName = Path.Combine(targetDirectory, costuraEmbeddedAssembly.RelativeFileName.Replace("/", DirectorySeparator));
-
-            if (_fileService.Exists(targetFileName))
-            {
-                var clearFile = false;
-
-                // Step 1: check size
-                if (costuraEmbeddedAssembly.Size.HasValue &&
-                    new FileInfo(targetFileName).Length != costuraEmbeddedAssembly.Size)
-                {
-                    Log.Debug($"File '{targetFileName}' has incorrect size, deleting file and re-extracting...");
-
-                    clearFile = true;
-                }
-
-                if (!clearFile)
-                {
-                    // Step 2: check sha1 hash
-                    var checksum = string.Empty;
-
-                    using (var existingFileStream = _fileService.OpenRead(targetFileName))
-                    {
-                        checksum = await CalculateSha1ChecksumAsync(existingFileStream);
-                    }
-
-                    if (!checksum.EqualsIgnoreCase(costuraEmbeddedAssembly.Sha1Checksum))
-                    {
-                        Log.Debug($"File '{targetFileName}' has incorrect size, deleting file and re-extracting...");
-
-                        clearFile = true;
-                    }
-                }
-
-                if (clearFile)
-                {
-                    _fileService.Delete(targetFileName);
-                }
-                else
-                {
-                    Log.Debug($"File '{targetFileName}' has correct size and hash, no need for re-extracting");
-                }
-
-                extract = clearFile;
-            }
-
-            var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
-
-            if (extract)
-            {
-                await ExtractAssemblyFromEmbeddedResourceUncachedAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly, targetFileName);
-            }
-
-            var assemblyName = !string.IsNullOrWhiteSpace(costuraEmbeddedAssembly.AssemblyName) ?
-                TypeHelper.GetAssemblyNameWithoutOverhead(costuraEmbeddedAssembly.AssemblyName) :
-                costuraEmbeddedAssembly.ResourceName;
-
-            var runtimeAssembly = new RuntimeAssembly(assemblyName, targetFileName, embeddedResource.SourceAssemblyPath)
-            {
-                IsRuntime = costuraEmbeddedAssembly.ResourceName.ContainsIgnoreCase(".runtimes.")
-            };
-
-            originatingAssembly?.Dependencies.Add(runtimeAssembly);
-
-            pluginLoadContext.RuntimeAssemblies.Add(runtimeAssembly);
-
-            //using (var symbolStream = LoadStream(symbolNames, text))
-            //{
-            //    if (symbolStream is not null)
-            //    {
-            //        byte[] rawSymbolStore = ReadStream(symbolStream);
-            //        return Assembly.Load(rawAssembly, rawSymbolStore);
-            //    }
-            //}
-
-            // Could be nested, extract this one
-            await RegisterAssemblyAsync(pluginLoadContext, runtimeAssembly, targetFileName);
-
-            return targetFileName;
-        }
-
-        [Time]
-        protected virtual async Task ExtractAssemblyFromEmbeddedResourceUncachedAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, CosturaEmbeddedAssembly costuraEmbeddedAssembly, string targetFileName)
-        {
-            Log.Debug($"Extracting embedded assembly '{costuraEmbeddedAssembly.ResourceName}' to '{targetFileName}'");
-
-            var embeddedResource = costuraEmbeddedAssembly.EmbeddedResource;
-
-            Stream resourceStream = null;
-
-            unsafe
-            {
-                resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size);
-            }
-
-            try
-            {
-                using (var assemblyStream = await LoadStreamAsync(resourceStream, embeddedResource.Name))
-                {
-                    if (assemblyStream is null)
-                    {
-                        return;
-                    }
-
-                    var rawAssembly = await ReadStreamAsync(assemblyStream);
-
-                    var fileDirectory = Path.GetDirectoryName(targetFileName);
-
-                    _directoryService.Create(fileDirectory);
-
-                    using (var targetStream = _fileService.Create(targetFileName))
-                    {
-                        await targetStream.WriteAsync(rawAssembly, 0, rawAssembly.Length);
-                        await targetStream.FlushAsync();
-                    }
-                }
-            }
-            finally
-            {
-                resourceStream?.Dispose();
-            }
-        }
-
-        [Time]
-        protected virtual async Task<string> CalculateSha1ChecksumAsync(Stream stream)
-        {
-            // Performance idea: do we want to cache hashes for already extracted assemblies?
-
-            using (var bs = new BufferedStream(stream))
-            {
-                using (var sha1 = new SHA1CryptoServiceProvider())
-                {
-#if NETCOREAPP3_1
-                    var hash = sha1.ComputeHash(bs);
-#else
-                    // Note: don't use ComputeHasAsync, is very slow!
-                    //var hash = await sha1.ComputeHashAsync(bs);
-                    var hash = sha1.ComputeHash(bs);
-#endif
-                    var formatted = new StringBuilder(2 * hash.Length);
-
-                    foreach (var b in hash)
-                    {
-                        formatted.AppendFormat("{0:X2}", b);
-                    }
-
-                    return formatted.ToString();
-                }
-            }
-        }
-
-        private async Task<Stream> LoadStreamAsync(Stream existingStream, string resourceName)
-        {
-            if (resourceName.EndsWith(".compressed"))
-            {
-                using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
-                {
-                    var memoryStream = new MemoryStream();
-
-                    await CopyToAsync(source, memoryStream);
-
-                    memoryStream.Position = 0L;
-                    return memoryStream;
-                }
-            }
-
-            return existingStream;
-        }
-
-        private async Task CopyToAsync(Stream source, Stream destination)
-        {
-            var array = new byte[81920];
-            int count;
-
-            while ((count = source.Read(array, 0, array.Length)) != 0)
-            {
-                await destination.WriteAsync(array, 0, count);
-            }
-
-            await destination.FlushAsync();
-        }
-
-        private async Task<byte[]> ReadStreamAsync(Stream stream)
-        {
-            var array = new byte[stream.Length];
-            await stream.ReadAsync(array, 0, array.Length);
-            return array;
-        }
-
-        public unsafe class EmbeddedResource
-        {
-            public string SourceAssemblyPath { get; set; }
-
-            public string Name { get; set; }
-
-            public byte* Start { get; set; }
-
-            public int Size { get; set; }
-
-            public override string ToString()
-            {
-                return $"{Name} ({SourceAssemblyPath})";
-            }
-        }
-
-        public class CosturaEmbeddedAssembly
-        {
-            public CosturaEmbeddedAssembly(EmbeddedResource embeddedResource)
-            {
-                EmbeddedResource = embeddedResource;
-            }
-
-            public CosturaEmbeddedAssembly(string content)
-            {
-                var splitted = content.Split('|');
-
-                ResourceName = splitted[0];
-                Version = splitted[1];
-                AssemblyName = splitted[2];
-                RelativeFileName = splitted[3];
-                Sha1Checksum = splitted[4];
-
-                // Requires newer version of Costura
-                if (splitted.Length > 5 &&
-                    long.TryParse(splitted[5], out var size))
-                {
-                    Size = size;
-                }
-            }
-
-            public string ResourceName { get; set; }
-
-            public string Version { get; set; }
-
-            public string AssemblyName { get; set; }
-
-            public string RelativeFileName { get; set; }
-
-            public string Sha1Checksum { get; set; }
-
-            public long? Size { get; set; }
-
-            public bool IsRuntime
-            {
-                get
-                {
-                    var resourceName = ResourceName;
-                    if (!string.IsNullOrWhiteSpace(resourceName))
-                    {
-                        return resourceName.ContainsIgnoreCase(".runtimes.");
-                    }
-
-                    return EmbeddedResource?.Name.ContainsIgnoreCase(".runtimes.") ?? false;
-                }
-            }
-
-            public EmbeddedResource EmbeddedResource { get; set; }
-
-            public override string ToString()
-            {
-                return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Sha1Checksum}|{Size}";
-            }
         }
     }
 }

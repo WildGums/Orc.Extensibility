@@ -2,27 +2,25 @@
 {
     using System.Collections.Generic;
     using System.IO;
+    using Catel;
 
     public class PluginLoadContext
     {
-        public PluginLoadContext(string pluginLocation, string runtimeDirectory)
+        public PluginLoadContext(RuntimeAssembly pluginRuntimeAssembly)
         {
-            PluginLocation = pluginLocation;
-            RuntimeDirectory = runtimeDirectory;
-            DependenciesFilePath = Path.ChangeExtension(pluginLocation, "deps.json");
+            Argument.IsNotNull(() => pluginRuntimeAssembly);
 
+            PluginRuntimeAssembly = pluginRuntimeAssembly;
             RuntimeAssemblies = new List<RuntimeAssembly>();
         }
 
-        public string PluginLocation { get; }
-        public string RuntimeDirectory { get; }
-        public string DependenciesFilePath { get; }
+        public RuntimeAssembly PluginRuntimeAssembly { get; }
 
         public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
 
         public override string ToString()
         {
-            return $"{PluginLocation}";
+            return $"{PluginRuntimeAssembly}";
         }
     }
 }

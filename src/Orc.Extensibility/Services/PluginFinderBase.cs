@@ -24,6 +24,8 @@ namespace Orc.Extensibility
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
+        private static readonly Version DefaultFallbackVersion = new Version("0.0.0");
+
         private static readonly string[] PluginFileFilters = { "*.dll", "*.exe" };
 
         // Note: make sure these are lowercase & alphabetically sorted
@@ -211,7 +213,9 @@ namespace Orc.Extensibility
 
                             context.Plugins.RemoveAt(j);
 
-                            await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(oldDuplicateLocation);
+                            var fileRuntimeAssembly = new FileRuntimeAssembly(oldDuplicateLocation);
+
+                            await _runtimeAssemblyResolverService.UnregisterAssemblyAsync(fileRuntimeAssembly);
                         }
                     }
 
@@ -344,15 +348,19 @@ namespace Orc.Extensibility
                 return;
             }
 
+            // Just use file name as checksum, it will make it unique as well
+            var fileRuntimeAssembly = new FileRuntimeAssembly(assemblyPath);
+
             // Register assembly in their own plugin load context
-            await _runtimeAssemblyResolverService.RegisterAssemblyAsync(assemblyPath);
+            await _runtimeAssemblyResolverService.RegisterAssemblyAsync(fileRuntimeAssembly);
 
             // Important: all types already in the app domain should be included as well
-            var resolvableAssemblyPaths = new List<string>(new string[] { assemblyPath });
+            var resolvableAssemblyPaths = new List<string>();
+            resolvableAssemblyPaths.Add(assemblyPath);
 
             resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths(assemblyPath));
 
-            var resolver = new PathAssemblyResolver(resolvableAssemblyPaths);
+            var resolver = new RuntimeAssemblyMetadataAssemblyResolver(resolvableAssemblyPaths);
 
             using (var metadataLoadContext = new MetadataLoadContext(resolver))
             {
@@ -465,40 +473,6 @@ namespace Orc.Extensibility
             }
 
             var paths = new List<string>(_appDomainResolvablePaths);
-
-            // Always add runtime assemblies, they could be changed. We could (should?) maybe do this *per assembly*
-            var pluginLoadContext = (from x in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-                                     where x.PluginLocation.EqualsIgnoreCase(assemblyPath)
-                                     select x).FirstOrDefault();
-            if (pluginLoadContext is not null)
-            {
-                foreach (var runtimeAssembly in pluginLoadContext.RuntimeAssemblies)
-                {
-                    if (!_fileService.Exists(runtimeAssembly.Location))
-                    {
-                        continue;
-                    }
-
-                    var fileName = Path.GetFileNameWithoutExtension(runtimeAssembly.Location);
-                    var version = GetFileVersion(runtimeAssembly.Location);
-
-                    if (assemblyVersions.TryGetValue(fileName, out var existingVersion))
-                    {
-                        if (existingVersion != version)
-                        {
-                            // Important: just log, but still add the path
-                            Log.Warning($"Already loaded '{fileName}' version '{existingVersion}', but also found runtime assembly '{version}'. The already loaded assembly will be used to investigate '{assemblyPath}'");
-                        }
-                    }
-                    else
-                    {
-                        assemblyVersions[fileName] = version;
-                    }
-
-                    paths.Add(runtimeAssembly.Location);
-                }
-            }
-
             return paths;
         }
 
@@ -506,7 +480,7 @@ namespace Orc.Extensibility
         {
             try
             {
-                return AssemblyName.GetAssemblyName(fileName)?.Version ?? new Version("0.0.0");
+                return AssemblyName.GetAssemblyName(fileName)?.Version ?? DefaultFallbackVersion;
             }
             catch (Exception)
             {
@@ -515,12 +489,18 @@ namespace Orc.Extensibility
                     // Fall back to file version
                     var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
                     var fileVersion = fileVersionInfo?.FileVersion ?? "0.0.0";
-                    return new Version(fileVersion);
+
+                    if (Version.TryParse(fileVersion, out var version))
+                    {
+                        return version;
+                    }
+
+                    return DefaultFallbackVersion;
                 }
                 catch (Exception)
                 {
                     // Aware of Argument Exception and other possible
-                    return new Version("0.0.0");
+                    return DefaultFallbackVersion;
                 }
             }
         }
@@ -537,6 +517,13 @@ namespace Orc.Extensibility
                 }
             }
 
+            var refAssemblyPath = $"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}{fileName}";
+            if (assemblyPath.EndsWithIgnoreCase(refAssemblyPath))
+            {
+                // Ignore ref assemblies
+                return true;
+            }
+ 
             if (fileName.ContainsIgnoreCase(".resources.dll"))
             {
                 return true;
@@ -565,18 +552,19 @@ namespace Orc.Extensibility
         {
             try
             {
-                var certificate = X509Certificate.CreateFromSignedFile(fileName);
-
-                if (!string.IsNullOrWhiteSpace(subjectName))
+                using (var certificate = X509Certificate.CreateFromSignedFile(fileName))
                 {
-                    if (!certificate.Subject.ContainsIgnoreCase(subjectName))
+                    if (!string.IsNullOrWhiteSpace(subjectName))
                     {
-                        Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
-                        return false;
+                        if (!certificate.Subject.ContainsIgnoreCase(subjectName))
+                        {
+                            Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
+                            return false;
+                        }
                     }
-                }
 
-                return true;
+                    return true;
+                }
             }
             catch (Exception ex)
             {

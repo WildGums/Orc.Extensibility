@@ -440,7 +440,7 @@ namespace Orc.Extensibility
 
         protected virtual List<string> FindResolvableAssemblyPaths(string assemblyPath)
         {
-            var assemblyVersions = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+            //var assemblyVersions = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
 
             if (_appDomainResolvablePaths.Count == 0)
             {
@@ -465,10 +465,10 @@ namespace Orc.Extensibility
 
                     _appDomainResolvablePaths.Add(location);
 
-                    var fileName = Path.GetFileNameWithoutExtension(location);
-                    var version = GetFileVersion(location);
+                    //var fileName = Path.GetFileNameWithoutExtension(location);
+                    //var version = GetFileVersion(location);
 
-                    assemblyVersions[fileName] = version;
+                    //assemblyVersions[fileName] = version;
                 }
             }
 
@@ -488,7 +488,14 @@ namespace Orc.Extensibility
                 {
                     // Fall back to file version
                     var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
-                    var fileVersion = fileVersionInfo?.FileVersion ?? "0.0.0";
+
+                    // Note: use the parts since FileVersion can contain commit info, etc
+                    var fileVersion = "0.0.0";
+                    if (fileVersionInfo is not null)
+                    {
+                        fileVersion = $"{fileVersionInfo.FileMajorPart}.{fileVersionInfo.FileMinorPart}.{fileVersionInfo.FileBuildPart}";
+                        fileVersion = fileVersionInfo.FileVersion;
+                    }
 
                     if (Version.TryParse(fileVersion, out var version))
                     {

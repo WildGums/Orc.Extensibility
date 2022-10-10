@@ -1,11 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SinglePluginService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2015 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Linq;
@@ -15,42 +8,35 @@ namespace Orc.Extensibility
 
     public class SinglePluginService : ISinglePluginService
     {
-        #region Fields
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private readonly IPluginFactory _pluginFactory;
         private readonly ILoadedPluginService _loadedPluginService;
         private readonly IPluginManager _pluginManager;
-        private IPluginInfo _fallbackPlugin;
-        #endregion
+        private IPluginInfo? _fallbackPlugin;
 
-        #region Constructors
         public SinglePluginService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
         {
-            Argument.IsNotNull(() => pluginManager);
-            Argument.IsNotNull(() => pluginFactory);
-            Argument.IsNotNull(() => loadedPluginService);
+            ArgumentNullException.ThrowIfNull(pluginManager);
+            ArgumentNullException.ThrowIfNull(pluginFactory);
+            ArgumentNullException.ThrowIfNull(loadedPluginService);
 
             _pluginManager = pluginManager;
             _pluginFactory = pluginFactory;
             _loadedPluginService = loadedPluginService;
         }
-        #endregion
 
-        #region Events
-        public event EventHandler<PluginEventArgs> PluginLoadingFailed;
+        public event EventHandler<PluginEventArgs>? PluginLoadingFailed;
 
-        public event EventHandler<PluginEventArgs> PluginLoaded;
-        #endregion
+        public event EventHandler<PluginEventArgs>? PluginLoaded;
 
-        #region Methods
-        public async Task<IPlugin> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin)
+        public async Task<IPlugin?> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin)
         {
             var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
             Log.Debug("Found '{0}' plugins", plugins.Count());
 
-            IPluginInfo pluginToLoad = null;
+            IPluginInfo? pluginToLoad = null;
 
             // Step 1: search for full name
             foreach (var plugin in plugins)
@@ -117,7 +103,7 @@ namespace Orc.Extensibility
                 return null;
             }
 
-            object pluginInstance;
+            object? pluginInstance = null;
 
             try
             {
@@ -133,14 +119,22 @@ namespace Orc.Extensibility
 
                 PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
 
-                pluginToLoad = fallbackPlugin;
+                if (fallbackPlugin is not null)
+                {
+                    pluginToLoad = fallbackPlugin;
 
-                Log.Debug("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
+                    Log.Debug("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
 
-                pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
+                    pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
+                }
             }
 
-            Log.Debug($"Final instantiated plugin is '{pluginInstance?.GetType().Name}'");
+            if (pluginInstance is null)
+            {
+                return null;
+            }
+
+            Log.Debug($"Final instantiated plugin is '{pluginInstance.GetType().Name}'");
 
             _loadedPluginService.AddPlugin(pluginToLoad);
 
@@ -149,11 +143,9 @@ namespace Orc.Extensibility
             return new Plugin(pluginInstance, pluginToLoad);
         }
 
-        public async Task SetFallbackPluginAsync(IPluginInfo fallbackPlugin)
+        public async Task SetFallbackPluginAsync(IPluginInfo? fallbackPlugin)
         {
             _fallbackPlugin = fallbackPlugin;
         }
-
-        #endregion
     }
 }

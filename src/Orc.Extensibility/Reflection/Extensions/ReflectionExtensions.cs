@@ -1,15 +1,13 @@
 ﻿namespace Orc.Extensibility
 {
     using System;
-    using System.Linq;
-    using Catel;
     using Catel.Reflection;
 
     public static class ReflectionExtensions
     {
         public static bool ImplementsInterface<TInterface>(this Type type)
         {
-            Argument.IsNotNull(() => type);
+            ArgumentNullException.ThrowIfNull(type);
 
             var typeName = typeof(TInterface).FullName;
 

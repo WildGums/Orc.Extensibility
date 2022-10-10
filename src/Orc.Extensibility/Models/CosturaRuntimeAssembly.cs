@@ -11,13 +11,8 @@
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-        private byte[] _cachedData;
+        private byte[]? _cachedData;
         private bool _markedLoaded;
-
-        public CosturaRuntimeAssembly(EmbeddedResource embeddedResource)
-        {
-            EmbeddedResource = embeddedResource;
-        }
 
         public CosturaRuntimeAssembly(string content)
         {
@@ -58,7 +53,7 @@
 
         public long? Size { get; set; }
 
-        public EmbeddedResource EmbeddedResource { get; set; }
+        public EmbeddedResource? EmbeddedResource { get; set; }
 
         public override bool IsRuntime
         {
@@ -85,6 +80,10 @@
             {
                 // Note: we preferred not to cache, but we can't read the same stream twice it seems
                 var embeddedResource = EmbeddedResource;
+                if (embeddedResource is null)
+                {
+                    throw new NotSupportedException("Cannot get stream when the EmbeddedResource property is not set");
+                }
 
                 unsafe
                 {

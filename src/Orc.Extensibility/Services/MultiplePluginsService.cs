@@ -1,50 +1,35 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MultiplePluginsService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2015 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Catel;
     using Catel.Logging;
     using MethodTimer;
 
     public class MultiplePluginsService : IMultiplePluginsService
     {
-        #region Fields
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private readonly IPluginFactory _pluginFactory;
         private readonly ILoadedPluginService _loadedPluginService;
         private readonly IPluginManager _pluginManager;
-        #endregion
 
-        #region Constructors
         public MultiplePluginsService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
         {
-            Argument.IsNotNull(() => pluginManager);
-            Argument.IsNotNull(() => pluginFactory);
-            Argument.IsNotNull(() => loadedPluginService);
+            ArgumentNullException.ThrowIfNull(pluginManager);
+            ArgumentNullException.ThrowIfNull(pluginFactory);
+            ArgumentNullException.ThrowIfNull(loadedPluginService);
 
             _pluginManager = pluginManager;
             _pluginFactory = pluginFactory;
             _loadedPluginService = loadedPluginService;
         }
-        #endregion
 
-        #region Events
-        public event EventHandler<PluginEventArgs> PluginLoadingFailed;
+        public event EventHandler<PluginEventArgs>? PluginLoadingFailed;
 
-        public event EventHandler<PluginEventArgs> PluginLoaded;
-        #endregion
+        public event EventHandler<PluginEventArgs>? PluginLoaded;
 
-        #region Methods
         /// <summary>
         /// Configures the and load plugins.
         /// </summary>
@@ -99,7 +84,7 @@ namespace Orc.Extensibility
             return pluginInstances;
         }
         
-        protected virtual async Task<Plugin> ConfigureAndLoadPluginAsync(IPluginInfo pluginToLoad, bool isLastTry)
+        protected virtual async Task<Plugin?> ConfigureAndLoadPluginAsync(IPluginInfo pluginToLoad, bool isLastTry)
         {
             try
             {
@@ -128,6 +113,5 @@ namespace Orc.Extensibility
                 return null;
             }
         }
-        #endregion
     }
 }

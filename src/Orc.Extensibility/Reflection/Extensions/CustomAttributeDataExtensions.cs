@@ -8,7 +8,7 @@
 
     public static class CustomAttributeDataExtensions
     {
-        public static object GetAttributeValue<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
+        public static object? GetAttributeValue<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
             where TAttribute : Attribute
         {
             var attribute = FilterCustomAttributes<TAttribute>(customAttributes).FirstOrDefault();
@@ -41,12 +41,8 @@
             where TAttribute : Attribute
         {
             var attributes = (from customAttributeData in customAttributes
-#if NETFX_CORE
-                              let declaringTypeName = customAttributeData.AttributeType.Name
-#else
-                              let declaringTypeName = customAttributeData.Constructor.DeclaringType.Name
-#endif
-                              where declaringTypeName.EqualsIgnoreCase(typeof(TAttribute).Name)
+                              let declaringTypeName = customAttributeData.Constructor.DeclaringType?.Name
+                              where !string.IsNullOrEmpty(declaringTypeName) && declaringTypeName.EqualsIgnoreCase(typeof(TAttribute).Name)
                               select customAttributeData).ToList();
 
             return attributes;

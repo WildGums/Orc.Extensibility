@@ -7,6 +7,7 @@
 
 namespace Orc.Extensibility.Example.ViewModels
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
@@ -36,12 +37,12 @@ namespace Orc.Extensibility.Example.ViewModels
             IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
             AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher)
         {
-            Argument.IsNotNull(() => hostService);
-            Argument.IsNotNull(() => dispatcherService);
-            Argument.IsNotNull(() => pluginManager);
-            Argument.IsNotNull(() => configurationService);
-            Argument.IsNotNull(() => runtimeAssemblyResolverService);
-            Argument.IsNotNull(() => appDomainRuntimeAssemblyWatcher);
+            ArgumentNullException.ThrowIfNull(hostService);
+            ArgumentNullException.ThrowIfNull(dispatcherService);
+            ArgumentNullException.ThrowIfNull(pluginManager);
+            ArgumentNullException.ThrowIfNull(configurationService);
+            ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
+            ArgumentNullException.ThrowIfNull(appDomainRuntimeAssemblyWatcher);
 
             _hostService = hostService;
             _dispatcherService = dispatcherService;
@@ -52,27 +53,26 @@ namespace Orc.Extensibility.Example.ViewModels
 
             RuntimeResolvedAssemblies = new ObservableCollection<RuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
+            AvailablePlugins = new List<IPluginInfo>();
+            RuntimeAssemblies = new List<RuntimeAssembly>();
             Title = "Orc.Extensibility example";
         }
 
-        #region Properties
         public List<IPluginInfo> AvailablePlugins { get; private set; }
 
-        public IPluginInfo SelectedPlugin { get; set; }
+        public IPluginInfo? SelectedPlugin { get; set; }
 
         public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
 
         public ObservableCollection<RuntimeAssembly> RuntimeResolvedAssemblies { get; private set; }
 
         public Color Color { get; private set; }
-        #endregion
 
-        #region Methods
         protected override async Task InitializeAsync()
         {
             await base.InitializeAsync();
 
-            var selectedPlugin = _configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            var selectedPlugin = await _configurationService.GetRoamingValueAsync(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
             var plugins = _pluginManager.GetPlugins();
 
             AvailablePlugins = plugins.ToList();
@@ -111,25 +111,24 @@ namespace Orc.Extensibility.Example.ViewModels
             _isInitialized = false;
         }
 
-        private void OnHostServiceColorChanged(object sender, ColorEventArgs e)
+        private void OnHostServiceColorChanged(object? sender, ColorEventArgs e)
         {
             _dispatcherService.BeginInvokeIfRequired(() => Color = e.Color);
         }
 
-        private void OnRuntimeAssemblyWatcherAssemblyLoaded(object sender, RuntimeLoadedAssemblyEventArgs e)
+        private void OnRuntimeAssemblyWatcherAssemblyLoaded(object? sender, RuntimeLoadedAssemblyEventArgs e)
         {
             _dispatcherService.BeginInvokeIfRequired(() => RuntimeResolvedAssemblies.Add(e.ResolvedRuntimeAssembly));
         }
 
-        private void OnSelectedPluginChanged()
+        private async void OnSelectedPluginChanged()
         {
             if (!_isInitialized)
             {
                 return;
             }
 
-            _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin is not null ? SelectedPlugin.FullTypeName : null);
+            await _configurationService.SetRoamingValueAsync(ConfigurationKeys.ActivePlugin, SelectedPlugin is not null ? SelectedPlugin.FullTypeName : null);
         }
-        #endregion
     }
 }

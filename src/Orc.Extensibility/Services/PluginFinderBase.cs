@@ -1,10 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ExtensionsManager.cs" company="WildGums">
-//   Copyright (c) 2008 - 2015 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
@@ -89,13 +83,13 @@ namespace Orc.Extensibility
             IPluginCleanupService pluginCleanupService, IDirectoryService directoryService, IFileService fileService,
             IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
-            Argument.IsNotNull(() => pluginLocationsProvider);
-            Argument.IsNotNull(() => pluginInfoProvider);
-            Argument.IsNotNull(() => pluginCleanupService);
-            Argument.IsNotNull(() => directoryService);
-            Argument.IsNotNull(() => fileService);
-            Argument.IsNotNull(() => assemblyReflectionService);
-            Argument.IsNotNull(() => runtimeAssemblyResolverService);
+            ArgumentNullException.ThrowIfNull(pluginLocationsProvider);
+            ArgumentNullException.ThrowIfNull(pluginInfoProvider);
+            ArgumentNullException.ThrowIfNull(pluginCleanupService);
+            ArgumentNullException.ThrowIfNull(directoryService);
+            ArgumentNullException.ThrowIfNull(fileService);
+            ArgumentNullException.ThrowIfNull(assemblyReflectionService);
+            ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
 
             _pluginLocationsProvider = pluginLocationsProvider;
             _pluginInfoProvider = pluginInfoProvider;
@@ -227,7 +221,7 @@ namespace Orc.Extensibility
 
         protected virtual List<IPluginInfo> GetOldestDuplicates(List<IPluginInfo> duplicates)
         {
-            List<IPluginInfo> oldDuplicates = null;
+            List<IPluginInfo>? oldDuplicates = null;
 
             // Method 1: use version
             if (oldDuplicates is null)
@@ -355,8 +349,10 @@ namespace Orc.Extensibility
             await _runtimeAssemblyResolverService.RegisterAssemblyAsync(fileRuntimeAssembly);
 
             // Important: all types already in the app domain should be included as well
-            var resolvableAssemblyPaths = new List<string>();
-            resolvableAssemblyPaths.Add(assemblyPath);
+            var resolvableAssemblyPaths = new List<string>
+            {
+                assemblyPath
+            };
 
             resolvableAssemblyPaths.AddRange(FindResolvableAssemblyPaths(assemblyPath));
 
@@ -381,12 +377,12 @@ namespace Orc.Extensibility
                     // NON-FIRST CHANCE EXCEPTION THROWING CHECKS
                     // ************************************************************************************
 
-                    if (type.IsInterfaceEx())
+                    if (type.IsInterface)
                     {
                         continue;
                     }
 
-                    if (type.IsAbstractEx())
+                    if (type.IsAbstract)
                     {
                         continue;
                     }
@@ -415,7 +411,7 @@ namespace Orc.Extensibility
                     // FIRST CHANCE EXCEPTION THROWING CHECKS
                     // ************************************************************************************
 
-                    if (!type.IsClassEx())
+                    if (!type.IsClass)
                     {
                         continue;
                     }
@@ -555,7 +551,7 @@ namespace Orc.Extensibility
         /// <param name="fileName">The file name to check.</param>
         /// <param name="subjectName">If not <c>null</c>, the certificate must match this subject name.</param>
         /// <returns></returns>
-        protected virtual bool IsSigned(string fileName, string subjectName = null)
+        protected virtual bool IsSigned(string fileName, string? subjectName = null)
         {
             try
             {

@@ -84,14 +84,14 @@
             }
         }
 
-        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
             var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
             pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
         }
 
         [Time("{runtimeAssembly}")]
-        protected virtual async Task<IEnumerable<RuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected virtual async Task<IEnumerable<RuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
             // Ignore specific assemblies
             if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, runtimeAssembly))
@@ -181,7 +181,7 @@
             return indexedCosturaAssemblies;
         }
 
-        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
         {
             if (runtimeAssembly.Name.ContainsIgnoreCase(".resources.dll"))
             {
@@ -200,7 +200,13 @@
         {
             var embeddedResources = new List<EmbeddedResource>();
 
-            var resourcesDirectory = peReader.PEHeaders.CorHeader.ResourcesDirectory;
+            var corHeader = peReader.PEHeaders.CorHeader;
+            if (corHeader is null)
+            {
+                return embeddedResources;
+            }
+
+            var resourcesDirectory = corHeader.ResourcesDirectory;
             if (resourcesDirectory.Size <= 0)
             {
                 return embeddedResources;
@@ -270,20 +276,14 @@
 
                     var resourceStart = resourcesStart + resource.Offset + sizeof(int);
 
-                    embeddedResources.Add(new EmbeddedResource
-                    {
-                        ContainerAssembly = containerAssembly,
-                        Name = resourceName,
-                        Start = resourceStart,
-                        Size = size
-                    });
+                    embeddedResources.Add(new EmbeddedResource(containerAssembly, resourceName, resourceStart, size));
                 }
             }
 
             return embeddedResources;
         }
 
-        protected virtual async Task<List<CosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
+        protected virtual async Task<List<CosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
         {
             var metadataResource = (from x in resources
                                     where x.Name.EqualsIgnoreCase("costura.metadata")

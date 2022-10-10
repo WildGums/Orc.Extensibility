@@ -1,12 +1,6 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="App.xaml.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example
+﻿namespace Orc.Extensibility.Example
 {
+    using System;
     using System.Globalization;
     using System.Windows;
     using Catel.Configuration;
@@ -30,7 +24,7 @@ namespace Orc.Extensibility.Example
         {
             var serviceLocator = ServiceLocator.Default;
 
-            var languageService = serviceLocator.ResolveType<ILanguageService>();
+            var languageService = serviceLocator.ResolveRequiredType<ILanguageService>();
 
             // Note: it's best to use .CurrentUICulture in actual apps since it will use the preferred language
             // of the user. But in order to demo multilingual features for devs (who mostly have en-US as .CurrentUICulture),
@@ -46,14 +40,19 @@ namespace Orc.Extensibility.Example
 
             // Support Costura embedded runtime assemblies
             var appDomainWatcher = serviceLocator.RegisterTypeAndInstantiate<AppDomainRuntimeAssemblyWatcher>();
+            if (appDomainWatcher is null)
+            {
+                throw new InvalidOperationException("Failed to create runtime assembly watcher");
+            }
+
             //appDomainWatcher.AllowAssemblyResolvingFromOtherLoadContexts = false;
             appDomainWatcher.Attach();
 
             // In an Orchestra environment, this would go into the bootstrapper
-            var configurationService = serviceLocator.ResolveType<IConfigurationService>();
-            var activePlugin = configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            var configurationService = serviceLocator.ResolveRequiredType<IConfigurationService>();
+            var activePlugin = await configurationService.GetRoamingValueAsync(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
 
-            var singlePluginService = serviceLocator.ResolveType<ISinglePluginService>();
+            var singlePluginService = serviceLocator.ResolveRequiredType<ISinglePluginService>();
             var plugin = await singlePluginService.ConfigureAndLoadPluginAsync(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);
             if (plugin is not null)
             {

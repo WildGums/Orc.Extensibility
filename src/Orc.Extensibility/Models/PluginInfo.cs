@@ -3,21 +3,31 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using System.Reflection.Metadata;
-    using Catel;
     using Catel.Reflection;
 
     public class PluginInfo : IPluginInfo
     {
         public PluginInfo(string location, Type type)
         {
-            Argument.IsNotNull(() => location);
-            Argument.IsNotNull(() => type);
+            ArgumentNullException.ThrowIfNull(location);
+            ArgumentNullException.ThrowIfNull(type);
 
             Location = location;
             Aliases = new List<string>();
 
-            InitializeData(type);
+            FullTypeName = type.GetSafeFullName();
+            AssemblyName = type.Assembly.GetName().Name ?? string.Empty;
+
+            Name = AssemblyName;
+            Description = Name;
+            Version = type.Assembly.Version();
+
+            var customAttributes = type.Assembly.GetCustomAttributesData();
+
+            Name = customAttributes.GetAttributeValue<AssemblyTitleAttribute>() as string ?? Name;
+            Version = customAttributes.GetAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? Version;
+            Company = customAttributes.GetAttributeValue<AssemblyCompanyAttribute>() as string ?? string.Empty;
+            Customer = string.Empty;
         }
 
         public string Name { get; set; }
@@ -50,21 +60,6 @@
             }
 
             return value;
-        }
-
-        private void InitializeData(Type type)
-        {
-            FullTypeName = type.FullName;
-            AssemblyName = type.Assembly.GetName().Name;
-
-            Name = AssemblyName;
-            Version = type.Assembly.Version();
-
-            var customAttributes = type.Assembly.GetCustomAttributesData();
-
-            Name = customAttributes.GetAttributeValue<AssemblyTitleAttribute>() as string ?? Name;
-            Version = customAttributes.GetAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? Version;
-            Company = customAttributes.GetAttributeValue<AssemblyCompanyAttribute>() as string;
         }
     }
 }

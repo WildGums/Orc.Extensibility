@@ -1,15 +1,8 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IPluginServiceExtensions.cs" company="WildGums">
-//   Copyright (c) 2008 - 2015 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Catel;
     using Catel.Logging;
 
     public static class IPluginManagerExtensions
@@ -18,7 +11,7 @@ namespace Orc.Extensibility
 
         public static async Task<IEnumerable<IPluginInfo>> RefreshAndGetPluginsAsync(this IPluginManager pluginManager)
         {
-            Argument.IsNotNull(() => pluginManager);
+            ArgumentNullException.ThrowIfNull(pluginManager);
 
             await pluginManager.RefreshAsync();
 
@@ -32,7 +25,7 @@ namespace Orc.Extensibility
 
         //public static List<IPluginInfo> FindPluginImplementations(this IPluginManager pluginManager, Type interfaceType)
         //{
-        //    Argument.IsNotNull(() => interfaceType);
+        //    ArgumentNullException.ThrowIfNull(interfaceType);
 
         //    var interfaceTypeFullName = interfaceType.FullName;
         //    var plugins = new List<IPluginInfo>();

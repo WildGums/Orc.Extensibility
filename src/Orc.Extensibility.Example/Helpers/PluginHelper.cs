@@ -1,11 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginHelper.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example
+﻿namespace Orc.Extensibility.Example
 {
     using System.Collections.Generic;
     using Catel.IoC;
@@ -25,7 +18,7 @@ namespace Orc.Extensibility.Example
             var serviceLocator = ServiceLocator.Default;
             if (serviceLocator.IsTypeRegistered<ICustomPlugin>())
             {
-                plugins.Add(serviceLocator.ResolveType<ICustomPlugin>());
+                plugins.Add(serviceLocator.ResolveRequiredType<ICustomPlugin>());
             }
 
             return plugins;

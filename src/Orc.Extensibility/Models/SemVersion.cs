@@ -1,11 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SemVersion.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Diagnostics;
@@ -33,7 +26,7 @@ namespace Orc.Extensibility
             get { return _classicVersion; }
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
             var otherVersion = obj as SemVersion;
             if (otherVersion is null)
@@ -89,11 +82,16 @@ namespace Orc.Extensibility
             return !(x == y);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
+            if (obj is not SemVersion version)
+            {
+                return false;
+            }
+
             try
             {
-                return this == (SemVersion)obj;
+                return this == version;
             }
             catch
             {

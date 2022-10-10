@@ -1,16 +1,9 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginManager.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Catel;
     using Catel.Logging;
 
     public class PluginManager : IPluginManager
@@ -20,11 +13,11 @@ namespace Orc.Extensibility
         private readonly object _lock = new object();
         private readonly IPluginFinder _pluginFinder;
 
-        private List<IPluginInfo> _plugins;
+        private List<IPluginInfo>? _plugins;
 
         public PluginManager(IPluginFinder pluginFinder)
         {
-            Argument.IsNotNull(() => pluginFinder);
+            ArgumentNullException.ThrowIfNull(pluginFinder);
 
             _pluginFinder = pluginFinder;
         }

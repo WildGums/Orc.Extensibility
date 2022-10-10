@@ -1,14 +1,6 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginA.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example.ExtensionA.Plugins
+﻿namespace Orc.Extensibility.Example.ExtensionA.Plugins
 {
     using System.Threading.Tasks;
-    using Catel;
     using Catel.Logging;
     using Catel.Services;
     using Services;
@@ -30,7 +22,7 @@ namespace Orc.Extensibility.Example.ExtensionA.Plugins
 
         public async Task InitializeAsync()
         {
-            var value = _languageService.GetString("TestResource");
+            var value = _languageService.GetRequiredString("TestResource");
 
             Log.Info($"{typeof(YamlDotNet.Core.AnchorName).FullName}");
 

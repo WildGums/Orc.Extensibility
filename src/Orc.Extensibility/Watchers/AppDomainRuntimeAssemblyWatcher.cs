@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using Catel;
     using Catel.Logging;
-
     using System.Runtime.Loader;
     using System.IO;
     using System.Reflection;
@@ -26,15 +25,15 @@
         private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _loadedUmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        private PluginLoadContext _activeSingleLoadContext;
+        private PluginLoadContext? _activeSingleLoadContext;
 
         public AppDomainRuntimeAssemblyWatcher(IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
             IAppDataService appDataService, IDirectoryService directoryService, IFileService fileService)
         {
-            Argument.IsNotNull(() => runtimeAssemblyResolverService);
-            Argument.IsNotNull(() => appDataService);
-            Argument.IsNotNull(() => directoryService);
-            Argument.IsNotNull(() => fileService);
+            ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
+            ArgumentNullException.ThrowIfNull(appDataService);
+            ArgumentNullException.ThrowIfNull(directoryService);
+            ArgumentNullException.ThrowIfNull(fileService);
 
             _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
             _appDataService = appDataService;
@@ -45,7 +44,7 @@
             AllowAssemblyResolvingFromOtherLoadContexts = true;
         }
 
-        public event EventHandler<RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
+        public event EventHandler<RuntimeLoadedAssemblyEventArgs>? AssemblyLoaded;
 
         /// <summary>
         /// Gets or sets a value whether assembly resolving from other load contexts is permitted.
@@ -64,7 +63,9 @@
 
         public void Attach(AssemblyLoadContext assemblyLoadContext)
         {
-            var name = assemblyLoadContext.Name;
+            ArgumentNullException.ThrowIfNull(assemblyLoadContext);
+
+            var name = assemblyLoadContext.Name ?? string.Empty;
 
             if (_registeredLoadContexts.Contains(name))
             {
@@ -79,20 +80,27 @@
             assemblyLoadContext.ResolvingUnmanagedDll += OnLoadContextResolvingUnmanagedDll;
         }
 
-        private Assembly OnLoadContextResolving(AssemblyLoadContext arg1, AssemblyName arg2)
+        private Assembly? OnLoadContextResolving(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName)
         {
-            return LoadManagedAssembly(arg1, arg2, arg2.FullName);
+            ArgumentNullException.ThrowIfNull(assemblyLoadContext);
+            ArgumentNullException.ThrowIfNull(assemblyName);
+
+            return LoadManagedAssembly(assemblyLoadContext, assemblyName, assemblyName.FullName);
         }
 
         [Time("{assemblyFullName}")]
-        private Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
+        private Assembly? LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
         {
+            ArgumentNullException.ThrowIfNull(assemblyLoadContext);
+            ArgumentNullException.ThrowIfNull(assemblyName);
+            ArgumentNullException.ThrowIfNull(assemblyFullName);
+
             Log.Debug($"Requesting to load '{assemblyName.FullName}'");
 
             // Load context, ignore the requesting assembly for now
             if (!string.IsNullOrWhiteSpace(assemblyName.Name))
             {
-                RuntimeAssembly runtimeReference = null;
+                RuntimeAssembly? runtimeReference = null;
 
                 var loadContexts = _runtimeAssemblyResolverService.GetPluginLoadContexts().ToList();
 
@@ -180,7 +188,7 @@
 
                     try
                     {
-                        Assembly loadedAssembly = null;
+                        Assembly? loadedAssembly = null;
 
                         using (var stream = runtimeReference.GetStream())
                         {
@@ -198,7 +206,7 @@
                     catch (Exception ex)
                     {
                         var loadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
-                                              where x.GetName().Name.EqualsIgnoreCase(assemblyName.Name)
+                                              where x.GetName().Name?.EqualsIgnoreCase(assemblyName.Name) ?? false
                                               select x).FirstOrDefault();
                         if (loadedAssembly is not null)
                         {

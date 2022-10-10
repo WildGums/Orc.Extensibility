@@ -1,19 +1,13 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Plugin.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
-    using Catel;
+    using System;
 
     public class Plugin : IPlugin
     {
         public Plugin(object instance, IPluginInfo info)
         {
-            Argument.IsNotNull(() => instance);
-            Argument.IsNotNull(() => info);
+            ArgumentNullException.ThrowIfNull(instance);
+            ArgumentNullException.ThrowIfNull(info);
 
             Instance = instance;
             Info = info;

@@ -2,13 +2,15 @@
 {
     using System.Collections.Generic;
     using System.IO;
-    using System.Threading.Tasks;
 
     public abstract class RuntimeAssembly
     {
         protected RuntimeAssembly()
         {
             Dependencies = new List<RuntimeAssembly>();
+            Name = string.Empty;
+            Source = string.Empty;
+            Checksum = string.Empty;
         }
 
         protected RuntimeAssembly(string name, string source, string checksum)

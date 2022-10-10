@@ -18,7 +18,7 @@
 
         public AssemblyReflectionService(IFileService fileService)
         {
-            Argument.IsNotNull(() => fileService);
+            ArgumentNullException.ThrowIfNull(fileService);
 
             _fileService = fileService;
         }

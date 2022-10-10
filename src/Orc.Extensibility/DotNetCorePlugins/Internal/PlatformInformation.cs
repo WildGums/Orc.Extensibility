@@ -1,7 +1,5 @@
 ﻿// Note: comes from https://github.com/natemcmaster/DotNetCorePlugins/
 
-#if NETCORE
-
 namespace Orc.Extensibility
 {
     using System;
@@ -9,7 +7,7 @@ namespace Orc.Extensibility
     using System.Runtime.InteropServices;
     using Catel.Logging;
 
-    internal class PlatformInformation
+    internal static class PlatformInformation
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
@@ -59,5 +57,3 @@ namespace Orc.Extensibility
         }
     }
 }
-
-#endif

@@ -3,14 +3,10 @@
     using System;
     using System.Linq;
     using System.Reflection;
-    using Catel;
     using Catel.IoC;
     using Catel.Logging;
     using Catel.Reflection;
     using MethodTimer;
-
-    using System.Runtime.InteropServices;
-    using System.Runtime.Loader;
 
     public class PluginFactory : IPluginFactory
     {
@@ -19,12 +15,12 @@
         private readonly ITypeFactory _typeFactory;
         private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
 
-        private PropertyInfo _runtimeTypePropertyInfo;
+        private PropertyInfo? _runtimeTypePropertyInfo;
 
         public PluginFactory(ITypeFactory typeFactory, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
         {
-            Argument.IsNotNull(() => typeFactory);
-            Argument.IsNotNull(() => runtimeAssemblyResolverService);
+            ArgumentNullException.ThrowIfNull(typeFactory);
+            ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
 
             _typeFactory = typeFactory;
             _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
@@ -33,7 +29,7 @@
         [Time]
         public virtual object CreatePlugin(IPluginInfo pluginInfo)
         {
-            Argument.IsNotNull(() => pluginInfo);
+            ArgumentNullException.ThrowIfNull(pluginInfo);
 
             try
             {
@@ -66,6 +62,10 @@
                 Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 
                 var type = assembly.GetType(pluginInfo.FullTypeName);
+                if (type is null)
+                {
+                    throw new NotSupportedException($"Cannot find type '{pluginInfo.FullTypeName}'");
+                }
 
                 Log.Debug($"  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
 
@@ -80,9 +80,7 @@
 
                 Log.Debug($"  4. Instantiating type '{type.GetSafeFullName(true)}'");
 
-                var plugin = _typeFactory.CreateInstance(type);
-
-                Log.Debug($"Plugin creation resulted in an instance: '{plugin is not null}'");
+                var plugin = _typeFactory.CreateRequiredInstance(type);
 
                 // Workaround for loading assemblies
                 TypeCache.InitializeTypes(type.GetAssemblyEx(), true);
@@ -99,6 +97,8 @@
 
         protected virtual void PreloadAssembly(Assembly assembly)
         {
+            ArgumentNullException.ThrowIfNull(assembly);
+
             // This specific preload code is written to allow module initializers (e.g. Fody.ModuleInit) to run *before* creating the plugin. This
             // will allow an assembly to register services *before* the constructor is invoked and allows for dependency injection of plugins, even
             // if the types are coming from the same plugin

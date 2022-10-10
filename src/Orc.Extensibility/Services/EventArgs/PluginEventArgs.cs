@@ -1,19 +1,17 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginEventArgs.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
 
     public class PluginEventArgs : EventArgs
     {
         public PluginEventArgs(IPluginInfo pluginInfo, string messageTitle, string messageDetails)
-            : this(pluginInfo.Name, messageTitle, messageDetails)
         {
+            ArgumentNullException.ThrowIfNull(pluginInfo);
+
+            PluginName = pluginInfo.Name;
             PluginInfo = pluginInfo;
+            MessageTitle = messageTitle;
+            MessageDetails = messageDetails;
         }
 
         public PluginEventArgs(string pluginName, string messageTitle, string messageDetails)
@@ -25,7 +23,7 @@ namespace Orc.Extensibility
 
         public string PluginName { get; private set; }
 
-        public IPluginInfo PluginInfo { get; private set; }
+        public IPluginInfo? PluginInfo { get; private set; }
 
         public string MessageTitle { get; private set; }
 

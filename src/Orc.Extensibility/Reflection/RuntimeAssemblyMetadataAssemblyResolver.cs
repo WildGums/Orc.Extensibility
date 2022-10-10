@@ -2,10 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using System.Text;
 
     /// <summary>
     /// This class is written in preparation in case we need to lazy-load dynamic assemblies for assembly resolving. For
@@ -22,10 +19,12 @@
 
         public void RegisterAssembly(RuntimeAssembly runtimeAssembly)
         {
+            ArgumentNullException.ThrowIfNull(runtimeAssembly);
+
             _runtimeAssemblies.Add(runtimeAssembly);
         }
 
-        public override Assembly Resolve(MetadataLoadContext context, AssemblyName assemblyName)
+        public override Assembly? Resolve(MetadataLoadContext context, AssemblyName assemblyName)
         {
             // Note: 
 

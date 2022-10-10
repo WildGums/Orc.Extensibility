@@ -1,7 +1,6 @@
 ﻿namespace Orc.Extensibility
 {
     using System;
-    using System.Reflection.Metadata;
 
     public interface IPluginInfoProvider
     {

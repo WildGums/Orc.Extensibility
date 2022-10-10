@@ -1,15 +1,7 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginB.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example.ExtensionB.Plugins
+﻿namespace Orc.Extensibility.Example.ExtensionB.Plugins
 {
     using System.Threading.Tasks;
     using System.Windows.Media;
-    using Catel;
     using Catel.Services;
     using Services;
 
@@ -28,7 +20,7 @@ namespace Orc.Extensibility.Example.ExtensionB.Plugins
 
         public async Task InitializeAsync()
         {
-            var value = _languageService.GetString("TestResource");
+            var value = _languageService.GetRequiredString("TestResource");
 
             await _messageService.ShowAsync($"Plugin B has been loaded, setting color to green. Resource value: '{value}'");
 

@@ -4,6 +4,7 @@
     using System.IO;
     using Catel;
     using Catel.Logging;
+    using Catel.Reflection;
     using FileSystem;
 
     public class PluginFinder : Orc.Extensibility.PluginFinderBase

@@ -1,10 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginCleanupService.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Linq;
@@ -23,8 +17,8 @@ namespace Orc.Extensibility
 
         public PluginCleanupService(IFileService fileService, IDirectoryService directoryService)
         {
-            Argument.IsNotNull(() => fileService);
-            Argument.IsNotNull(() => directoryService);
+            ArgumentNullException.ThrowIfNull(fileService);
+            ArgumentNullException.ThrowIfNull(directoryService);
 
             _fileService = fileService;
             _directoryService = directoryService;
@@ -47,6 +41,11 @@ namespace Orc.Extensibility
             }
 
             var deleteMeFile = GetDeleteMeFile(directory);
+            if (deleteMeFile is null)
+            {
+                return;
+            }
+
             var succeeded = false;
 
             try
@@ -79,7 +78,7 @@ namespace Orc.Extensibility
             }
         }
 
-        private string GetDeleteMeFile(string directory)
+        private string? GetDeleteMeFile(string directory)
         {
             try
             {

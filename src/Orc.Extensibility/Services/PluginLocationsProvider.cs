@@ -1,13 +1,8 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginLocationsProvider.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using Catel;
     using Catel.IO;
     using Catel.Reflection;
@@ -19,7 +14,7 @@ namespace Orc.Extensibility
 
         public PluginLocationsProvider(IAppDataService appDataService)
         {
-            Argument.IsNotNull(() => appDataService);
+            ArgumentNullException.ThrowIfNull(appDataService);
 
             _appDataService = appDataService;
         }
@@ -28,7 +23,7 @@ namespace Orc.Extensibility
         {
             var directories = new List<string>();
 
-            var pluginsDirectory = Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
+            var pluginsDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
             if (ValidateDirectory(pluginsDirectory))
             {
                 directories.Add(pluginsDirectory);
@@ -40,7 +35,7 @@ namespace Orc.Extensibility
                 directories.Add(currentDirectory);
             }
 
-            var appDirectory = AssemblyHelper.GetEntryAssembly().GetDirectory();
+            var appDirectory = AssemblyHelper.GetRequiredEntryAssembly().GetDirectory();
             if (ValidateDirectory(appDirectory))
             {
                 directories.Add(appDirectory);

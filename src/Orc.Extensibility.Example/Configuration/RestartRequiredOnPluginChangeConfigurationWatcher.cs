@@ -1,13 +1,6 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="RestartRequiredOnPluginChangeConfigurationWatcher.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility.Example.Configuration
+﻿namespace Orc.Extensibility.Example.Configuration
 {
-    using Catel;
+    using System;
     using Catel.Configuration;
     using Catel.Logging;
     using Catel.Services;
@@ -22,8 +15,8 @@ namespace Orc.Extensibility.Example.Configuration
         public RestartRequiredOnPluginChangeConfigurationWatcher(IConfigurationService configurationService,
             IMessageService messageService)
         {
-            Argument.IsNotNull(() => configurationService);
-            Argument.IsNotNull(() => messageService);
+            ArgumentNullException.ThrowIfNull(configurationService);
+            ArgumentNullException.ThrowIfNull(messageService);
 
             _configurationService = configurationService;
             _messageService = messageService;
@@ -32,7 +25,7 @@ namespace Orc.Extensibility.Example.Configuration
         }
 
 #pragma warning disable AvoidAsyncVoid
-        private async void OnConfigurationServiceConfigurationChanged(object sender, ConfigurationChangedEventArgs e)
+        private async void OnConfigurationServiceConfigurationChanged(object? sender, ConfigurationChangedEventArgs e)
 #pragma warning restore AvoidAsyncVoid
         {
             if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))

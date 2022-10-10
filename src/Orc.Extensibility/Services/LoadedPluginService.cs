@@ -1,16 +1,8 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LoadedPluginService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
-namespace Orc.Extensibility
+﻿namespace Orc.Extensibility
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Catel;
     using Catel.Logging;
 
     public class LoadedPluginService : ILoadedPluginService
@@ -32,11 +24,11 @@ namespace Orc.Extensibility
             }
         }
 
-        public event EventHandler<PluginEventArgs> PluginLoaded;
+        public event EventHandler<PluginEventArgs>? PluginLoaded;
 
         public void AddPlugin(IPluginInfo pluginInfo)
         {
-            Argument.IsNotNull(() => pluginInfo);
+            ArgumentNullException.ThrowIfNull(pluginInfo);
 
             Log.Debug($"Registering plugin '{pluginInfo}' as loaded");
 

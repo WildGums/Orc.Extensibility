@@ -12,11 +12,7 @@
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private byte[]? _cachedData;
- 
-        public CosturaRuntimeAssembly(EmbeddedResource embeddedResource)
-        {
-            EmbeddedResource = embeddedResource;
-        }
+
         public CosturaRuntimeAssembly(string content)
         {
             var splitted = content.Split('|');

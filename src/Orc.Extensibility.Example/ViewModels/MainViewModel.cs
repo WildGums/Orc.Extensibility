@@ -72,7 +72,7 @@ namespace Orc.Extensibility.Example.ViewModels
         {
             await base.InitializeAsync();
 
-            var selectedPlugin = await _configurationService.GetRoamingValueAsync(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            var selectedPlugin = _configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
             var plugins = _pluginManager.GetPlugins();
 
             AvailablePlugins = plugins.ToList();
@@ -121,14 +121,14 @@ namespace Orc.Extensibility.Example.ViewModels
             _dispatcherService.BeginInvokeIfRequired(() => RuntimeResolvedAssemblies.Add(e.ResolvedRuntimeAssembly));
         }
 
-        private async void OnSelectedPluginChanged()
+        private void OnSelectedPluginChanged()
         {
             if (!_isInitialized)
             {
                 return;
             }
 
-            await _configurationService.SetRoamingValueAsync(ConfigurationKeys.ActivePlugin, SelectedPlugin is not null ? SelectedPlugin.FullTypeName : null);
+            _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin is not null ? SelectedPlugin.FullTypeName : null);
         }
     }
 }

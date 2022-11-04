@@ -50,7 +50,8 @@
 
             // In an Orchestra environment, this would go into the bootstrapper
             var configurationService = serviceLocator.ResolveRequiredType<IConfigurationService>();
-            var activePlugin = await configurationService.GetRoamingValueAsync(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
+            await configurationService.LoadAsync();
+            var activePlugin = configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
 
             var singlePluginService = serviceLocator.ResolveRequiredType<ISinglePluginService>();
             var plugin = await singlePluginService.ConfigureAndLoadPluginAsync(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);

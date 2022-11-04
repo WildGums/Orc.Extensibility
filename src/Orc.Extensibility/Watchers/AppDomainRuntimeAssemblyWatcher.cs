@@ -220,7 +220,6 @@
                     {
                         Log.Error($"Failed to load assembly from '{runtimeReference}': {error}");
                     }
-
                 }
             }
 

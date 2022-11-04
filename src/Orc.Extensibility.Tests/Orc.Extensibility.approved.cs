@@ -33,7 +33,7 @@ namespace Orc.Extensibility
         public long? Size { get; set; }
         public string Version { get; set; }
         public override System.IO.Stream GetStream() { }
-        public override void MarkLoaded() { }
+        protected override void OnMarkLoaded() { }
         public override string ToString() { }
     }
     public static class CosturaRuntimeAssemblyExtensions
@@ -62,7 +62,7 @@ namespace Orc.Extensibility
         public FileRuntimeAssembly(string name, string source, string checksum, string location) { }
         public string Location { get; }
         public override System.IO.Stream GetStream() { }
-        public override void MarkLoaded() { }
+        protected override void OnMarkLoaded() { }
         public override string ToString() { }
     }
     public interface IAssemblyReflectionService
@@ -271,11 +271,13 @@ namespace Orc.Extensibility
         protected RuntimeAssembly(string name, string source, string checksum) { }
         public string Checksum { get; set; }
         public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> Dependencies { get; }
+        public bool IsLoaded { get; set; }
         public virtual bool IsRuntime { get; set; }
         public string Name { get; set; }
         public string Source { get; set; }
         public abstract System.IO.Stream GetStream();
-        public abstract void MarkLoaded();
+        public void MarkLoaded() { }
+        protected abstract void OnMarkLoaded();
         public override string ToString() { }
     }
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService

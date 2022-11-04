@@ -178,38 +178,47 @@
                 {
                     Log.Debug($"Trying to provide '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
 
+                    var error = string.Empty;
+
                     try
                     {
-                        Assembly loadedAssembly = null;
-
-                        using (var stream = runtimeReference.GetStream())
+                        if (!runtimeReference.IsLoaded)
                         {
-                            loadedAssembly = assemblyLoadContext.LoadFromStream(stream);
+                            Assembly loadedAssembly = null;
+
+                            using (var stream = runtimeReference.GetStream())
+                            {
+                                loadedAssembly = assemblyLoadContext.LoadFromStream(stream);
+                            }
+
+                            runtimeReference.MarkLoaded();
+
+                            LoadedAssemblies.Add(runtimeReference);
+
+                            AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(assemblyName, runtimeReference, loadedAssembly));
+
+                            return loadedAssembly;
                         }
-
-                        runtimeReference.MarkLoaded();
-
-                        LoadedAssemblies.Add(runtimeReference);
-
-                        AssemblyLoaded?.Invoke(this, new RuntimeLoadedAssemblyEventArgs(assemblyName, runtimeReference, loadedAssembly));
-
-                        return loadedAssembly;
                     }
                     catch (Exception ex)
                     {
-                        var loadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
-                                              where x.GetName().Name.EqualsIgnoreCase(assemblyName.Name)
-                                              select x).FirstOrDefault();
-                        if (loadedAssembly is not null)
-                        {
-                            Log.Error(ex, $"Failed to load assembly from '{runtimeReference}', a different version '{loadedAssembly.Version()}' is already loaded");
-                        }
-                        else
-                        {
-                            Log.Error(ex, $"Failed to load assembly from '{runtimeReference}'");
-                        }
+                        // Allow first attempt to fail
+                        error = ex.Message;
+                    }
 
-                        throw;
+                    // Fallback mechanism
+                    var alreadyLoadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
+                                          where x.GetName().Name.EqualsIgnoreCase(assemblyName.Name)
+                                          select x).FirstOrDefault();
+                    if (alreadyLoadedAssembly is not null)
+                    {
+                        Log.Warning($"Failed to load assembly from '{runtimeReference}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
+                        
+                        return alreadyLoadedAssembly;
+                    }
+                    else
+                    {
+                        Log.Error($"Failed to load assembly from '{runtimeReference}': {error}");
                     }
                 }
             }
@@ -243,17 +252,20 @@
                 // Only load what we extracted ourselves and immediately took into use (blocked)
                 if (!_loadedUmanagedAssemblies.Contains(targetFileName))
                 {
-                    // Note: maybe we could optimize by checking the hash? Or maybe just writing is faster than checking
-                    using (var sourceStream = runtimeReference.GetStream())
+                    if (!runtimeReference.IsLoaded)
                     {
-                        using (var targetStream = _fileService.Create(targetFileName))
+                        // Note: maybe we could optimize by checking the hash? Or maybe just writing is faster than checking
+                        using (var sourceStream = runtimeReference.GetStream())
                         {
-                            sourceStream.CopyTo(targetStream);
-                            targetStream.Flush();
+                            using (var targetStream = _fileService.Create(targetFileName))
+                            {
+                                sourceStream.CopyTo(targetStream);
+                                targetStream.Flush();
+                            }
                         }
-                    }
 
-                    runtimeReference.MarkLoaded();
+                        runtimeReference.MarkLoaded();
+                    }
                 }
 
                 // In very rare cases, this could not work, see https://github.com/dotnet/runtime/issues/13819

@@ -23,7 +23,7 @@
             return File.OpenRead(Location);
         }
 
-        public override void MarkLoaded()
+        protected override void OnMarkLoaded()
         {
             // no implementation needed
         }

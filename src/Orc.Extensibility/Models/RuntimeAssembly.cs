@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using System.IO;
-    using System.Threading.Tasks;
 
     public abstract class RuntimeAssembly
     {
@@ -25,13 +24,22 @@
 
         public virtual bool IsRuntime { get; protected set; }
 
+        public bool IsLoaded { get; protected set; }
+
         public string Checksum { get; set; }
 
         public List<RuntimeAssembly> Dependencies { get; private set; }
 
         public abstract Stream GetStream();
 
-        public abstract void MarkLoaded();
+        public void MarkLoaded()
+        {
+            IsLoaded = true;
+
+            OnMarkLoaded();
+        }
+
+        protected abstract void OnMarkLoaded();
 
         public override string ToString()
         {

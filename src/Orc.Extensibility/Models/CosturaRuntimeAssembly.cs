@@ -12,7 +12,6 @@
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         private byte[] _cachedData;
-        private bool _markedLoaded;
 
         public CosturaRuntimeAssembly(EmbeddedResource embeddedResource)
         {
@@ -76,9 +75,9 @@
 
         public override Stream GetStream()
         {
-            if (_markedLoaded)
+            if (IsLoaded)
             {
-                throw new NotSupportedException($"{this} is marked as loaded, stream is no longer available");
+                throw Log.ErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
             }
 
             if (_cachedData is null)
@@ -101,10 +100,8 @@
             return new MemoryStream(_cachedData);
         }
 
-        public override void MarkLoaded()
+        protected override void OnMarkLoaded()
         {
-            _markedLoaded = true;
-
             if (_cachedData is not null)
             {
                 Log.Debug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");

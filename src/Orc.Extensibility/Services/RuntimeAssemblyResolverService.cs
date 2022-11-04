@@ -105,6 +105,11 @@
 
             try
             {
+                if (runtimeAssembly.IsLoaded)
+                {
+                    return indexedCosturaAssemblies;
+                }
+
                 using (var runtimeAssemblyStream = runtimeAssembly.GetStream())
                 {
                     using (var peReader = new PEReader(runtimeAssemblyStream))

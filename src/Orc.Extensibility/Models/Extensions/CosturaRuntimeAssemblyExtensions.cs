@@ -8,6 +8,11 @@
         {
             ArgumentNullException.ThrowIfNull(runtimeAssembly);
 
+            if (runtimeAssembly.IsLoaded)
+            {
+                return;
+            }
+
             using (var stream = runtimeAssembly.GetStream())
             {
                 // Will be cached

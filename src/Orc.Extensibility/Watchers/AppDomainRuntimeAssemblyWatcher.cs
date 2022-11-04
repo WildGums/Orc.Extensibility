@@ -212,7 +212,8 @@
                                           select x).FirstOrDefault();
                     if (alreadyLoadedAssembly is not null)
                     {
-                        //Log.Error(ex, $"Failed to load assembly from '{runtimeReference}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded");
+                        Log.Warning($"Failed to load assembly from '{runtimeReference}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
+                        
                         return alreadyLoadedAssembly;
                     }
                     else

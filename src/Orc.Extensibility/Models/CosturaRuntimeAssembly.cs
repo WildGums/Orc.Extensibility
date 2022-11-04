@@ -77,7 +77,7 @@
         {
             if (IsLoaded)
             {
-                throw new NotSupportedException($"{this} is marked as loaded, stream is no longer available");
+                throw Log.ErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
             }
 
             if (_cachedData is null)

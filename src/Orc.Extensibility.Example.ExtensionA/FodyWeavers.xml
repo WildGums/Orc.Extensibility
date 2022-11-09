@@ -5,12 +5,16 @@
     <Costura>
         <IncludeAssemblies>
             Newtonsoft.Json
+            Orc.Metadata
+            Orc.Search
+            Orc.Search.Xaml
             YamlDotNet
         </IncludeAssemblies>
     </Costura>
     <LoadAssembliesOnStartup>
         <IncludeAssemblies>
             Newtonsoft.Json
+            Orc.Search.Xaml
         </IncludeAssemblies>
     </LoadAssembliesOnStartup>
 </Weavers>

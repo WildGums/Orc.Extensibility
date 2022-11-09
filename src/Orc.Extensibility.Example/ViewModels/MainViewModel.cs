@@ -54,7 +54,7 @@ namespace Orc.Extensibility.Example.ViewModels
             RuntimeResolvedAssemblies = new ObservableCollection<IRuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
             AvailablePlugins = new List<IPluginInfo>();
-            RuntimeAssemblies = new List<RuntimeAssembly>();
+            RuntimeAssemblies = new List<IRuntimeAssembly>();
             Title = "Orc.Extensibility example";
         }
 

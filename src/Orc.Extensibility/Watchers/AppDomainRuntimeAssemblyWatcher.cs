@@ -90,7 +90,7 @@
         }
 
         [Time("{assemblyFullName}")]
-        internal Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
+        internal Assembly? LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
         {
             ArgumentNullException.ThrowIfNull(assemblyLoadContext);
             ArgumentNullException.ThrowIfNull(assemblyName);
@@ -101,7 +101,7 @@
             // Load context, ignore the requesting assembly for now
             if (!string.IsNullOrWhiteSpace(assemblyName.Name))
             {
-                IRuntimeAssembly runtimeReference = null;
+                IRuntimeAssembly? runtimeReference = null;
 
                 var loadContexts = _runtimeAssemblyResolverService.GetPluginLoadContexts().ToList();
 

@@ -84,14 +84,14 @@
             }
         }
 
-        protected async Task RegisterAssemblyAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly? runtimeAssembly)
+        protected async Task RegisterAssemblyAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
         {
             var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
             pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
         }
 
         [Time("{runtimeAssembly}")]
-        protected virtual async Task<IEnumerable<IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly? runtimeAssembly)
+        protected virtual async Task<IEnumerable<IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
         {
             // Ignore specific assemblies
             if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, runtimeAssembly))
@@ -186,7 +186,7 @@
             return indexedCosturaAssemblies;
         }
 
-        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(IPluginLoadContext pluginLoadContext, IRuntimeAssembly originatingAssembly, IRuntimeAssembly runtimeAssembly)
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
         {
             if (runtimeAssembly.Name.ContainsIgnoreCase(".resources.dll"))
             {
@@ -288,7 +288,7 @@
             return embeddedResources;
         }
 
-        protected virtual async Task<List<ICosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
+        protected virtual async Task<List<ICosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
         {
             var metadataResource = (from x in resources
                                     where x.Name.EqualsIgnoreCase("costura.metadata")

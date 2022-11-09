@@ -4,7 +4,7 @@
 
     public unsafe class EmbeddedResource
     {
-        public EmbeddedResource(RuntimeAssembly containerAssembly, string name, byte* start, int size)
+        public EmbeddedResource(IRuntimeAssembly containerAssembly, string name, byte* start, int size)
         {
             ArgumentNullException.ThrowIfNull(containerAssembly);
 

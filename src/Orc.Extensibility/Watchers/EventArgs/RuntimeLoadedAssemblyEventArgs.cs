@@ -5,7 +5,7 @@
 
     public class RuntimeLoadedAssemblyEventArgs : EventArgs
     {
-        public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, RuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
+        public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
         {
             RequestedAssemblyName = requestedAssemblyName;
             ResolvedRuntimeAssembly = resolvedRuntimeAssembly;
@@ -13,7 +13,7 @@
         }
 
         public AssemblyName RequestedAssemblyName { get; }
-        public RuntimeAssembly ResolvedRuntimeAssembly { get; }
+        public IRuntimeAssembly ResolvedRuntimeAssembly { get; }
         public Assembly ResolvedAssembly { get; }
     }
 }

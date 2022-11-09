@@ -10,7 +10,6 @@
     using System.Reflection;
     using System.Linq;
     using Catel.Reflection;
-    using System.Globalization;
     using MethodTimer;
     using Catel.Services;
     using Orc.FileSystem;
@@ -26,7 +25,7 @@
         private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _loadedUmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        private PluginLoadContext _activeSingleLoadContext;
+        private IPluginLoadContext _activeSingleLoadContext;
 
         public AppDomainRuntimeAssemblyWatcher(IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
             IAppDataService appDataService, IDirectoryService directoryService, IFileService fileService)
@@ -41,7 +40,7 @@
             _directoryService = directoryService;
             _fileService = fileService;
 
-            LoadedAssemblies = new List<RuntimeAssembly>();
+            LoadedAssemblies = new List<IRuntimeAssembly>();
             AllowAssemblyResolvingFromOtherLoadContexts = true;
         }
 
@@ -55,7 +54,7 @@
         /// </summary>
         public bool AllowAssemblyResolvingFromOtherLoadContexts { get; set; }
 
-        public List<RuntimeAssembly> LoadedAssemblies { get; private set; }
+        public List<IRuntimeAssembly> LoadedAssemblies { get; private set; }
 
         public void Attach()
         {
@@ -85,14 +84,14 @@
         }
 
         [Time("{assemblyFullName}")]
-        private Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
+        internal Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
         {
             Log.Debug($"Requesting to load '{assemblyName.FullName}'");
 
             // Load context, ignore the requesting assembly for now
             if (!string.IsNullOrWhiteSpace(assemblyName.Name))
             {
-                RuntimeAssembly runtimeReference = null;
+                IRuntimeAssembly runtimeReference = null;
 
                 var loadContexts = _runtimeAssemblyResolverService.GetPluginLoadContexts().ToList();
 
@@ -227,7 +226,7 @@
         }
 
         [Time("{libraryName}")]
-        private IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
+        internal IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
         {
             Log.Debug($"Requesting to load '{libraryName}', requested by '{assembly.FullName}'");
 
@@ -241,7 +240,7 @@
             {
                 // Note: unmanaged assemblies *must* be loaded from disk
 
-                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), 
+                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal),
                     "runtime", runtimeReference.Checksum);
                 _directoryService.Create(targetDirectory);
 

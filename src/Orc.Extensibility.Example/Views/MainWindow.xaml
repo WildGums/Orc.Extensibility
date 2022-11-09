@@ -71,25 +71,25 @@
             <GroupBox Grid.Row="0" 
                       Grid.Column="0"
                       Header="Runtime extracted assemblies">
-                <ItemsControl ItemsSource="{Binding RuntimeAssemblies}">
+                <ListBox ItemsSource="{Binding RuntimeAssemblies}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Label Content="{Binding Source}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                </ListBox>
             </GroupBox>
 
             <GroupBox Grid.Row="1" 
                       Grid.Column="0"
                       Header="Runtime resolved assemblies">
-                <ItemsControl ItemsSource="{Binding RuntimeResolvedAssemblies}">
+                <ListBox ItemsSource="{Binding RuntimeResolvedAssemblies}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Label Content="{Binding Source}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                </ListBox>
             </GroupBox>
 
             <GroupBox Grid.RowSpan="2" 

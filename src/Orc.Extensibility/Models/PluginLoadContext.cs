@@ -1,22 +1,21 @@
 ﻿namespace Orc.Extensibility
 {
     using System.Collections.Generic;
-    using System.IO;
     using Catel;
 
-    public class PluginLoadContext
+    public class PluginLoadContext : IPluginLoadContext
     {
-        public PluginLoadContext(RuntimeAssembly pluginRuntimeAssembly)
+        public PluginLoadContext(IRuntimeAssembly pluginRuntimeAssembly)
         {
             Argument.IsNotNull(() => pluginRuntimeAssembly);
 
             PluginRuntimeAssembly = pluginRuntimeAssembly;
-            RuntimeAssemblies = new List<RuntimeAssembly>();
+            RuntimeAssemblies = new List<IRuntimeAssembly>();
         }
 
-        public RuntimeAssembly PluginRuntimeAssembly { get; }
+        public IRuntimeAssembly PluginRuntimeAssembly { get; }
 
-        public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
+        public List<IRuntimeAssembly> RuntimeAssemblies { get; private set; }
 
         public override string ToString()
         {

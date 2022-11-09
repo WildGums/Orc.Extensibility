@@ -139,11 +139,12 @@
                     }
                 }
 
-                // Special case for resource assemblies: respect the current culture
-                if (assemblyName.Name.EndsWithIgnoreCase(".resources"))
-                {
-                    var culture = assemblyName.CultureInfo ?? CultureInfo.CurrentUICulture;
+                var isResourcesAssembly = assemblyName.Name.EndsWithIgnoreCase(".resources");
+                var culture = assemblyName.CultureInfo;
 
+                // Special case for resource assemblies: respect the current culture
+                if (isResourcesAssembly)
+                {
                     // Step 1: try specific culture (nl-NL)
                     // Step 2: try larger culture (nl)
                     while (culture is not null && !string.IsNullOrWhiteSpace(culture.Name))
@@ -153,8 +154,10 @@
 
                         runtimeReference = (from pluginLoadContext in loadContexts
                                             from reference in pluginLoadContext.RuntimeAssemblies
-                                            where reference.Name.ContainsIgnoreCase(locationWithBackslash) ||
-                                                  reference.Name.ContainsIgnoreCase(locationWithForwardslash)
+                                            let costuraEmbeddedRuntimeAssembly = reference as ICosturaRuntimeAssembly
+                                            where costuraEmbeddedRuntimeAssembly is not null &&
+                                                  costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithBackslash) ||
+                                                  costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithForwardslash)
                                             select reference).FirstOrDefault();
                         if (runtimeReference is not null)
                         {
@@ -163,12 +166,16 @@
 
                         culture = culture.Parent;
                     }
-
-                    //var location = $"{culture.}/{arg2.Name}.resources.dll";
                 }
 
                 if (runtimeReference is null)
                 {
+                    if (isResourcesAssembly)
+                    {
+                        Log.Debug($"Could not provide resource assembly for '{assemblyName.FullName}'");
+                        return null;
+                    }
+
                     runtimeReference = (from pluginLoadContext in loadContexts
                                         from reference in pluginLoadContext.RuntimeAssemblies
                                         where reference.Name.EqualsIgnoreCase(assemblyName.Name)

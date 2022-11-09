@@ -3,11 +3,11 @@
     using System.Collections.Generic;
     using System.IO;
 
-    public abstract class RuntimeAssembly
+    public abstract class RuntimeAssembly : IRuntimeAssembly
     {
         protected RuntimeAssembly()
         {
-            Dependencies = new List<RuntimeAssembly>();
+            Dependencies = new List<IRuntimeAssembly>();
             Name = string.Empty;
             Source = string.Empty;
             Checksum = string.Empty;
@@ -31,7 +31,7 @@
 
         public string Checksum { get; set; }
 
-        public List<RuntimeAssembly> Dependencies { get; private set; }
+        public List<IRuntimeAssembly> Dependencies { get; private set; }
 
         public abstract Stream GetStream();
 

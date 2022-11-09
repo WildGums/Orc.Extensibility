@@ -4,7 +4,7 @@
 
     public static class CosturaRuntimeAssemblyExtensions
     {
-        public static void PreloadStream(this CosturaRuntimeAssembly runtimeAssembly)
+        public static void PreloadStream(this ICosturaRuntimeAssembly runtimeAssembly)
         {
             ArgumentNullException.ThrowIfNull(runtimeAssembly);
 

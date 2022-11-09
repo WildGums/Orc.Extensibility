@@ -4,8 +4,8 @@
 
     public interface IRuntimeAssemblyResolverService
     {
-        PluginLoadContext[] GetPluginLoadContexts();
-        Task RegisterAssemblyAsync(RuntimeAssembly runtimeAssembly);
-        Task UnregisterAssemblyAsync(RuntimeAssembly runtimeAssembly);
+        IPluginLoadContext[] GetPluginLoadContexts();
+        Task RegisterAssemblyAsync(IRuntimeAssembly runtimeAssembly);
+        Task UnregisterAssemblyAsync(IRuntimeAssembly runtimeAssembly);
     }
 }

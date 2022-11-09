@@ -51,7 +51,7 @@ namespace Orc.Extensibility.Example.ViewModels
             _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
             _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
 
-            RuntimeResolvedAssemblies = new ObservableCollection<RuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
+            RuntimeResolvedAssemblies = new ObservableCollection<IRuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
             AvailablePlugins = new List<IPluginInfo>();
             RuntimeAssemblies = new List<RuntimeAssembly>();
@@ -62,9 +62,9 @@ namespace Orc.Extensibility.Example.ViewModels
 
         public IPluginInfo? SelectedPlugin { get; set; }
 
-        public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
+        public List<IRuntimeAssembly> RuntimeAssemblies { get; private set; }
 
-        public ObservableCollection<RuntimeAssembly> RuntimeResolvedAssemblies { get; private set; }
+        public ObservableCollection<IRuntimeAssembly> RuntimeResolvedAssemblies { get; private set; }
 
         public Color Color { get; private set; }
 

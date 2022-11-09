@@ -7,7 +7,7 @@
     using Catel.Logging;
     using Catel.Reflection;
 
-    public class CosturaRuntimeAssembly : RuntimeAssembly
+    public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     {
         private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 

@@ -30,7 +30,7 @@
         private readonly IAssemblyReflectionService _assemblyReflectionService;
         private readonly IAppDataService _appDataService;
 
-        private readonly Dictionary<string, PluginLoadContext> _pluginLoadContexts = new Dictionary<string, PluginLoadContext>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IPluginLoadContext> _pluginLoadContexts = new Dictionary<string, IPluginLoadContext>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _processedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public RuntimeAssemblyResolverService(IFileService fileService, IDirectoryService directoryService,
@@ -42,12 +42,12 @@
             _appDataService = appDataService;
         }
 
-        public PluginLoadContext[] GetPluginLoadContexts()
+        public IPluginLoadContext[] GetPluginLoadContexts()
         {
             return _pluginLoadContexts.Values.ToArray();
         }
 
-        public async Task RegisterAssemblyAsync(RuntimeAssembly runtimeAssembly)
+        public async Task RegisterAssemblyAsync(IRuntimeAssembly runtimeAssembly)
         {
             var fileNameWithExtension = Path.GetFileName(runtimeAssembly.Source);
 
@@ -71,7 +71,7 @@
             await RegisterAssemblyAsync(pluginLoadContext, null, runtimeAssembly);
         }
 
-        public async Task UnregisterAssemblyAsync(RuntimeAssembly runtimeAssembly)
+        public async Task UnregisterAssemblyAsync(IRuntimeAssembly runtimeAssembly)
         {
             if (runtimeAssembly is null)
             {
@@ -84,24 +84,24 @@
             }
         }
 
-        protected async Task RegisterAssemblyAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected async Task RegisterAssemblyAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly? runtimeAssembly)
         {
             var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
             pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
         }
 
         [Time("{runtimeAssembly}")]
-        protected virtual async Task<IEnumerable<RuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected virtual async Task<IEnumerable<IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly? runtimeAssembly)
         {
             // Ignore specific assemblies
             if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, runtimeAssembly))
             {
-                return Array.Empty<RuntimeAssembly>();
+                return Array.Empty<IRuntimeAssembly>();
             }
 
             Log.Debug($"Indexing all Costura embedded assemblies from '{runtimeAssembly}'");
 
-            var indexedCosturaAssemblies = new List<RuntimeAssembly>();
+            var indexedCosturaAssemblies = new List<IRuntimeAssembly>();
 
             try
             {
@@ -186,7 +186,7 @@
             return indexedCosturaAssemblies;
         }
 
-        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(PluginLoadContext pluginLoadContext, RuntimeAssembly? originatingAssembly, RuntimeAssembly runtimeAssembly)
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(IPluginLoadContext pluginLoadContext, IRuntimeAssembly originatingAssembly, IRuntimeAssembly runtimeAssembly)
         {
             if (runtimeAssembly.Name.ContainsIgnoreCase(".resources.dll"))
             {
@@ -201,7 +201,7 @@
             return false;
         }
 
-        protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, RuntimeAssembly containerAssembly)
+        protected async Task<List<EmbeddedResource>> FindEmbeddedResourcesAsync(PEReader peReader, IRuntimeAssembly containerAssembly)
         {
             var embeddedResources = new List<EmbeddedResource>();
 
@@ -288,7 +288,7 @@
             return embeddedResources;
         }
 
-        protected virtual async Task<List<CosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
+        protected virtual async Task<List<ICosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
         {
             var metadataResource = (from x in resources
                                     where x.Name.EqualsIgnoreCase("costura.metadata")
@@ -299,7 +299,7 @@
                 return null;
             }
 
-            var embeddedResources = new List<CosturaRuntimeAssembly>();
+            var embeddedResources = new List<ICosturaRuntimeAssembly>();
 
             unsafe
             {

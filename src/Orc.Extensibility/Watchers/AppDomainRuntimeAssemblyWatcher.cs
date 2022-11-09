@@ -9,7 +9,6 @@
     using System.Reflection;
     using System.Linq;
     using Catel.Reflection;
-    using System.Globalization;
     using MethodTimer;
     using Catel.Services;
     using Orc.FileSystem;
@@ -25,7 +24,7 @@
         private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _loadedUmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        private PluginLoadContext? _activeSingleLoadContext;
+        private IPluginLoadContext? _activeSingleLoadContext;
 
         public AppDomainRuntimeAssemblyWatcher(IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
             IAppDataService appDataService, IDirectoryService directoryService, IFileService fileService)
@@ -40,9 +39,11 @@
             _directoryService = directoryService;
             _fileService = fileService;
 
-            LoadedAssemblies = new List<RuntimeAssembly>();
+            LoadedAssemblies = new List<IRuntimeAssembly>();
             AllowAssemblyResolvingFromOtherLoadContexts = true;
         }
+
+        public event EventHandler<RuntimeLoadingAssemblyEventArgs>? AssemblyLoading;
 
         public event EventHandler<RuntimeLoadedAssemblyEventArgs>? AssemblyLoaded;
 
@@ -54,7 +55,7 @@
         /// </summary>
         public bool AllowAssemblyResolvingFromOtherLoadContexts { get; set; }
 
-        public List<RuntimeAssembly> LoadedAssemblies { get; private set; }
+        public List<IRuntimeAssembly> LoadedAssemblies { get; private set; }
 
         public void Attach()
         {
@@ -89,7 +90,7 @@
         }
 
         [Time("{assemblyFullName}")]
-        private Assembly? LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
+        internal Assembly LoadManagedAssembly(AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName, string assemblyFullName)
         {
             ArgumentNullException.ThrowIfNull(assemblyLoadContext);
             ArgumentNullException.ThrowIfNull(assemblyName);
@@ -100,7 +101,7 @@
             // Load context, ignore the requesting assembly for now
             if (!string.IsNullOrWhiteSpace(assemblyName.Name))
             {
-                RuntimeAssembly? runtimeReference = null;
+                IRuntimeAssembly runtimeReference = null;
 
                 var loadContexts = _runtimeAssemblyResolverService.GetPluginLoadContexts().ToList();
 
@@ -146,11 +147,12 @@
                     }
                 }
 
-                // Special case for resource assemblies: respect the current culture
-                if (assemblyName.Name.EndsWithIgnoreCase(".resources"))
-                {
-                    var culture = assemblyName.CultureInfo ?? CultureInfo.CurrentUICulture;
+                var isResourcesAssembly = assemblyName.Name.EndsWithIgnoreCase(".resources");
+                var culture = assemblyName.CultureInfo;
 
+                // Special case for resource assemblies: respect the current culture
+                if (isResourcesAssembly)
+                {
                     // Step 1: try specific culture (nl-NL)
                     // Step 2: try larger culture (nl)
                     while (culture is not null && !string.IsNullOrWhiteSpace(culture.Name))
@@ -160,8 +162,10 @@
 
                         runtimeReference = (from pluginLoadContext in loadContexts
                                             from reference in pluginLoadContext.RuntimeAssemblies
-                                            where reference.Name.ContainsIgnoreCase(locationWithBackslash) ||
-                                                  reference.Name.ContainsIgnoreCase(locationWithForwardslash)
+                                            let costuraEmbeddedRuntimeAssembly = reference as ICosturaRuntimeAssembly
+                                            where costuraEmbeddedRuntimeAssembly is not null &&
+                                                  costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithBackslash) ||
+                                                  costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithForwardslash)
                                             select reference).FirstOrDefault();
                         if (runtimeReference is not null)
                         {
@@ -170,12 +174,16 @@
 
                         culture = culture.Parent;
                     }
-
-                    //var location = $"{culture.}/{arg2.Name}.resources.dll";
                 }
 
                 if (runtimeReference is null)
                 {
+                    if (isResourcesAssembly)
+                    {
+                        Log.Debug($"Could not provide resource assembly for '{assemblyName.FullName}'");
+                        return null;
+                    }
+
                     runtimeReference = (from pluginLoadContext in loadContexts
                                         from reference in pluginLoadContext.RuntimeAssemblies
                                         where reference.Name.EqualsIgnoreCase(assemblyName.Name)
@@ -190,6 +198,16 @@
 
                     try
                     {
+                        var assemblyLoadingEventArgs = new RuntimeLoadingAssemblyEventArgs(assemblyName, runtimeReference);
+
+                        AssemblyLoading?.Invoke(this, assemblyLoadingEventArgs);
+
+                        if (assemblyLoadingEventArgs.Cancel)
+                        {
+                            Log.Debug($"Canceling loading of '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
+                            return null;
+                        }
+
                         if (!runtimeReference.IsLoaded)
                         {
                         	Assembly? loadedAssembly = null;
@@ -235,7 +253,7 @@
         }
 
         [Time("{libraryName}")]
-        private IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
+        internal IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
         {
             Log.Debug($"Requesting to load '{libraryName}', requested by '{assembly.FullName}'");
 
@@ -249,7 +267,7 @@
             {
                 // Note: unmanaged assemblies *must* be loaded from disk
 
-                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal), 
+                var targetDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(Catel.IO.ApplicationDataTarget.UserLocal),
                     "runtime", runtimeReference.Checksum);
                 _directoryService.Create(targetDirectory);
 

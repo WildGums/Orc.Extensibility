@@ -14,7 +14,7 @@
             Size = size;
         }
 
-        public RuntimeAssembly ContainerAssembly { get; private set; }
+        public IRuntimeAssembly ContainerAssembly { get; set; }
 
         public string Name { get; private set; }
 

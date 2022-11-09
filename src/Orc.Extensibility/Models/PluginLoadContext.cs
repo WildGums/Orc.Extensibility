@@ -3,19 +3,19 @@
     using System;
     using System.Collections.Generic;
 
-    public class PluginLoadContext
+    public class PluginLoadContext : IPluginLoadContext
     {
-        public PluginLoadContext(RuntimeAssembly pluginRuntimeAssembly)
+        public PluginLoadContext(IRuntimeAssembly pluginRuntimeAssembly)
         {
             ArgumentNullException.ThrowIfNull(pluginRuntimeAssembly);
 
             PluginRuntimeAssembly = pluginRuntimeAssembly;
-            RuntimeAssemblies = new List<RuntimeAssembly>();
+            RuntimeAssemblies = new List<IRuntimeAssembly>();
         }
 
-        public RuntimeAssembly PluginRuntimeAssembly { get; }
+        public IRuntimeAssembly PluginRuntimeAssembly { get; }
 
-        public List<RuntimeAssembly> RuntimeAssemblies { get; private set; }
+        public List<IRuntimeAssembly> RuntimeAssemblies { get; private set; }
 
         public override string ToString()
         {

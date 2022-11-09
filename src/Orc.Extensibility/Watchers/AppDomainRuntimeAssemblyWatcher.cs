@@ -44,6 +44,8 @@
             AllowAssemblyResolvingFromOtherLoadContexts = true;
         }
 
+        public event EventHandler<RuntimeLoadingAssemblyEventArgs> AssemblyLoading;
+
         public event EventHandler<RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
 
         /// <summary>
@@ -181,6 +183,16 @@
 
                     try
                     {
+                        var assemblyLoadingEventArgs = new RuntimeLoadingAssemblyEventArgs(assemblyName, runtimeReference);
+
+                        AssemblyLoading?.Invoke(this, assemblyLoadingEventArgs);
+
+                        if (assemblyLoadingEventArgs.Cancel)
+                        {
+                            Log.Debug($"Canceling loading of '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
+                            return null;
+                        }
+
                         if (!runtimeReference.IsLoaded)
                         {
                             Assembly loadedAssembly = null;

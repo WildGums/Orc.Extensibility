@@ -11,8 +11,9 @@ namespace Orc.Extensibility
     {
         public AppDomainRuntimeAssemblyWatcher(Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService, Catel.Services.IAppDataService appDataService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService) { }
         public bool AllowAssemblyResolvingFromOtherLoadContexts { get; set; }
-        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> LoadedAssemblies { get; }
+        public System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> LoadedAssemblies { get; }
         public event System.EventHandler<Orc.Extensibility.RuntimeLoadedAssemblyEventArgs> AssemblyLoaded;
+        public event System.EventHandler<Orc.Extensibility.RuntimeLoadingAssemblyEventArgs> AssemblyLoading;
         public void Attach() { }
         public void Attach(System.Runtime.Loader.AssemblyLoadContext assemblyLoadContext) { }
     }
@@ -21,7 +22,7 @@ namespace Orc.Extensibility
         public AssemblyReflectionService(Orc.FileSystem.IFileService fileService) { }
         public virtual bool IsPeAssembly(string assemblyPath) { }
     }
-    public class CosturaRuntimeAssembly : Orc.Extensibility.RuntimeAssembly
+    public class CosturaRuntimeAssembly : Orc.Extensibility.RuntimeAssembly, Orc.Extensibility.ICosturaRuntimeAssembly, Orc.Extensibility.IRuntimeAssembly
     {
         public CosturaRuntimeAssembly(Orc.Extensibility.EmbeddedResource embeddedResource) { }
         public CosturaRuntimeAssembly(string content) { }
@@ -38,7 +39,7 @@ namespace Orc.Extensibility
     }
     public static class CosturaRuntimeAssemblyExtensions
     {
-        public static void PreloadStream(this Orc.Extensibility.CosturaRuntimeAssembly runtimeAssembly) { }
+        public static void PreloadStream(this Orc.Extensibility.ICosturaRuntimeAssembly runtimeAssembly) { }
     }
     public static class CustomAttributeDataExtensions
     {
@@ -50,7 +51,7 @@ namespace Orc.Extensibility
     public class EmbeddedResource
     {
         public EmbeddedResource() { }
-        public Orc.Extensibility.RuntimeAssembly ContainerAssembly { get; set; }
+        public Orc.Extensibility.IRuntimeAssembly ContainerAssembly { get; set; }
         public string Name { get; set; }
         public int Size { get; set; }
         public unsafe byte* Start { get; set; }
@@ -68,6 +69,12 @@ namespace Orc.Extensibility
     public interface IAssemblyReflectionService
     {
         bool IsPeAssembly(string assemblyPath);
+    }
+    public interface ICosturaRuntimeAssembly : Orc.Extensibility.IRuntimeAssembly
+    {
+        Orc.Extensibility.EmbeddedResource EmbeddedResource { get; set; }
+        string RelativeFileName { get; set; }
+        string ResourceName { get; set; }
     }
     public interface ILoadedPluginService
     {
@@ -120,6 +127,11 @@ namespace Orc.Extensibility
     {
         Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Type type);
     }
+    public interface IPluginLoadContext
+    {
+        Orc.Extensibility.IRuntimeAssembly PluginRuntimeAssembly { get; }
+        System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> RuntimeAssemblies { get; }
+    }
     public interface IPluginLocationsProvider
     {
         System.Collections.Generic.IEnumerable<string> GetPluginDirectories();
@@ -138,11 +150,22 @@ namespace Orc.Extensibility
         event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoaded;
         event System.EventHandler<Orc.Extensibility.PluginEventArgs> PluginLoadingFailed;
     }
+    public interface IRuntimeAssembly
+    {
+        string Checksum { get; set; }
+        System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> Dependencies { get; }
+        bool IsLoaded { get; }
+        bool IsRuntime { get; }
+        string Name { get; }
+        string Source { get; }
+        System.IO.Stream GetStream();
+        void MarkLoaded();
+    }
     public interface IRuntimeAssemblyResolverService
     {
-        Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts();
-        System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.RuntimeAssembly runtimeAssembly);
-        System.Threading.Tasks.Task UnregisterAssemblyAsync(Orc.Extensibility.RuntimeAssembly runtimeAssembly);
+        Orc.Extensibility.IPluginLoadContext[] GetPluginLoadContexts();
+        System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.IRuntimeAssembly runtimeAssembly);
+        System.Threading.Tasks.Task UnregisterAssemblyAsync(Orc.Extensibility.IRuntimeAssembly runtimeAssembly);
     }
     public interface ISinglePluginService : Orc.Extensibility.IPluginService
     {
@@ -236,11 +259,11 @@ namespace Orc.Extensibility
         public PluginInfoProvider() { }
         public virtual Orc.Extensibility.IPluginInfo GetPluginInfo(string location, System.Type type) { }
     }
-    public class PluginLoadContext
+    public class PluginLoadContext : Orc.Extensibility.IPluginLoadContext
     {
-        public PluginLoadContext(Orc.Extensibility.RuntimeAssembly pluginRuntimeAssembly) { }
-        public Orc.Extensibility.RuntimeAssembly PluginRuntimeAssembly { get; }
-        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> RuntimeAssemblies { get; }
+        public PluginLoadContext(Orc.Extensibility.IRuntimeAssembly pluginRuntimeAssembly) { }
+        public Orc.Extensibility.IRuntimeAssembly PluginRuntimeAssembly { get; }
+        public System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> RuntimeAssemblies { get; }
         public override string ToString() { }
     }
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
@@ -265,12 +288,12 @@ namespace Orc.Extensibility
     {
         public static bool ImplementsInterface<TInterface>(this System.Type type) { }
     }
-    public abstract class RuntimeAssembly
+    public abstract class RuntimeAssembly : Orc.Extensibility.IRuntimeAssembly
     {
         protected RuntimeAssembly() { }
         protected RuntimeAssembly(string name, string source, string checksum) { }
         public string Checksum { get; set; }
-        public System.Collections.Generic.List<Orc.Extensibility.RuntimeAssembly> Dependencies { get; }
+        public System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> Dependencies { get; }
         public bool IsLoaded { get; set; }
         public virtual bool IsRuntime { get; set; }
         public string Name { get; set; }
@@ -283,21 +306,28 @@ namespace Orc.Extensibility
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService
     {
         public RuntimeAssemblyResolverService(Orc.FileSystem.IFileService fileService, Orc.FileSystem.IDirectoryService directoryService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService, Catel.Services.IAppDataService appDataService) { }
-        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.CosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(System.Collections.Generic.IEnumerable<Orc.Extensibility.EmbeddedResource> resources) { }
-        protected System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.EmbeddedResource>> FindEmbeddedResourcesAsync(System.Reflection.PortableExecutable.PEReader peReader, Orc.Extensibility.RuntimeAssembly containerAssembly) { }
-        public Orc.Extensibility.PluginLoadContext[] GetPluginLoadContexts() { }
-        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.RuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, Orc.Extensibility.RuntimeAssembly runtimeAssembly) { }
-        public System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.RuntimeAssembly runtimeAssembly) { }
-        protected System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, Orc.Extensibility.RuntimeAssembly runtimeAssembly) { }
-        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(Orc.Extensibility.PluginLoadContext pluginLoadContext, Orc.Extensibility.RuntimeAssembly originatingAssembly, Orc.Extensibility.RuntimeAssembly runtimeAssembly) { }
-        public System.Threading.Tasks.Task UnregisterAssemblyAsync(Orc.Extensibility.RuntimeAssembly runtimeAssembly) { }
+        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.ICosturaRuntimeAssembly>> FindEmbeddedAssembliesViaMetadataAsync(System.Collections.Generic.IEnumerable<Orc.Extensibility.EmbeddedResource> resources) { }
+        protected System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.EmbeddedResource>> FindEmbeddedResourcesAsync(System.Reflection.PortableExecutable.PEReader peReader, Orc.Extensibility.IRuntimeAssembly containerAssembly) { }
+        public Orc.Extensibility.IPluginLoadContext[] GetPluginLoadContexts() { }
+        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
+        public System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
+        protected System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
+        protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
+        public System.Threading.Tasks.Task UnregisterAssemblyAsync(Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
     }
     public class RuntimeLoadedAssemblyEventArgs : System.EventArgs
     {
-        public RuntimeLoadedAssemblyEventArgs(System.Reflection.AssemblyName requestedAssemblyName, Orc.Extensibility.RuntimeAssembly resolvedRuntimeAssembly, System.Reflection.Assembly resolvedAssembly) { }
+        public RuntimeLoadedAssemblyEventArgs(System.Reflection.AssemblyName requestedAssemblyName, Orc.Extensibility.IRuntimeAssembly resolvedRuntimeAssembly, System.Reflection.Assembly resolvedAssembly) { }
         public System.Reflection.AssemblyName RequestedAssemblyName { get; }
         public System.Reflection.Assembly ResolvedAssembly { get; }
-        public Orc.Extensibility.RuntimeAssembly ResolvedRuntimeAssembly { get; }
+        public Orc.Extensibility.IRuntimeAssembly ResolvedRuntimeAssembly { get; }
+    }
+    public class RuntimeLoadingAssemblyEventArgs : System.EventArgs
+    {
+        public RuntimeLoadingAssemblyEventArgs(System.Reflection.AssemblyName requestedAssemblyName, Orc.Extensibility.IRuntimeAssembly resolvedRuntimeAssembly) { }
+        public bool Cancel { get; set; }
+        public System.Reflection.AssemblyName RequestedAssemblyName { get; }
+        public Orc.Extensibility.IRuntimeAssembly ResolvedRuntimeAssembly { get; }
     }
     public class SinglePluginService : Orc.Extensibility.IPluginService, Orc.Extensibility.ISinglePluginService
     {

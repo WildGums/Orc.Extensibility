@@ -3,17 +3,19 @@
     using System;
     using System.Reflection;
 
-    public class RuntimeLoadedAssemblyEventArgs : EventArgs
+    public class RuntimeLoadingAssemblyEventArgs : EventArgs
     {
-        public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
+        public RuntimeLoadingAssemblyEventArgs(AssemblyName requestedAssemblyName, 
+            IRuntimeAssembly resolvedRuntimeAssembly)
         {
             RequestedAssemblyName = requestedAssemblyName;
             ResolvedRuntimeAssembly = resolvedRuntimeAssembly;
-            ResolvedAssembly = resolvedAssembly;
+            Cancel = false;
         }
 
         public AssemblyName RequestedAssemblyName { get; }
         public IRuntimeAssembly ResolvedRuntimeAssembly { get; }
-        public Assembly ResolvedAssembly { get; }
+
+        public bool Cancel { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 {
     public unsafe class EmbeddedResource
     {
-        public RuntimeAssembly ContainerAssembly { get; set; }
+        public IRuntimeAssembly ContainerAssembly { get; set; }
 
         public string Name { get; set; }
 

@@ -1,9 +1,8 @@
-﻿namespace Orc.Extensibility.Example
-{
-    using System.Threading.Tasks;
+﻿namespace Orc.Extensibility.Example;
 
-    public interface ICustomPlugin
-    {
-        Task InitializeAsync();
-    }
+using System.Threading.Tasks;
+
+public interface ICustomPlugin
+{
+    Task InitializeAsync();
 }

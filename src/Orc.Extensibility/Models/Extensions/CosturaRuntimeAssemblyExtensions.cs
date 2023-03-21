@@ -1,22 +1,21 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+
+public static class CosturaRuntimeAssemblyExtensions
 {
-    using System;
-
-    public static class CosturaRuntimeAssemblyExtensions
+    public static void PreloadStream(this ICosturaRuntimeAssembly runtimeAssembly)
     {
-        public static void PreloadStream(this ICosturaRuntimeAssembly runtimeAssembly)
+        ArgumentNullException.ThrowIfNull(runtimeAssembly);
+
+        if (runtimeAssembly.IsLoaded)
         {
-            ArgumentNullException.ThrowIfNull(runtimeAssembly);
+            return;
+        }
 
-            if (runtimeAssembly.IsLoaded)
-            {
-                return;
-            }
-
-            using (var stream = runtimeAssembly.GetStream())
-            {
-                // Will be cached
-            }
+        using (var stream = runtimeAssembly.GetStream())
+        {
+            // Will be cached
         }
     }
 }

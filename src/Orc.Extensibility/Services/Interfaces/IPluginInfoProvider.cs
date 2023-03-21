@@ -1,9 +1,8 @@
-﻿namespace Orc.Extensibility
-{
-    using System;
+﻿namespace Orc.Extensibility;
 
-    public interface IPluginInfoProvider
-    {
-        IPluginInfo GetPluginInfo(string location, Type type);
-    }
+using System;
+
+public interface IPluginInfoProvider
+{
+    IPluginInfo GetPluginInfo(string location, Type type);
 }

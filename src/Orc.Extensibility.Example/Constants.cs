@@ -5,11 +5,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 
-namespace Orc.Extensibility.Example
+namespace Orc.Extensibility.Example;
+
+public static class ConfigurationKeys
 {
-    public static class ConfigurationKeys
-    {
-        public const string ActivePlugin = "ActivePlugin";
-        public const string ActivePluginDefaultValue = "Orc.Extensibility.Example.ExtensionA.PluginA";
-    }
+    public const string ActivePlugin = "ActivePlugin";
+    public const string ActivePluginDefaultValue = "Orc.Extensibility.Example.ExtensionA.PluginA";
 }

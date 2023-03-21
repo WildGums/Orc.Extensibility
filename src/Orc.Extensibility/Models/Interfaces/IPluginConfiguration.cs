@@ -1,10 +1,9 @@
-﻿namespace Orc.Extensibility
-{
-    public interface IPluginConfiguration
-    {
-        string PackagesDirectory { get; set; }
+﻿namespace Orc.Extensibility;
 
-        string FeedUrl { get; set; }
-        string FeedName { get; set; }
-    }
+public interface IPluginConfiguration
+{
+    string PackagesDirectory { get; set; }
+
+    string FeedUrl { get; set; }
+    string FeedName { get; set; }
 }

@@ -1,6 +1,5 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public static class IPluginFinderExtensions
 {
-    public static class IPluginFinderExtensions
-    {
-    }
 }

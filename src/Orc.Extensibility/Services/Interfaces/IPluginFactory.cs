@@ -1,7 +1,6 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface IPluginFactory
 {
-    public interface IPluginFactory
-    {
-        object CreatePlugin(IPluginInfo pluginInfo);
-    }
+    object CreatePlugin(IPluginInfo pluginInfo);
 }

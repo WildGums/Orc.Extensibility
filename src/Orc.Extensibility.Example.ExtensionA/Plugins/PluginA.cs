@@ -1,34 +1,33 @@
-﻿namespace Orc.Extensibility.Example.ExtensionA.Plugins
+﻿namespace Orc.Extensibility.Example.ExtensionA.Plugins;
+
+using System.Threading.Tasks;
+using Catel.Logging;
+using Catel.Services;
+using Services;
+
+public class PluginA : ICustomPlugin
 {
-    using System.Threading.Tasks;
-    using Catel.Logging;
-    using Catel.Services;
-    using Services;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class PluginA : ICustomPlugin
+    private readonly IMessageService _messageService;
+    private readonly IHostService _hostService;
+    private readonly ILanguageService _languageService;
+
+    public PluginA(IMessageService messageService, IHostService hostService, ILanguageService languageService)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        _messageService = messageService;
+        _hostService = hostService;
+        _languageService = languageService;
+    }
 
-        private readonly IMessageService _messageService;
-        private readonly IHostService _hostService;
-        private readonly ILanguageService _languageService;
+    public async Task InitializeAsync()
+    {
+        var value = _languageService.GetRequiredString("TestResource");
 
-        public PluginA(IMessageService messageService, IHostService hostService, ILanguageService languageService)
-        {
-            _messageService = messageService;
-            _hostService = hostService;
-            _languageService = languageService;
-        }
+        Log.Info($"{typeof(YamlDotNet.Core.AnchorName).FullName}");
 
-        public async Task InitializeAsync()
-        {
-            var value = _languageService.GetRequiredString("TestResource");
+        await _messageService.ShowAsync($"Plugin A has been loaded, setting color to red. Resource value: '{value}'");
 
-            Log.Info($"{typeof(YamlDotNet.Core.AnchorName).FullName}");
-
-            await _messageService.ShowAsync($"Plugin A has been loaded, setting color to red. Resource value: '{value}'");
-
-            _hostService.SetColor(System.Windows.Media.Colors.Red);
-        }
+        _hostService.SetColor(System.Windows.Media.Colors.Red);
     }
 }

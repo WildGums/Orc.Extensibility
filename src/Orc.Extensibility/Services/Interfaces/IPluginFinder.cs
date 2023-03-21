@@ -1,10 +1,9 @@
-﻿namespace Orc.Extensibility
-{
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
+﻿namespace Orc.Extensibility;
 
-    public interface IPluginFinder
-    {
-        Task<IEnumerable<IPluginInfo>> FindPluginsAsync();
-    }
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+public interface IPluginFinder
+{
+    Task<IEnumerable<IPluginInfo>> FindPluginsAsync();
 }

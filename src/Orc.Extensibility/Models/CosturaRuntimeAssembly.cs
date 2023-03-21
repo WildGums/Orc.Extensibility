@@ -1,162 +1,161 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+using System.IO;
+using System.IO.Compression;
+using Catel;
+using Catel.Logging;
+using Catel.Reflection;
+
+public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
 {
-    using System;
-    using System.IO;
-    using System.IO.Compression;
-    using Catel;
-    using Catel.Logging;
-    using Catel.Reflection;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
+    private byte[]? _cachedData;
+
+    public CosturaRuntimeAssembly(string content)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        var splitted = content.Split('|');
 
-        private byte[]? _cachedData;
+        ResourceName = splitted[0];
+        Version = splitted[1];
+        AssemblyName = splitted[2];
+        RelativeFileName = splitted[3];
+        Checksum = splitted[4];
 
-        public CosturaRuntimeAssembly(string content)
+        // Requires newer version of Costura
+        if (splitted.Length > 5 &&
+            long.TryParse(splitted[5], out var size))
         {
-            var splitted = content.Split('|');
-
-            ResourceName = splitted[0];
-            Version = splitted[1];
-            AssemblyName = splitted[2];
-            RelativeFileName = splitted[3];
-            Checksum = splitted[4];
-
-            // Requires newer version of Costura
-            if (splitted.Length > 5 &&
-                long.TryParse(splitted[5], out var size))
-            {
-                Size = size;
-            }
-
-            if (!string.IsNullOrWhiteSpace(AssemblyName))
-            {
-                Name = TypeHelper.GetAssemblyNameWithoutOverhead(AssemblyName);
-            }
-            else
-            {
-                Name = Path.GetFileName(RelativeFileName);
-            }
-
-            Source = AssemblyName;
+            Size = size;
         }
 
-        public string ResourceName { get; set; }
-
-        public string Version { get; set; }
-
-        public string AssemblyName { get; set; }
-
-        public string RelativeFileName { get; set; }
-
-        public long? Size { get; set; }
-
-        public EmbeddedResource? EmbeddedResource { get; set; }
-
-        public override bool IsRuntime
+        if (!string.IsNullOrWhiteSpace(AssemblyName))
         {
-            get
-            {
-                var resourceName = ResourceName;
-                if (!string.IsNullOrWhiteSpace(resourceName))
-                {
-                    return resourceName.ContainsIgnoreCase(".runtimes.");
-                }
-
-                return EmbeddedResource?.Name.ContainsIgnoreCase(".runtimes.") ?? false;
-            }
+            Name = TypeHelper.GetAssemblyNameWithoutOverhead(AssemblyName);
+        }
+        else
+        {
+            Name = Path.GetFileName(RelativeFileName);
         }
 
-        public override Stream GetStream()
+        Source = AssemblyName;
+    }
+
+    public string ResourceName { get; set; }
+
+    public string Version { get; set; }
+
+    public string AssemblyName { get; set; }
+
+    public string RelativeFileName { get; set; }
+
+    public long? Size { get; set; }
+
+    public EmbeddedResource? EmbeddedResource { get; set; }
+
+    public override bool IsRuntime
+    {
+        get
         {
-            if (IsLoaded)
+            var resourceName = ResourceName;
+            if (!string.IsNullOrWhiteSpace(resourceName))
             {
-                throw Log.ErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
+                return resourceName.ContainsIgnoreCase(".runtimes.");
             }
 
-            if (_cachedData is null)
-            {
-                // Note: we preferred not to cache, but we can't read the same stream twice it seems
-                var embeddedResource = EmbeddedResource;
-                if (embeddedResource is null)
-                {
-                    throw new NotSupportedException("Cannot get stream when the EmbeddedResource property is not set");
-                }
+            return EmbeddedResource?.Name.ContainsIgnoreCase(".runtimes.") ?? false;
+        }
+    }
 
-                unsafe
+    public override Stream GetStream()
+    {
+        if (IsLoaded)
+        {
+            throw Log.ErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
+        }
+
+        if (_cachedData is null)
+        {
+            // Note: we preferred not to cache, but we can't read the same stream twice it seems
+            var embeddedResource = EmbeddedResource;
+            if (embeddedResource is null)
+            {
+                throw Log.ErrorAndCreateException<NotSupportedException>("Cannot get stream when the EmbeddedResource property is not set");
+            }
+
+            unsafe
+            {
+                using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
                 {
-                    using (var resourceStream = new UnmanagedMemoryStream(embeddedResource.Start, embeddedResource.Size))
+                    using (var stream = LoadStream(resourceStream, embeddedResource.Name))
                     {
-                        using (var stream = LoadStream(resourceStream, embeddedResource.Name))
-                        {
-                            _cachedData = ReadStream(stream);
-                        }
+                        _cachedData = ReadStream(stream);
                     }
                 }
             }
-
-            return new MemoryStream(_cachedData);
         }
 
-        protected override void OnMarkLoaded()
+        return new MemoryStream(_cachedData);
+    }
+
+    protected override void OnMarkLoaded()
+    {
+        if (_cachedData is not null)
         {
-            if (_cachedData is not null)
-            {
-                Log.Debug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
+            Log.Debug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
 
-                _cachedData = null;
-            }
+            _cachedData = null;
         }
+    }
 
-        public override string ToString()
-        {
-            return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Checksum}|{Size}";
-        }
+    public override string ToString()
+    {
+        return $"{ResourceName}|{Version}|{AssemblyName}|{RelativeFileName}|{Checksum}|{Size}";
+    }
 
 #pragma warning disable IDISP015 // Member should not return created and cached instance
-        private Stream LoadStream(Stream existingStream, string resourceName)
+    private Stream LoadStream(Stream existingStream, string resourceName)
 #pragma warning restore IDISP015 // Member should not return created and cached instance
+    {
+        if (resourceName.EndsWith(".compressed"))
         {
-            if (resourceName.EndsWith(".compressed"))
+            var originalPosition = existingStream.Position;
+
+            using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
             {
-                var originalPosition = existingStream.Position;
+                var memoryStream = new MemoryStream();
 
-                using (var source = new DeflateStream(existingStream, CompressionMode.Decompress))
-                {
-                    var memoryStream = new MemoryStream();
+                CopyTo(source, memoryStream);
 
-                    CopyTo(source, memoryStream);
+                memoryStream.Position = 0L;
+                existingStream.Position = originalPosition;
 
-                    memoryStream.Position = 0L;
-                    existingStream.Position = originalPosition;
-
-                    return memoryStream;
-                }
-
+                return memoryStream;
             }
 
-            return existingStream;
         }
 
-        private void CopyTo(Stream source, Stream destination)
+        return existingStream;
+    }
+
+    private void CopyTo(Stream source, Stream destination)
+    {
+        var array = new byte[81920];
+        int count;
+
+        while ((count = source.Read(array, 0, array.Length)) != 0)
         {
-            var array = new byte[81920];
-            int count;
-
-            while ((count = source.Read(array, 0, array.Length)) != 0)
-            {
-                destination.Write(array, 0, count);
-            }
-
-            destination.Flush();
+            destination.Write(array, 0, count);
         }
 
-        private byte[] ReadStream(Stream stream)
-        {
-            var array = new byte[stream.Length];
-            stream.Read(array, 0, array.Length);
-            return array;
-        }
+        destination.Flush();
+    }
+
+    private byte[] ReadStream(Stream stream)
+    {
+        var array = new byte[stream.Length];
+        stream.Read(array, 0, array.Length);
+        return array;
     }
 }

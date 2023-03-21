@@ -1,8 +1,7 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface IPluginCleanupService
 {
-    public interface IPluginCleanupService
-    {
-        bool IsCleanupRequired(string directory);
-        void Cleanup(string directory);
-    }
+    bool IsCleanupRequired(string directory);
+    void Cleanup(string directory);
 }

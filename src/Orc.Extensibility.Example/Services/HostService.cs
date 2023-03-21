@@ -1,20 +1,19 @@
-﻿namespace Orc.Extensibility.Example.Services
+﻿namespace Orc.Extensibility.Example.Services;
+
+using System;
+using System.Windows.Media;
+using Catel.Logging;
+
+public class HostService : IHostService
 {
-    using System;
-    using System.Windows.Media;
-    using Catel.Logging;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class HostService : IHostService
+    public event EventHandler<ColorEventArgs>? ColorChanged;
+
+    public void SetColor(Color color)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        Log.Info($"Changing color to '{color}'");
 
-        public event EventHandler<ColorEventArgs>? ColorChanged;
-
-        public void SetColor(Color color)
-        {
-            Log.Info($"Changing color to '{color}'");
-
-            ColorChanged?.Invoke(this, new ColorEventArgs(color));
-        }
+        ColorChanged?.Invoke(this, new ColorEventArgs(color));
     }
 }

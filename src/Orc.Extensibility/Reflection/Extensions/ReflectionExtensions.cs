@@ -1,32 +1,31 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+using Catel.Reflection;
+
+public static class ReflectionExtensions
 {
-    using System;
-    using Catel.Reflection;
-
-    public static class ReflectionExtensions
+    public static bool ImplementsInterface<TInterface>(this Type type)
     {
-        public static bool ImplementsInterface<TInterface>(this Type type)
+        ArgumentNullException.ThrowIfNull(type);
+
+        var typeName = typeof(TInterface).FullName;
+
+        foreach (var iface in type.GetInterfacesEx())
         {
-            ArgumentNullException.ThrowIfNull(type);
-
-            var typeName = typeof(TInterface).FullName;
-
-            foreach (var iface in type.GetInterfacesEx())
+            try
             {
-                try
+                if (iface.FullName?.Equals(typeName) ?? false)
                 {
-                    if (iface.FullName?.Equals(typeName) ?? false)
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore
+                    return true;
                 }
             }
-
-            return false;
+            catch (Exception)
+            {
+                // Ignore
+            }
         }
+
+        return false;
     }
 }

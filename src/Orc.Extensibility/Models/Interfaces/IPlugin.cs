@@ -1,8 +1,7 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface IPlugin
 {
-    public interface IPlugin
-    {
-        object Instance { get; }
-        IPluginInfo Info { get; }
-    }
+    object Instance { get; }
+    IPluginInfo Info { get; }
 }

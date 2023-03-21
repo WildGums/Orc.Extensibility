@@ -1,14 +1,13 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+using System.Collections.Generic;
+
+public interface ILoadedPluginService
 {
-    using System;
-    using System.Collections.Generic;
+    event EventHandler<PluginEventArgs>? PluginLoaded;
 
-    public interface ILoadedPluginService
-    {
-        event EventHandler<PluginEventArgs>? PluginLoaded;
+    List<IPluginInfo> GetLoadedPlugins();
 
-        List<IPluginInfo> GetLoadedPlugins();
-
-        void AddPlugin(IPluginInfo pluginInfo);
-    }
+    void AddPlugin(IPluginInfo pluginInfo);
 }

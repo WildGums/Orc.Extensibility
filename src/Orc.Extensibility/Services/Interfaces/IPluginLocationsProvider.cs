@@ -1,9 +1,8 @@
-﻿namespace Orc.Extensibility
-{
-    using System.Collections.Generic;
+﻿namespace Orc.Extensibility;
 
-    public interface IPluginLocationsProvider
-    {
-        IEnumerable<string> GetPluginDirectories();
-    }
+using System.Collections.Generic;
+
+public interface IPluginLocationsProvider
+{
+    IEnumerable<string> GetPluginDirectories();
 }

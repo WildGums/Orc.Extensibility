@@ -23,8 +23,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
-    <PackageReference Include="Orc.Controls" Version="5.0.0-alpha0274" />
-    <PackageReference Include="Orc.FileSystem" Version="5.0.0-alpha0196" />
+    <PackageReference Include="Orc.Controls" Version="5.0.0-alpha0282" />
+    <PackageReference Include="Orc.FileSystem" Version="5.0.0-alpha0222" />
     <PackageReference Include="Orchestra.Core" Version="7.0.0-alpha0219" />
   </ItemGroup>
 

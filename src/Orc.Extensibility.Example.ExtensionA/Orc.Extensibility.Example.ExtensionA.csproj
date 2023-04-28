@@ -27,7 +27,7 @@
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" />
     <PackageReference Include="Orc.Controls" Version="5.0.0-alpha0290" />
-    <PackageReference Include="Orc.Search.Xaml" Version="5.0.0-alpha0226" />
+    <PackageReference Include="Orc.Search.Xaml" Version="5.0.0-alpha0234" />
     <PackageReference Include="Orchestra.Core" Version="7.0.0-alpha0267" />
     <PackageReference Include="YamlDotNet" Version="13.1.0" PrivateAssets="all" />
   </ItemGroup>

@@ -25,7 +25,7 @@
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
     <PackageReference Include="Orc.Controls" Version="5.0.0-alpha0284" />
     <PackageReference Include="Orc.FileSystem" Version="5.0.0-alpha0224" />
-    <PackageReference Include="Orchestra.Core" Version="7.0.0-alpha0263" />
+    <PackageReference Include="Orchestra.Core" Version="7.0.0-alpha0267" />
   </ItemGroup>
 
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props')" />

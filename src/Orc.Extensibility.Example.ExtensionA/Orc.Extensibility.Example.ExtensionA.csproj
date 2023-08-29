@@ -29,7 +29,7 @@
     <PackageReference Include="Orc.Controls" Version="5.0.0-alpha0386" />
     <PackageReference Include="Orc.Search.Xaml" Version="5.0.0-alpha0234" />
     <PackageReference Include="Orchestra.Core" Version="7.0.0-alpha0344" />
-    <PackageReference Include="YamlDotNet" Version="13.2.0" PrivateAssets="all" />
+    <PackageReference Include="YamlDotNet" Version="13.3.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

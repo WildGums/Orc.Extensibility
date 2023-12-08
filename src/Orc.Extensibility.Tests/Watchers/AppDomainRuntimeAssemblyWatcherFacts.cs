@@ -52,7 +52,7 @@ public class AppDomainRuntimeAssemblyWatcherFacts
 
         appDomainRuntimeAssemblyWatcher.AssemblyLoading += (sender, e) =>
         {
-            Assert.AreEqual(e.ResolvedRuntimeAssembly, costuraRuntimeAssemblyNlMock.Object);
+            Assert.That(costuraRuntimeAssemblyNlMock.Object, Is.EqualTo(e.ResolvedRuntimeAssembly));
 
             e.Cancel = true;
         };
@@ -107,7 +107,7 @@ public class AppDomainRuntimeAssemblyWatcherFacts
 
         appDomainRuntimeAssemblyWatcher.AssemblyLoading += (sender, e) =>
         {
-            Assert.AreEqual(e.ResolvedRuntimeAssembly, costuraRuntimeAssemblyNlMock.Object);
+            Assert.That(costuraRuntimeAssemblyNlMock.Object, Is.EqualTo(e.ResolvedRuntimeAssembly));
 
             e.Cancel = true;
         };

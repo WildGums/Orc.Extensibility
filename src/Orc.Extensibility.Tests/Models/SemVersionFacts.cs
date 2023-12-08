@@ -16,6 +16,6 @@ public class SemVersionFacts
         var largest = (version1 > version2) ? v1 : v2;
         var equal = string.Equals(expectedVersion, largest, StringComparison.OrdinalIgnoreCase);
 
-        Assert.IsTrue(equal);
+        Assert.That(equal, Is.True);
     }
 }

@@ -33,7 +33,7 @@ public class AssemblyReflectionService : IAssemblyReflectionService
             return isPeAssembly;
         }
 
-        // Somehow .exe are not pe files
+        // Somehow .exe are not pe files (with .net core)
         if (!assemblyPath.EndsWithIgnoreCase(".exe"))
         {
             using var fileStream = _fileService.OpenRead(assemblyPath);
@@ -46,8 +46,18 @@ public class AssemblyReflectionService : IAssemblyReflectionService
             }
         }
 
-        _isPeAssembly[assemblyPath] = isPeAssembly;
-
         return isPeAssembly;
+    }
+
+    /// <summary>
+    /// Allows registering an assembly as PE (or not) to improve performance on PE verification on larger assemblies.
+    /// <para />
+    /// Note that this method will overwrite already existing determined data if it was determined before.
+    /// </summary>
+    /// <param name="assemblyPath">The path to the assembly.</param>
+    /// <param name="isPeAssembly">A value indicating whether the assembly is a PE assembly.</param>
+    public virtual void RegisterAssembly(string assemblyPath, bool isPeAssembly)
+    {
+        _isPeAssembly[assemblyPath] = isPeAssembly;
     }
 }

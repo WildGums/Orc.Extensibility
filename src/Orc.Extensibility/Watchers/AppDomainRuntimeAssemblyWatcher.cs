@@ -22,7 +22,7 @@ public class AppDomainRuntimeAssemblyWatcher
     private readonly IDirectoryService _directoryService;
     private readonly IFileService _fileService;
     private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _loadedUmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _loadedUnmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     private IPluginLoadContext? _activeSingleLoadContext;
 
@@ -161,12 +161,12 @@ public class AppDomainRuntimeAssemblyWatcher
                     var locationWithForwardslash = $"{culture.Name}/{assemblyName.Name}.dll";
 
                     runtimeReference = (from pluginLoadContext in loadContexts
-                        from reference in pluginLoadContext.RuntimeAssemblies
-                        let costuraEmbeddedRuntimeAssembly = reference as ICosturaRuntimeAssembly
-                        where costuraEmbeddedRuntimeAssembly is not null &&
-                              costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithBackslash) ||
-                              costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithForwardslash)
-                        select reference).FirstOrDefault();
+                                        from reference in pluginLoadContext.RuntimeAssemblies
+                                        let costuraEmbeddedRuntimeAssembly = reference as ICosturaRuntimeAssembly
+                                        where costuraEmbeddedRuntimeAssembly is not null &&
+                                              costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithBackslash) ||
+                                              costuraEmbeddedRuntimeAssembly.RelativeFileName.ContainsIgnoreCase(locationWithForwardslash)
+                                        select reference).FirstOrDefault();
                     if (runtimeReference is not null)
                     {
                         break;
@@ -185,9 +185,9 @@ public class AppDomainRuntimeAssemblyWatcher
                 }
 
                 runtimeReference = (from pluginLoadContext in loadContexts
-                    from reference in pluginLoadContext.RuntimeAssemblies
-                    where reference.Name.EqualsIgnoreCase(assemblyName.Name)
-                    select reference).FirstOrDefault();
+                                    from reference in pluginLoadContext.RuntimeAssemblies
+                                    where reference.Name.EqualsIgnoreCase(assemblyName.Name)
+                                    select reference).FirstOrDefault();
             }
 
             if (runtimeReference is not null)
@@ -234,12 +234,12 @@ public class AppDomainRuntimeAssemblyWatcher
 
                 // Fallback mechanism
                 var alreadyLoadedAssembly = (from x in AppDomain.CurrentDomain.GetLoadedAssemblies()
-                    where x.GetName().Name?.EqualsIgnoreCase(assemblyName.Name) ?? false
-                    select x).FirstOrDefault();
+                                             where x.GetName().Name?.EqualsIgnoreCase(assemblyName.Name) ?? false
+                                             select x).FirstOrDefault();
                 if (alreadyLoadedAssembly is not null)
                 {
                     Log.Warning($"Failed to load assembly from '{runtimeReference}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
-                        
+
                     return alreadyLoadedAssembly;
                 }
                 else
@@ -259,10 +259,10 @@ public class AppDomainRuntimeAssemblyWatcher
 
         // Load context, ignore the requesting assembly for now
         var runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-            from reference in pluginLoadContext.RuntimeAssemblies
-            where Path.GetFileName(reference.Name).EqualsIgnoreCase(libraryName) ||
-                  Path.GetFileNameWithoutExtension(reference.Name).EqualsIgnoreCase(libraryName)
-            select reference).FirstOrDefault();
+                                from reference in pluginLoadContext.RuntimeAssemblies
+                                where Path.GetFileName(reference.Name).EqualsIgnoreCase(libraryName) ||
+                                      Path.GetFileNameWithoutExtension(reference.Name).EqualsIgnoreCase(libraryName)
+                                select reference).FirstOrDefault();
         if (runtimeReference is not null)
         {
             // Note: unmanaged assemblies *must* be loaded from disk
@@ -276,7 +276,7 @@ public class AppDomainRuntimeAssemblyWatcher
             Log.Debug($"Trying to provide '{runtimeReference}' as resolution for '{libraryName}', temp file is '{targetFileName}'");
 
             // Only load what we extracted ourselves and immediately took into use (blocked)
-            if (!_loadedUmanagedAssemblies.Contains(targetFileName))
+            if (!_loadedUnmanagedAssemblies.Contains(targetFileName))
             {
                 if (!runtimeReference.IsLoaded)
                 {
@@ -298,7 +298,7 @@ public class AppDomainRuntimeAssemblyWatcher
             var loadedAssembly = System.Runtime.InteropServices.NativeLibrary.Load(targetFileName);
 
             // Only ones we have loaded the assembly, we are sure we don't want to overwrite it again
-            _loadedUmanagedAssemblies.Add(targetFileName);
+            _loadedUnmanagedAssemblies.Add(targetFileName);
 
             return loadedAssembly;
         }

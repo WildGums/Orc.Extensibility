@@ -21,6 +21,7 @@ namespace Orc.Extensibility
     {
         public AssemblyReflectionService(Orc.FileSystem.IFileService fileService) { }
         public virtual bool IsPeAssembly(string assemblyPath) { }
+        public virtual void RegisterAssembly(string assemblyPath, bool isPeAssembly) { }
     }
     public class CosturaRuntimeAssembly : Orc.Extensibility.RuntimeAssembly, Orc.Extensibility.ICosturaRuntimeAssembly, Orc.Extensibility.IRuntimeAssembly
     {
@@ -68,6 +69,7 @@ namespace Orc.Extensibility
     public interface IAssemblyReflectionService
     {
         bool IsPeAssembly(string assemblyPath);
+        void RegisterAssembly(string assemblyPath, bool isPeAssembly);
     }
     public interface ICosturaRuntimeAssembly : Orc.Extensibility.IRuntimeAssembly
     {

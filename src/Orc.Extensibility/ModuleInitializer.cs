@@ -27,7 +27,7 @@ public static class ModuleInitializer
         serviceLocator.RegisterType<ISinglePluginService, SinglePluginService>();
         serviceLocator.RegisterType<IMultiplePluginsService, MultiplePluginsService>();
 
-        var languageService = serviceLocator.ResolveType<ILanguageService>();
+        var languageService = serviceLocator.ResolveRequiredType<ILanguageService>();
         languageService.RegisterLanguageSource(new LanguageResourceSource("Orc.Extensibility", "Orc.Extensibility.Properties", "Resources"));
     }
 }

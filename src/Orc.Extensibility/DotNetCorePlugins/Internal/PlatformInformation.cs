@@ -1,63 +1,58 @@
 ﻿// Note: comes from https://github.com/natemcmaster/DotNetCorePlugins/
 
-#if NETCORE
+namespace Orc.Extensibility;
 
-namespace Orc.Extensibility
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Catel.Logging;
+
+internal static class PlatformInformation
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
-    using Catel.Logging;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    internal class PlatformInformation
+    public static readonly string[] RuntimeIdentifiers;
+    public static readonly string[] NativeLibraryExtensions;
+    public static readonly string[] NativeLibraryPrefixes;
+    public static readonly string[] ManagedAssemblyExtensions = new[]
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        ".dll",
+        ".ni.dll",
+        ".exe",
+        ".ni.exe"
+    };
 
-        public static readonly string[] RuntimeIdentifiers;
-        public static readonly string[] NativeLibraryExtensions;
-        public static readonly string[] NativeLibraryPrefixes;
-        public static readonly string[] ManagedAssemblyExtensions = new[]
+    static PlatformInformation()
+    {
+        var runtimeIdentifiers = new List<string>();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-                ".dll",
-                ".ni.dll",
-                ".exe",
-                ".ni.exe"
-        };
+            NativeLibraryPrefixes = new[] { string.Empty };
+            NativeLibraryExtensions = new[] { ".dll" };
 
-        static PlatformInformation()
-        {
-            var runtimeIdentifiers = new List<string>();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                NativeLibraryPrefixes = new[] { "" };
-                NativeLibraryExtensions = new[] { ".dll" };
-
-                // For now we only care about windows
-                runtimeIdentifiers.Add($"win-{RuntimeInformation.OSArchitecture.ToString().ToLower()}");
-                runtimeIdentifiers.Add("win");
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                NativeLibraryPrefixes = new[] { "", "lib", };
-                NativeLibraryExtensions = new[] { ".dylib" };
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                NativeLibraryPrefixes = new[] { "", "lib" };
-                NativeLibraryExtensions = new[] { ".so", ".so.1" };
-            }
-            else
-            {
-                Log.Error("Unknown or unsupported OS type");
-
-                NativeLibraryPrefixes = Array.Empty<string>();
-                NativeLibraryExtensions = Array.Empty<string>();
-            }
-
-            RuntimeIdentifiers = runtimeIdentifiers.ToArray();
+            // For now we only care about windows
+            runtimeIdentifiers.Add($"win-{RuntimeInformation.OSArchitecture.ToString().ToLower()}");
+            runtimeIdentifiers.Add("win");
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            NativeLibraryPrefixes = new[] { string.Empty, "lib", };
+            NativeLibraryExtensions = new[] { ".dylib" };
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            NativeLibraryPrefixes = new[] { string.Empty, "lib" };
+            NativeLibraryExtensions = new[] { ".so", ".so.1" };
+        }
+        else
+        {
+            Log.Error("Unknown or unsupported OS type");
+
+            NativeLibraryPrefixes = Array.Empty<string>();
+            NativeLibraryExtensions = Array.Empty<string>();
+        }
+
+        RuntimeIdentifiers = runtimeIdentifiers.ToArray();
     }
 }
-
-#endif

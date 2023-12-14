@@ -1,9 +1,8 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface ICosturaRuntimeAssembly : IRuntimeAssembly
 {
-    public interface ICosturaRuntimeAssembly : IRuntimeAssembly
-    {
-        EmbeddedResource EmbeddedResource { get; set; }
-        string RelativeFileName { get; set; }
-        string ResourceName { get; set; }
-    }
+    EmbeddedResource? EmbeddedResource { get; set; }
+    string RelativeFileName { get; set; }
+    string ResourceName { get; set; }
 }

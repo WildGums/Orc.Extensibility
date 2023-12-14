@@ -1,7 +1,7 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface IAssemblyReflectionService
 {
-    public interface IAssemblyReflectionService
-    {
-        bool IsPeAssembly(string assemblyPath);
-    }
+    bool IsPeAssembly(string assemblyPath);
+    void RegisterAssembly(string assemblyPath, bool isPeAssembly);
 }

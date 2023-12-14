@@ -1,49 +1,34 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="TextBoxLogListener.cs" company="WildGums">
-//   Copyright (c) 2008 - 2015 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Logging;
 
+using System;
+using System.Windows.Controls;
+using Catel.Logging;
 
-namespace Orc.Extensibility.Example.Logging
+public class TextBoxLogListener : LogListenerBase
 {
-    using System;
-    using System.Windows.Controls;
-    using Catel;
-    using Catel.Logging;
+    private readonly TextBox _textBox;
 
-    public class TextBoxLogListener : LogListenerBase
+    public TextBoxLogListener(TextBox textBox)
     {
-        #region Fields
-        private readonly TextBox _textBox;
-        #endregion
+        ArgumentNullException.ThrowIfNull(textBox);
 
-        #region Constructors
-        public TextBoxLogListener(TextBox textBox)
+        _textBox = textBox;
+
+        IgnoreCatelLogging = true;
+    }
+
+    public void Clear()
+    {
+        _textBox.Dispatcher.Invoke(new Action(() => _textBox.Clear()));
+    }
+
+    protected override void Write(ILog log, string message, LogEvent logEvent, object? extraData, LogData? logData, DateTime time)
+    {
+        _textBox.Dispatcher.BeginInvoke(new Action(() =>
         {
-            Argument.IsNotNull(() => textBox);
-
-            _textBox = textBox;
-
-            IgnoreCatelLogging = true;
-        }
-        #endregion
-
-        #region Methods
-        public void Clear()
-        {
-            _textBox.Dispatcher.Invoke(new Action(() => _textBox.Clear()));
-        }
-
-        protected override void Write(ILog log, string message, LogEvent logEvent, object extraData, LogData logData, DateTime time)
-        {
-            _textBox.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                _textBox.AppendText(string.Format("{0} [{1}] {2}", time.ToString("hh:mm:ss.fff"), logEvent.ToString().ToUpper(), message));
-                _textBox.AppendText(Environment.NewLine);
-                _textBox.ScrollToEnd();
-            }));
-        }
-        #endregion
+            _textBox.AppendText($"{time.ToString("hh:mm:ss.fff")} [{logEvent.ToString().ToUpper()}] {message}");
+            _textBox.AppendText(Environment.NewLine);
+            _textBox.ScrollToEnd();
+        }));
     }
 }

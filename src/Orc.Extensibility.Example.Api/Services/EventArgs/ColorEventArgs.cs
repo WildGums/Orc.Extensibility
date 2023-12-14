@@ -1,22 +1,14 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ColorEventARgs.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Services;
 
+using System;
+using System.Windows.Media;
 
-namespace Orc.Extensibility.Example.Services
+public class ColorEventArgs : EventArgs
 {
-    using System;
-    using System.Windows.Media;
-
-    public class ColorEventArgs : EventArgs
+    public ColorEventArgs(Color color)
     {
-        public ColorEventArgs(Color color)
-        {
-            Color = color;
-        }
-
-        public Color Color { get; private set; }
+        Color = color;
     }
+
+    public Color Color { get; }
 }

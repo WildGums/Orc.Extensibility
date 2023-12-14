@@ -1,18 +1,29 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+
+public unsafe class EmbeddedResource
 {
-    public unsafe class EmbeddedResource
+    public EmbeddedResource(IRuntimeAssembly containerAssembly, string name, byte* start, int size)
     {
-        public IRuntimeAssembly ContainerAssembly { get; set; }
+        ArgumentNullException.ThrowIfNull(containerAssembly);
 
-        public string Name { get; set; }
+        ContainerAssembly = containerAssembly;
+        Name = name;
+        Start = start;
+        Size = size;
+    }
 
-        public byte* Start { get; set; }
+    public IRuntimeAssembly ContainerAssembly { get; set; }
 
-        public int Size { get; set; }
+    public string Name { get; private set; }
 
-        public override string ToString()
-        {
-            return $"{Name} (from {ContainerAssembly})";
-        }
+    public byte* Start { get; private set; }
+
+    public int Size { get; private set; }
+
+    public override string ToString()
+    {
+        return $"{Name} (from {ContainerAssembly})";
     }
 }

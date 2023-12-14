@@ -1,58 +1,45 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LoadedPluginService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Catel.Logging;
 
-namespace Orc.Extensibility
+public class LoadedPluginService : ILoadedPluginService
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Catel;
-    using Catel.Logging;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class LoadedPluginService : ILoadedPluginService
+    private readonly Dictionary<string, IPluginInfo> _loadedPlugins = new();
+
+       
+    public List<IPluginInfo> GetLoadedPlugins()
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
-
-        private readonly Dictionary<string, IPluginInfo> _loadedPlugins = new Dictionary<string, IPluginInfo>();
-
-        public LoadedPluginService()
+        lock (_loadedPlugins)
         {
-            
+            return _loadedPlugins.Values.ToList();
         }
-        
-        public List<IPluginInfo> GetLoadedPlugins()
+    }
+
+    public event EventHandler<PluginEventArgs>? PluginLoaded;
+
+    public void AddPlugin(IPluginInfo pluginInfo)
+    {
+        ArgumentNullException.ThrowIfNull(pluginInfo);
+
+        Log.Debug($"Registering plugin '{pluginInfo}' as loaded");
+
+        lock (_loadedPlugins)
         {
-            lock (_loadedPlugins)
+            var key = pluginInfo.FullTypeName.ToLower();
+            if (_loadedPlugins.ContainsKey(key))
             {
-                return _loadedPlugins.Values.ToList();
-            }
-        }
-
-        public event EventHandler<PluginEventArgs> PluginLoaded;
-
-        public void AddPlugin(IPluginInfo pluginInfo)
-        {
-            Argument.IsNotNull(() => pluginInfo);
-
-            Log.Debug($"Registering plugin '{pluginInfo}' as loaded");
-
-            lock (_loadedPlugins)
-            {
-                var key = pluginInfo.FullTypeName.ToLower();
-                if (_loadedPlugins.ContainsKey(key))
-                {
-                    Log.Warning($"Plugin '{pluginInfo}' is already marked as loaded");
-                    return;
-                }
-
-                _loadedPlugins.Add(key, pluginInfo);
+                Log.Warning($"Plugin '{pluginInfo}' is already marked as loaded");
+                return;
             }
 
-            PluginLoaded?.Invoke(this, new PluginEventArgs(pluginInfo, string.Empty, string.Empty));
+            _loadedPlugins.Add(key, pluginInfo);
         }
+
+        PluginLoaded?.Invoke(this, new PluginEventArgs(pluginInfo, string.Empty, string.Empty));
     }
 }

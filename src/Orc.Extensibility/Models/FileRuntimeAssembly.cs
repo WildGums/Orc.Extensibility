@@ -1,36 +1,35 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System.IO;
+
+public class FileRuntimeAssembly : RuntimeAssembly
 {
-    using System.IO;
-
-    public class FileRuntimeAssembly : RuntimeAssembly
+    public FileRuntimeAssembly(string location)
+        : this(location, location, location, location)
     {
-        public FileRuntimeAssembly(string location)
-            : this(location, location, location, location)
-        {
-            // Keep empty by design
-        }
+        // Keep empty by design
+    }
 
-        public FileRuntimeAssembly(string name, string source, string checksum, string location)
-            : base(name, source, checksum)
-        {
-            Location = location;
-        }
+    public FileRuntimeAssembly(string name, string source, string checksum, string location)
+        : base(name, source, checksum)
+    {
+        Location = location;
+    }
 
-        public string Location { get; private set; }
+    public string Location { get; private set; }
 
-        public override Stream GetStream()
-        {
-            return File.OpenRead(Location);
-        }
+    public override Stream GetStream()
+    {
+        return File.OpenRead(Location);
+    }
 
-        protected override void OnMarkLoaded()
-        {
-            // no implementation needed
-        }
+    protected override void OnMarkLoaded()
+    {
+        // no implementation needed
+    }
 
-        public override string ToString()
-        {
-            return $"{Name} ({Location})";
-        }
+    public override string ToString()
+    {
+        return $"{Name} ({Location})";
     }
 }

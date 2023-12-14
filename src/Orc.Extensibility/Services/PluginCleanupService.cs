@@ -1,97 +1,98 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginCleanupService.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
-namespace Orc.Extensibility
+using System;
+using System.Linq;
+using Catel.Logging;
+using FileSystem;
+
+public class PluginCleanupService : IPluginCleanupService
 {
-    using System;
-    using System.Linq;
-    using Catel;
-    using Catel.Logging;
-    using FileSystem;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class PluginCleanupService : IPluginCleanupService
+    private const string DeleteMeFilter = "*.deleteme";
+
+    private readonly IFileService _fileService;
+    private readonly IDirectoryService _directoryService;
+
+    public PluginCleanupService(IFileService fileService, IDirectoryService directoryService)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        ArgumentNullException.ThrowIfNull(fileService);
+        ArgumentNullException.ThrowIfNull(directoryService);
 
-        private const string DeleteMeFilter = "*.deleteme";
+        _fileService = fileService;
+        _directoryService = directoryService;
+    }
 
-        private readonly IFileService _fileService;
-        private readonly IDirectoryService _directoryService;
+    public bool IsCleanupRequired(string directory)
+    {
+        var deleteMeFile = GetDeleteMeFile(directory);
+        return !string.IsNullOrWhiteSpace(deleteMeFile);
+    }
 
-        public PluginCleanupService(IFileService fileService, IDirectoryService directoryService)
+    public void Cleanup(string directory)
+    {
+        Log.Debug("Cleaning up plugin at '{0}'", directory);
+
+        if (!IsCleanupRequired(directory))
         {
-            Argument.IsNotNull(() => fileService);
-            Argument.IsNotNull(() => directoryService);
-
-            _fileService = fileService;
-            _directoryService = directoryService;
+            Log.Debug("Cleaning up of plugin is not required");
+            return;
         }
 
-        public bool IsCleanupRequired(string directory)
+        var deleteMeFile = GetDeleteMeFile(directory);
+        if (deleteMeFile is null)
         {
-            var deleteMeFile = GetDeleteMeFile(directory);
-            return !string.IsNullOrWhiteSpace(deleteMeFile);
+            return;
         }
 
-        public void Cleanup(string directory)
-        {
-            Log.Debug("Cleaning up plugin at '{0}'", directory);
+        var succeeded = false;
 
-            if (!IsCleanupRequired(directory))
+        try
+        {
+            _directoryService.Delete(directory, true);
+            succeeded = !_directoryService.Exists(directory);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to clean up plugin at '{0}'", directory);
+        }
+
+        if (succeeded)
+        {
+            return;
+        }
+
+        try
+        {
+            // Create the file again, we didn't delete successfully
+            if (_fileService.Exists(deleteMeFile))
             {
-                Log.Debug("Cleaning up of plugin is not required");
                 return;
             }
 
-            var deleteMeFile = GetDeleteMeFile(directory);
-            var succeeded = false;
-
-            try
+            using (_fileService.Create(deleteMeFile))
             {
-                _directoryService.Delete(directory, true);
-                succeeded = !_directoryService.Exists(directory);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to clean up plugin at '{0}'", directory);
-            }
-
-            if (!succeeded)
-            {
-                try
-                {
-                    // Create the file again, we didn't delete successfully
-                    if (!_fileService.Exists(deleteMeFile))
-                    {
-                        using (_fileService.Create(deleteMeFile))
-                        {
-                            // No need to write contents
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Just ignore
-                }
+                // No need to write contents
             }
         }
-
-        private string GetDeleteMeFile(string directory)
+        catch (Exception)
         {
-            try
-            {
-                var files = _directoryService.GetFiles(directory, DeleteMeFilter);
-                return files.FirstOrDefault();
-            }
-            catch (Exception)
-            {
-                // Just ignore
-            }
-
-            return null;
+            // Just ignore
         }
+    }
+
+    private string? GetDeleteMeFile(string directory)
+    {
+        try
+        {
+            var files = _directoryService.GetFiles(directory, DeleteMeFilter);
+            return files.FirstOrDefault();
+        }
+        catch (Exception)
+        {
+            // Just ignore
+        }
+
+        return null;
     }
 }

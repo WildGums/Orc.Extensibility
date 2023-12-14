@@ -1,36 +1,35 @@
-﻿namespace Orc.Extensibility.Example.Services
+﻿namespace Orc.Extensibility.Example.Services;
+
+using System;
+using System.IO;
+using Catel;
+using Catel.Logging;
+using FileSystem;
+
+public class PluginFinder : PluginFinderBase
 {
-    using System;
-    using System.IO;
-    using Catel;
-    using Catel.Logging;
-    using FileSystem;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class PluginFinder : Orc.Extensibility.PluginFinderBase
+    public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider, IPluginCleanupService pluginCleanupService,
+        IDirectoryService directoryService, IFileService fileService, IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
+        : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService, assemblyReflectionService, runtimeAssemblyResolverService)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    }
 
-        public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider, IPluginCleanupService pluginCleanupService,
-            IDirectoryService directoryService, IFileService fileService, IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
-            : base(pluginLocationsProvider, pluginInfoProvider, pluginCleanupService, directoryService, fileService, assemblyReflectionService, runtimeAssemblyResolverService)
+    protected override bool IsPlugin(PluginProbingContext context, Type type)
+    {
+        return type.ImplementsInterface<ICustomPlugin>();
+    }
+
+    protected override bool ShouldIgnoreAssembly(string assemblyPath)
+    {
+        // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here (ExtensionA and ExtensionB)
+        if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension") &&
+            !assemblyPath.ContainsIgnoreCase($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}"))
         {
+            return false;
         }
 
-        protected override bool IsPlugin(PluginProbingContext context, Type type)
-        {
-            return type.ImplementsInterface<ICustomPlugin>();
-        }
-
-        protected override bool ShouldIgnoreAssembly(string assemblyPath)
-        {
-            // Since by default, the plugin finder ignores Orc.* assemblies, we need to override it here (ExtensionA and ExtensionB)
-            if (assemblyPath.ContainsIgnoreCase("Orc.Extensibility.Example.Extension") &&
-                !assemblyPath.ContainsIgnoreCase($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}"))
-            {
-                return false;
-            }
-
-            return base.ShouldIgnoreAssembly(assemblyPath);
-        }
+        return base.ShouldIgnoreAssembly(assemblyPath);
     }
 }

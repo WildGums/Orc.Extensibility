@@ -1,46 +1,38 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="RestartRequiredOnPluginChangeConfigurationWatcher.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Configuration;
 
+using System;
+using Catel.Configuration;
+using Catel.Logging;
+using Catel.Services;
 
-namespace Orc.Extensibility.Example.Configuration
+public class RestartRequiredOnPluginChangeConfigurationWatcher
 {
-    using Catel;
-    using Catel.Configuration;
-    using Catel.Logging;
-    using Catel.Services;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class RestartRequiredOnPluginChangeConfigurationWatcher
+    private readonly IConfigurationService _configurationService;
+    private readonly IMessageService _messageService;
+
+    public RestartRequiredOnPluginChangeConfigurationWatcher(IConfigurationService configurationService,
+        IMessageService messageService)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        ArgumentNullException.ThrowIfNull(configurationService);
+        ArgumentNullException.ThrowIfNull(messageService);
 
-        private readonly IConfigurationService _configurationService;
-        private readonly IMessageService _messageService;
+        _configurationService = configurationService;
+        _messageService = messageService;
 
-        public RestartRequiredOnPluginChangeConfigurationWatcher(IConfigurationService configurationService,
-            IMessageService messageService)
-        {
-            Argument.IsNotNull(() => configurationService);
-            Argument.IsNotNull(() => messageService);
-
-            _configurationService = configurationService;
-            _messageService = messageService;
-
-            _configurationService.ConfigurationChanged += OnConfigurationServiceConfigurationChanged;
-        }
+        _configurationService.ConfigurationChanged += OnConfigurationServiceConfigurationChanged;
+    }
 
 #pragma warning disable AvoidAsyncVoid
-        private async void OnConfigurationServiceConfigurationChanged(object sender, ConfigurationChangedEventArgs e)
+    private async void OnConfigurationServiceConfigurationChanged(object? sender, ConfigurationChangedEventArgs e)
 #pragma warning restore AvoidAsyncVoid
+    {
+        if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))
         {
-            if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))
-            {
-                Log.Info("The active plugin has been changed, a restart is required");
+            Log.Info("The active plugin has been changed, a restart is required");
 
-                await _messageService.ShowAsync("The active plugin has been changed, a restart is required");
-            }
+            await _messageService.ShowAsync("The active plugin has been changed, a restart is required");
         }
     }
 }

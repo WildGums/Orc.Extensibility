@@ -1,25 +1,13 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ILoadedPluginService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
+using System;
+using System.Collections.Generic;
 
-namespace Orc.Extensibility
+public interface ILoadedPluginService
 {
-    using System;
-    using System.Collections.Generic;
+    event EventHandler<PluginEventArgs>? PluginLoaded;
 
-    public interface ILoadedPluginService
-    {
-        #region Events
-        event EventHandler<PluginEventArgs> PluginLoaded;
-        #endregion
+    List<IPluginInfo> GetLoadedPlugins();
 
-        #region Methods
-        List<IPluginInfo> GetLoadedPlugins();
-
-        void AddPlugin(IPluginInfo pluginInfo);
-        #endregion
-    }
+    void AddPlugin(IPluginInfo pluginInfo);
 }

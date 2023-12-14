@@ -1,55 +1,47 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginManager.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
-namespace Orc.Extensibility
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Catel.Logging;
+
+public class PluginManager : IPluginManager
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Catel;
-    using Catel.Logging;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class PluginManager : IPluginManager
+    private readonly object _lock = new object();
+    private readonly IPluginFinder _pluginFinder;
+
+    private List<IPluginInfo>? _plugins;
+
+    public PluginManager(IPluginFinder pluginFinder)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        ArgumentNullException.ThrowIfNull(pluginFinder);
 
-        private readonly object _lock = new object();
-        private readonly IPluginFinder _pluginFinder;
+        _pluginFinder = pluginFinder;
+    }
 
-        private List<IPluginInfo> _plugins;
-
-        public PluginManager(IPluginFinder pluginFinder)
+    public IEnumerable<IPluginInfo> GetPlugins()
+    {
+        lock (_lock)
         {
-            Argument.IsNotNull(() => pluginFinder);
-
-            _pluginFinder = pluginFinder;
-        }
-
-        public IEnumerable<IPluginInfo> GetPlugins()
-        {
-            lock (_lock)
+            if (_plugins is null)
             {
-                if (_plugins is null)
-                {
-                    throw Log.ErrorAndCreateException<InvalidOperationException>("Make sure to call RefreshAsync method at least once before using this method");
-                }
-
-                return _plugins.ToArray();
+                throw Log.ErrorAndCreateException<InvalidOperationException>("Make sure to call RefreshAsync method at least once before using this method");
             }
+
+            return _plugins.ToArray();
         }
+    }
 
-        public async Task RefreshAsync()
+    public async Task RefreshAsync()
+    {
+        var plugins = await _pluginFinder.FindPluginsAsync();
+
+        lock (_lock)
         {
-            var plugins = await _pluginFinder.FindPluginsAsync();
-
-            lock (_lock)
-            {
-                _plugins = new List<IPluginInfo>(plugins.OrderBy(x => x.Name));
-            }
+            _plugins = new List<IPluginInfo>(plugins.OrderBy(x => x.Name));
         }
     }
 }

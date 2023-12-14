@@ -1,17 +1,14 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+
+public class PluginInfoProvider : IPluginInfoProvider
 {
-    using System;
-    using System.Reflection.Metadata;
-
-    public class PluginInfoProvider : IPluginInfoProvider
+    public virtual IPluginInfo GetPluginInfo(string location, Type type)
     {
-        public PluginInfoProvider()
-        {
-        }
+        ArgumentNullException.ThrowIfNull(location);
+        ArgumentNullException.ThrowIfNull(type);
 
-        public virtual IPluginInfo GetPluginInfo(string location, Type type)
-        {
-            return new PluginInfo(location, type);
-        }
+        return new PluginInfo(location, type);
     }
 }

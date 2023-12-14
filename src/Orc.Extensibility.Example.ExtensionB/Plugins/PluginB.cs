@@ -1,38 +1,29 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginB.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.ExtensionB.Plugins;
 
+using System.Threading.Tasks;
+using System.Windows.Media;
+using Catel.Services;
+using Services;
 
-namespace Orc.Extensibility.Example.ExtensionB.Plugins
+public class PluginB : ICustomPlugin
 {
-    using System.Threading.Tasks;
-    using System.Windows.Media;
-    using Catel;
-    using Catel.Services;
-    using Services;
+    private readonly IMessageService _messageService;
+    private readonly IHostService _hostService;
+    private readonly ILanguageService _languageService;
 
-    public class PluginB : ICustomPlugin
+    public PluginB(IMessageService messageService, IHostService hostService, ILanguageService languageService)
     {
-        private readonly IMessageService _messageService;
-        private readonly IHostService _hostService;
-        private readonly ILanguageService _languageService;
+        _messageService = messageService;
+        _hostService = hostService;
+        _languageService = languageService;
+    }
 
-        public PluginB(IMessageService messageService, IHostService hostService, ILanguageService languageService)
-        {
-            _messageService = messageService;
-            _hostService = hostService;
-            _languageService = languageService;
-        }
+    public async Task InitializeAsync()
+    {
+        var value = _languageService.GetRequiredString("TestResource");
 
-        public async Task InitializeAsync()
-        {
-            var value = _languageService.GetString("TestResource");
+        await _messageService.ShowAsync($"Plugin B has been loaded, setting color to green. Resource value: '{value}'");
 
-            await _messageService.ShowAsync($"Plugin B has been loaded, setting color to green. Resource value: '{value}'");
-
-            _hostService.SetColor(Colors.Green);
-        }
+        _hostService.SetColor(Colors.Green);
     }
 }

@@ -1,10 +1,9 @@
-﻿namespace Orc.Extensibility
-{
-    using System.Collections.Generic;
+﻿namespace Orc.Extensibility;
 
-    public interface IPluginLoadContext
-    {
-        IRuntimeAssembly PluginRuntimeAssembly { get; }
-        List<IRuntimeAssembly> RuntimeAssemblies { get; }
-    }
+using System.Collections.Generic;
+
+public interface IPluginLoadContext
+{
+    IRuntimeAssembly PluginRuntimeAssembly { get; }
+    List<IRuntimeAssembly> RuntimeAssemblies { get; }
 }

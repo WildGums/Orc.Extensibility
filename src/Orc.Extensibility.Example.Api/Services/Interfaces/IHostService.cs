@@ -1,19 +1,11 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IHostService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Services;
 
+using System;
+using System.Windows.Media;
 
-namespace Orc.Extensibility.Example.Services
+public interface IHostService
 {
-    using System;
-    using System.Windows.Media;
+    event EventHandler<ColorEventArgs>? ColorChanged;
 
-    public interface IHostService
-    {
-        event EventHandler<ColorEventArgs> ColorChanged;
-
-        void SetColor(Color color);
-    }
+    void SetColor(Color color);
 }

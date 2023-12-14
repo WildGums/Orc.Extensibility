@@ -1,17 +1,10 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IPluginService.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
-namespace Orc.Extensibility
+using System;
+
+public interface IPluginService
 {
-    using System;
+    event EventHandler<PluginEventArgs>? PluginLoadingFailed;
 
-    public interface IPluginService
-    {
-        event EventHandler<PluginEventArgs> PluginLoadingFailed;
-
-        event EventHandler<PluginEventArgs> PluginLoaded;
-    }
+    event EventHandler<PluginEventArgs>? PluginLoaded;
 }

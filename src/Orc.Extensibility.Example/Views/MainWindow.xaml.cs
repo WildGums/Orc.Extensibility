@@ -1,28 +1,18 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MainWindow.xaml.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Views;
 
-namespace Orc.Extensibility.Example.Views
-{
-    using Catel.Logging;
-    using Example.Logging;
+using Catel.Logging;
+using Logging;
 
-    public partial class MainWindow
+public partial class MainWindow
+{ public MainWindow()
     {
-        #region Constructors
-        public MainWindow()
+        InitializeComponent();
+
+        var logListener = new TextBoxLogListener(loggingTextBox)
         {
-            InitializeComponent();
+            IgnoreCatelLogging = true
+        };
 
-            var logListener = new TextBoxLogListener(loggingTextBox)
-            {
-                IgnoreCatelLogging = true
-            };
-
-            LogManager.AddListener(logListener);
-        }
-        #endregion
+        LogManager.AddListener(logListener);
     }
 }

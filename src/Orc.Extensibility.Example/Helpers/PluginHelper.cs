@@ -1,34 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginHelper.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example;
 
+using System.Collections.Generic;
+using Catel.IoC;
 
-namespace Orc.Extensibility.Example
+internal static class PluginHelper
 {
-    using System.Collections.Generic;
-    using Catel.IoC;
+    // Note: this class is used as an example to retrieve the active plugins. Best is to create a custom service
+    // that will return the active plugins. This way you can choose whether the plugins are registered in the service locator
+    // or in a customer service / manager.
+    //
+    // This class can also easily be modified to switch between single and multiple plugin scenarios
 
-    internal static class PluginHelper
+    public static IEnumerable<ICustomPlugin> GetActivePlugins()
     {
-        // Note: this class is used as an example to retrieve the active plugins. Best is to create a custom service
-        // that will return the active plugins. This way you can choose whether the plugins are registered in the service locator
-        // or in a customer service / manager.
-        //
-        // This class can also easily be modified to switch between single and multiple plugin scenarios
+        var plugins = new List<ICustomPlugin>();
 
-        public static IEnumerable<ICustomPlugin> GetActivePlugins()
+        var serviceLocator = ServiceLocator.Default;
+        if (serviceLocator.IsTypeRegistered<ICustomPlugin>())
         {
-            var plugins = new List<ICustomPlugin>();
-
-            var serviceLocator = ServiceLocator.Default;
-            if (serviceLocator.IsTypeRegistered<ICustomPlugin>())
-            {
-                plugins.Add(serviceLocator.ResolveType<ICustomPlugin>());
-            }
-
-            return plugins;
+            plugins.Add(serviceLocator.ResolveRequiredType<ICustomPlugin>());
         }
+
+        return plugins;
     }
 }

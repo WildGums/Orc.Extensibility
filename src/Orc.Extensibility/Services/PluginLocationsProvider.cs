@@ -1,68 +1,62 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PluginLocationsProvider.cs" company="WildGums">
-//   Copyright (c) 2012 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility;
 
-namespace Orc.Extensibility
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Catel;
+using Catel.IO;
+using Catel.Reflection;
+using Catel.Services;
+
+public class PluginLocationsProvider : IPluginLocationsProvider
 {
-    using System;
-    using System.Collections.Generic;
-    using Catel;
-    using Catel.IO;
-    using Catel.Reflection;
-    using Catel.Services;
+    private readonly IAppDataService _appDataService;
 
-    public class PluginLocationsProvider : IPluginLocationsProvider
+    public PluginLocationsProvider(IAppDataService appDataService)
     {
-        private readonly IAppDataService _appDataService;
+        ArgumentNullException.ThrowIfNull(appDataService);
 
-        public PluginLocationsProvider(IAppDataService appDataService)
+        _appDataService = appDataService;
+    }
+
+    public virtual IEnumerable<string> GetPluginDirectories()
+    {
+        var directories = new List<string>();
+
+        var pluginsDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
+        if (ValidateDirectory(pluginsDirectory))
         {
-            Argument.IsNotNull(() => appDataService);
-
-            _appDataService = appDataService;
+            directories.Add(pluginsDirectory);
         }
 
-        public virtual IEnumerable<string> GetPluginDirectories()
+        var currentDirectory = Environment.CurrentDirectory;
+        if (ValidateDirectory(currentDirectory))
         {
-            var directories = new List<string>();
-
-            var pluginsDirectory = Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
-            if (ValidateDirectory(pluginsDirectory))
-            {
-                directories.Add(pluginsDirectory);
-            }
-
-            var currentDirectory = Environment.CurrentDirectory;
-            if (ValidateDirectory(currentDirectory))
-            {
-                directories.Add(currentDirectory);
-            }
-
-            var appDirectory = AssemblyHelper.GetEntryAssembly().GetDirectory();
-            if (ValidateDirectory(appDirectory))
-            {
-                directories.Add(appDirectory);
-            }
-
-            return directories;
+            directories.Add(currentDirectory);
         }
 
-        protected virtual bool ValidateDirectory(string directory)
+        var appDirectory = AssemblyHelper.GetRequiredEntryAssembly().GetDirectory();
+        if (ValidateDirectory(appDirectory))
         {
-            if (directory is null)
-            {
-                return false;
-            }
-
-            // We never ever want to include system directory
-            if (directory.ContainsIgnoreCase("\\windows\\"))
-            {
-                return false;
-            }
-
-            return true;
+            directories.Add(appDirectory);
         }
+
+        return directories;
+    }
+
+    protected virtual bool ValidateDirectory(string directory)
+    {
+        if (directory is null)
+        {
+            return false;
+        }
+
+        // We never ever want to include system directory
+        if (directory.ContainsIgnoreCase("\\windows\\"))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

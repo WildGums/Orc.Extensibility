@@ -1,19 +1,22 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+using System;
+using System.Reflection;
+
+public class RuntimeLoadedAssemblyEventArgs : EventArgs
 {
-    using System;
-    using System.Reflection;
-
-    public class RuntimeLoadedAssemblyEventArgs : EventArgs
+    public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
     {
-        public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
-        {
-            RequestedAssemblyName = requestedAssemblyName;
-            ResolvedRuntimeAssembly = resolvedRuntimeAssembly;
-            ResolvedAssembly = resolvedAssembly;
-        }
+        ArgumentNullException.ThrowIfNull(requestedAssemblyName);
+        ArgumentNullException.ThrowIfNull(resolvedRuntimeAssembly);
+        ArgumentNullException.ThrowIfNull(resolvedAssembly);
 
-        public AssemblyName RequestedAssemblyName { get; }
-        public IRuntimeAssembly ResolvedRuntimeAssembly { get; }
-        public Assembly ResolvedAssembly { get; }
+        RequestedAssemblyName = requestedAssemblyName;
+        ResolvedRuntimeAssembly = resolvedRuntimeAssembly;
+        ResolvedAssembly = resolvedAssembly;
     }
+
+    public AssemblyName RequestedAssemblyName { get; }
+    public IRuntimeAssembly ResolvedRuntimeAssembly { get; }
+    public Assembly ResolvedAssembly { get; }
 }

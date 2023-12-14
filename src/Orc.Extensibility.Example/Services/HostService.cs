@@ -1,28 +1,19 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="HostLoggingService.cs" company="WildGums">
-//   Copyright (c) 2008 - 2016 WildGums. All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+﻿namespace Orc.Extensibility.Example.Services;
 
+using System;
+using System.Windows.Media;
+using Catel.Logging;
 
-namespace Orc.Extensibility.Example.Services
+public class HostService : IHostService
 {
-    using System;
-    using System.Windows.Media;
-    using Catel;
-    using Catel.Logging;
+    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public class HostService : IHostService
+    public event EventHandler<ColorEventArgs>? ColorChanged;
+
+    public void SetColor(Color color)
     {
-        private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+        Log.Info($"Changing color to '{color}'");
 
-        public event EventHandler<ColorEventArgs> ColorChanged;
-
-        public void SetColor(Color color)
-        {
-            Log.Info($"Changing color to '{color}'");
-
-            ColorChanged?.Invoke(this, new ColorEventArgs(color));
-        }
+        ColorChanged?.Invoke(this, new ColorEventArgs(color));
     }
 }

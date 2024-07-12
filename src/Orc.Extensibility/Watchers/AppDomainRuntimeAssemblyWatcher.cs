@@ -12,6 +12,7 @@ using Catel.Reflection;
 using MethodTimer;
 using Catel.Services;
 using Orc.FileSystem;
+using System.Collections.Concurrent;
 
 public class AppDomainRuntimeAssemblyWatcher
 {
@@ -22,7 +23,9 @@ public class AppDomainRuntimeAssemblyWatcher
     private readonly IDirectoryService _directoryService;
     private readonly IFileService _fileService;
     private readonly HashSet<string> _registeredLoadContexts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _loadedUnmanagedAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Assembly> _loadedManagedAssembliesByName = new ConcurrentDictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IntPtr> _loadedUnmanagedAssemblies = new ConcurrentDictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _failedAssembliesByName = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     private IPluginLoadContext? _activeSingleLoadContext;
 
@@ -95,6 +98,19 @@ public class AppDomainRuntimeAssemblyWatcher
         ArgumentNullException.ThrowIfNull(assemblyLoadContext);
         ArgumentNullException.ThrowIfNull(assemblyName);
         ArgumentNullException.ThrowIfNull(assemblyFullName);
+
+        var assemblyNameAsString = assemblyName.ToString();
+
+        if (_failedAssembliesByName.Contains(assemblyNameAsString))
+        {
+            return null;
+        }
+
+        // Super fast way out
+        if (_loadedManagedAssembliesByName.TryGetValue(assemblyNameAsString, out var existingAssembly))
+        {
+            return existingAssembly;
+        }
 
         Log.Debug($"Requesting to load '{assemblyName.FullName}'");
 
@@ -181,6 +197,10 @@ public class AppDomainRuntimeAssemblyWatcher
                 if (isResourcesAssembly)
                 {
                     Log.Debug($"Could not provide resource assembly for '{assemblyName.FullName}'");
+
+                    // Don't try again
+                    _failedAssembliesByName.Add(assemblyNameAsString);
+
                     return null;
                 }
 
@@ -204,6 +224,7 @@ public class AppDomainRuntimeAssemblyWatcher
 
                     if (assemblyLoadingEventArgs.Cancel)
                     {
+                        // Note: was explicitly canceled, don't add to ignore list
                         Log.Debug($"Canceling loading of '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
                         return null;
                     }
@@ -249,13 +270,15 @@ public class AppDomainRuntimeAssemblyWatcher
             }
         }
 
+        _failedAssembliesByName.Add(assemblyNameAsString);
+
         return null;
     }
 
     [Time("{libraryName}")]
     internal IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
     {
-        Log.Debug($"Requesting to load '{libraryName}', requested by '{assembly.FullName}'");
+        Log.Debug($"Requesting to load unmanaged '{libraryName}', requested by '{assembly.FullName}'");
 
         // Load context, ignore the requesting assembly for now
         var runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
@@ -276,7 +299,7 @@ public class AppDomainRuntimeAssemblyWatcher
             Log.Debug($"Trying to provide '{runtimeReference}' as resolution for '{libraryName}', temp file is '{targetFileName}'");
 
             // Only load what we extracted ourselves and immediately took into use (blocked)
-            if (!_loadedUnmanagedAssemblies.Contains(targetFileName))
+            if (!_loadedUnmanagedAssemblies.ContainsKey(targetFileName))
             {
                 if (!runtimeReference.IsLoaded)
                 {
@@ -298,7 +321,7 @@ public class AppDomainRuntimeAssemblyWatcher
             var loadedAssembly = System.Runtime.InteropServices.NativeLibrary.Load(targetFileName);
 
             // Only ones we have loaded the assembly, we are sure we don't want to overwrite it again
-            _loadedUnmanagedAssemblies.Add(targetFileName);
+            _loadedUnmanagedAssemblies[targetFileName] = loadedAssembly;
 
             return loadedAssembly;
         }

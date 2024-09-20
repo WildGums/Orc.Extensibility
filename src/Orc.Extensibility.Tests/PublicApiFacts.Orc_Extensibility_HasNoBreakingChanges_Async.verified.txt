@@ -307,10 +307,10 @@ namespace Orc.Extensibility
     public class RuntimeAssemblyResolverService : Orc.Extensibility.IRuntimeAssemblyResolverService
     {
         public RuntimeAssemblyResolverService(Orc.FileSystem.IFileService fileService, Orc.FileSystem.IDirectoryService directoryService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService, Catel.Services.IAppDataService appDataService) { }
-        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.ICosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaMetadataAsync(System.Collections.Generic.IEnumerable<Orc.Extensibility.EmbeddedResource> resources) { }
+        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.ICosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaCosturaMetadataAsync(System.Collections.Generic.IEnumerable<Orc.Extensibility.EmbeddedResource> resources) { }
         protected System.Threading.Tasks.Task<System.Collections.Generic.List<Orc.Extensibility.EmbeddedResource>> FindEmbeddedResourcesAsync(System.Reflection.PortableExecutable.PEReader peReader, Orc.Extensibility.IRuntimeAssembly containerAssembly) { }
         public Orc.Extensibility.IPluginLoadContext[] GetPluginLoadContexts() { }
-        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly? originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
+        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Orc.Extensibility.IRuntimeAssembly>> IndexCosturaClassicEmbeddedAssembliesAsync(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly? originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
         public System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
         protected System.Threading.Tasks.Task RegisterAssemblyAsync(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly? originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }
         protected virtual bool ShouldIgnoreAssemblyForCosturaExtracting(Orc.Extensibility.IPluginLoadContext pluginLoadContext, Orc.Extensibility.IRuntimeAssembly? originatingAssembly, Orc.Extensibility.IRuntimeAssembly runtimeAssembly) { }

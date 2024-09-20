@@ -2,22 +2,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
-using System.Reflection;
 using Catel.Logging;
 using Orc.FileSystem;
 using Catel.Services;
 using System.Reflection.Metadata;
 using Catel;
 using MethodTimer;
-using Catel.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverService
 {
@@ -40,6 +35,9 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
         _directoryService = directoryService;
         _assemblyReflectionService = assemblyReflectionService;
         _appDataService = appDataService;
+
+        Log.Debug($"Platform identifiers: {PlatformInformation.RuntimeIdentifiers}");
+        Log.Debug($"Runtime identifier: {RuntimeInformation.RuntimeIdentifier}");
     }
 
     public IPluginLoadContext[] GetPluginLoadContexts()
@@ -86,12 +84,12 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
 
     protected async Task RegisterAssemblyAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
     {
-        var assemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
+        var assemblies = await IndexCosturaClassicEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, runtimeAssembly);
         pluginLoadContext.RuntimeAssemblies.AddRange(assemblies);
     }
 
     [Time("{runtimeAssembly}")]
-    protected virtual async Task<IEnumerable<IRuntimeAssembly>> IndexCosturaEmbeddedAssembliesAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
+    protected virtual async Task<IEnumerable<IRuntimeAssembly>> IndexCosturaClassicEmbeddedAssembliesAsync(IPluginLoadContext pluginLoadContext, IRuntimeAssembly? originatingAssembly, IRuntimeAssembly runtimeAssembly)
     {
         // Ignore specific assemblies
         if (ShouldIgnoreAssemblyForCosturaExtracting(pluginLoadContext, originatingAssembly, runtimeAssembly))
@@ -119,7 +117,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                         var embeddedResources = await FindEmbeddedResourcesAsync(peReader, runtimeAssembly);
                         if (embeddedResources.Count > 0)
                         {
-                            var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaMetadataAsync(embeddedResources);
+                            var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaCosturaMetadataAsync(embeddedResources);
                             if (costuraEmbeddedAssembliesFromMetadata is null)
                             {
                                 Log.Error($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
@@ -132,6 +130,8 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                                 if (costuraEmbeddedAssembly.IsRuntime)
                                 {
                                     // Check if correct platform
+                                    //RuntimeInformation.RuntimeIdentifier
+
                                     if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
                                     {
                                         Log.Debug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
@@ -167,7 +167,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                                 indexedCosturaAssemblies.Add(costuraEmbeddedAssembly);
 
                                 // Recursive indexing
-                                var recursiveRuntimeAssemblies = await IndexCosturaEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
+                                var recursiveRuntimeAssemblies = await IndexCosturaClassicEmbeddedAssembliesAsync(pluginLoadContext, originatingAssembly, costuraEmbeddedAssembly);
                                 if (recursiveRuntimeAssemblies.Any())
                                 {
                                     indexedCosturaAssemblies.AddRange(recursiveRuntimeAssemblies);
@@ -288,11 +288,11 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
         return embeddedResources;
     }
 
-    protected virtual async Task<List<ICosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaMetadataAsync(IEnumerable<EmbeddedResource> resources)
+    protected virtual async Task<List<ICosturaRuntimeAssembly>?> FindEmbeddedAssembliesViaCosturaMetadataAsync(IEnumerable<EmbeddedResource> resources)
     {
         var metadataResource = (from x in resources
-            where x.Name.EqualsIgnoreCase("costura.metadata")
-            select x).FirstOrDefault();
+                                where x.Name.EqualsIgnoreCase("costura.metadata")
+                                select x).FirstOrDefault();
         if (metadataResource is null)
         {
             // Not found, return null
@@ -319,8 +319,8 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                         var costuraEmbeddedResource = new CosturaRuntimeAssembly(line);
 
                         var embeddedResource = (from x in resources
-                            where x.Name == costuraEmbeddedResource.ResourceName
-                            select x).FirstOrDefault();
+                                                where x.Name == costuraEmbeddedResource.ResourceName
+                                                select x).FirstOrDefault();
                         if (embeddedResource is null)
                         {
                             Log.Error($"Expected to find Costura embedded resource '{costuraEmbeddedResource.ResourceName}', but could not find it");

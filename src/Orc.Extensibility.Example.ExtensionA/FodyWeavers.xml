@@ -4,12 +4,23 @@
     <Catel />
     <Costura>
         <IncludeAssemblies>
+            Azure.* <!-- required for Microsoft.Data.SqlClient -->
+            EntityFramework
+            EntityFramework.SqlServer
+            Microsoft.Identity.Client*
+            Microsoft.SqlServer.*
             Newtonsoft.Json
             Orc.Metadata
             Orc.Search
             Orc.Search.Xaml
             YamlDotNet
         </IncludeAssemblies>
+        <IncludeRuntimeAssemblies>
+            Microsoft.Data.SqlClient
+            Microsoft.Data.SqlClient.SNI
+            System.Data.SqlClient
+            sni
+        </IncludeRuntimeAssemblies>
     </Costura>
     <LoadAssembliesOnStartup>
         <IncludeAssemblies>

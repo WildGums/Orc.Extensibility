@@ -35,9 +35,6 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
         _directoryService = directoryService;
         _assemblyReflectionService = assemblyReflectionService;
         _appDataService = appDataService;
-
-        Log.Debug($"Platform identifiers: {PlatformInformation.RuntimeIdentifiers}");
-        Log.Debug($"Runtime identifier: {RuntimeInformation.RuntimeIdentifier}");
     }
 
     public IPluginLoadContext[] GetPluginLoadContexts()

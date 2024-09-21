@@ -31,8 +31,15 @@ internal static class PlatformInformation
             NativeLibraryPrefixes = new[] { string.Empty };
             NativeLibraryExtensions = new[] { ".dll" };
 
-            // For now we only care about windows
-            runtimeIdentifiers.Add($"win-{RuntimeInformation.OSArchitecture.ToString().ToLower()}");
+            var runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
+            var osArchitecture = RuntimeInformation.OSArchitecture.ToString();
+
+            Log.Debug($"OS Architecture:    {osArchitecture}");
+            Log.Debug($"Runtime identifier: {runtimeIdentifier}");
+
+            // Note that we need to respect the process, not the OS
+            runtimeIdentifiers.Add(runtimeIdentifier);
+            //runtimeIdentifiers.Add($"win-{osArchitecture.ToLower()}");
             runtimeIdentifiers.Add("win");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

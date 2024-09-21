@@ -25,6 +25,26 @@ public class PluginA : ICustomPlugin
         var value = _languageService.GetRequiredString("TestResource");
 
         Log.Info($"{typeof(YamlDotNet.Core.AnchorName).FullName}");
+        Log.Info($"{typeof(System.Data.SqlClient.SqlClientFactory).FullName}");
+        Log.Info($"{typeof(Microsoft.Data.SqlClient.SqlClientFactory).FullName}");
+        Log.Info($"{typeof(Microsoft.Data.SqlClient.SqlConnection).FullName}");
+
+        try
+        {
+            var connectionString = ".\\SQLExpress";
+
+            System.Data.Entity.Database.Exists(connectionString);
+
+            //using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
+            //{
+            //    await connection.OpenAsync();
+            //}
+        }
+        catch 
+        {
+            // Ignore
+            Log.Error("Failed to open database connection");
+        }
 
         await _messageService.ShowAsync($"Plugin A has been loaded, setting color to red. Resource value: '{value}'");
 

@@ -295,10 +295,10 @@ namespace Orc.Extensibility
         protected RuntimeAssembly(string name, string source, string checksum) { }
         public string Checksum { get; set; }
         public System.Collections.Generic.List<Orc.Extensibility.IRuntimeAssembly> Dependencies { get; }
-        public bool IsLoaded { get; set; }
-        public virtual bool IsRuntime { get; set; }
-        public string Name { get; set; }
-        public string Source { get; set; }
+        public bool IsLoaded { get; protected set; }
+        public virtual bool IsRuntime { get; protected set; }
+        public string Name { get; protected set; }
+        public string Source { get; protected set; }
         public abstract System.IO.Stream GetStream();
         public void MarkLoaded() { }
         protected abstract void OnMarkLoaded();

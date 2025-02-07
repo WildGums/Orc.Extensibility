@@ -542,7 +542,11 @@ public abstract class PluginFinderBase : IPluginFinder
     {
         try
         {
+#if NET9_0_OR_GREATER
+            using var certificate = X509CertificateLoader.LoadCertificateFromFile(fileName);
+#else
             using var certificate = X509Certificate.CreateFromSignedFile(fileName);
+#endif
             if (string.IsNullOrWhiteSpace(subjectName))
             {
                 return true;

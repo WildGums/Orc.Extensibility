@@ -502,11 +502,11 @@ public abstract class PluginFinderBase : IPluginFinder
 
     protected virtual bool ShouldIgnoreAssembly(string assemblyPath)
     {
-        var fileName = Path.GetFileName(assemblyPath).ToLower();
+        var fileName = Path.GetFileName(assemblyPath);
 
         foreach (var knownAssemblyPrefix in KnownAssemblyPrefixesToIgnore)
         {
-            if (fileName.StartsWith(knownAssemblyPrefix))
+            if (fileName.StartsWithIgnoreCase(knownAssemblyPrefix))
             {
                 return true;
             }

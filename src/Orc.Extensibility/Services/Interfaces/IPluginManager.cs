@@ -5,6 +5,6 @@ using System.Threading.Tasks;
 
 public interface IPluginManager
 {
-    IEnumerable<IPluginInfo> GetPlugins();
+    IReadOnlyList<IPluginInfo> GetPlugins();
     Task RefreshAsync();
 }

@@ -11,16 +11,20 @@ public class LoadedPluginService : ILoadedPluginService
 
     private readonly Dictionary<string, IPluginInfo> _loadedPlugins = new();
 
-       
-    public List<IPluginInfo> GetLoadedPlugins()
+    public LoadedPluginService()
     {
-        lock (_loadedPlugins)
-        {
-            return _loadedPlugins.Values.ToList();
-        }
+        
     }
 
     public event EventHandler<PluginEventArgs>? PluginLoaded;
+
+    public IReadOnlyList<IPluginInfo> GetLoadedPlugins()
+    {
+        lock (_loadedPlugins)
+        {
+            return _loadedPlugins.Values.ToArray();
+        }
+    }
 
     public void AddPlugin(IPluginInfo pluginInfo)
     {

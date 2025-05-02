@@ -101,7 +101,7 @@ public abstract class PluginFinderBase : IPluginFinder
     }
 
     [Time]
-    public async Task<IEnumerable<IPluginInfo>> FindPluginsAsync()
+    public async Task<IReadOnlyList<IPluginInfo>> FindPluginsAsync()
     {
         var pluginProbingContext = new PluginProbingContext();
 
@@ -113,7 +113,7 @@ public abstract class PluginFinderBase : IPluginFinder
 
         await RemoveDuplicatesAsync(pluginProbingContext);
 
-        return pluginProbingContext.Plugins;
+        return pluginProbingContext.Plugins.ToArray();
     }
 
     [Time]
@@ -144,16 +144,16 @@ public abstract class PluginFinderBase : IPluginFinder
             foreach (var pluginFileFilter in PluginFileFilters)
             {
                 var potentialPluginFiles = (from file in _directoryService.GetFiles(pluginDirectory, pluginFileFilter)
-                    orderby File.GetLastWriteTime(file) descending
-                    select file).ToList();
+                                            orderby File.GetLastWriteTime(file) descending
+                                            select file).ToList();
 
                 await FindPluginsInAssembliesAsync(context, potentialPluginFiles.ToArray());
             }
 
             // Step 2: treat each subdirectory separately
             var directories = (from directory in _directoryService.GetDirectories(pluginDirectory)
-                orderby Directory.GetLastWriteTime(directory) descending
-                select directory).ToList();
+                               orderby Directory.GetLastWriteTime(directory) descending
+                               select directory).ToList();
 
             foreach (var directory in directories)
             {
@@ -169,8 +169,8 @@ public abstract class PluginFinderBase : IPluginFinder
             var pluginName = context.Plugins[i].FullTypeName;
 
             var duplicates = (from plugin in context.Plugins
-                where string.Equals(plugin.FullTypeName, pluginName)
-                select plugin).ToList();
+                              where string.Equals(plugin.FullTypeName, pluginName)
+                              select plugin).ToList();
             if (duplicates.Count <= 1)
             {
                 continue;
@@ -221,9 +221,9 @@ public abstract class PluginFinderBase : IPluginFinder
         }
     }
 
-    protected virtual List<IPluginInfo> GetOldestDuplicates(List<IPluginInfo> duplicates)
+    protected virtual IReadOnlyList<IPluginInfo> GetOldestDuplicates(IReadOnlyList<IPluginInfo> duplicates)
     {
-        List<IPluginInfo>? oldDuplicates = null;
+        IReadOnlyList<IPluginInfo>? oldDuplicates = null;
 
         // Method 1: use version
         if (oldDuplicates is null)
@@ -231,8 +231,8 @@ public abstract class PluginFinderBase : IPluginFinder
             try
             {
                 oldDuplicates = (from duplicate in duplicates
-                    orderby new SemVersion(duplicate.Version) descending
-                    select duplicate).Skip(1).ToList();
+                                 orderby new SemVersion(duplicate.Version) descending
+                                 select duplicate).Skip(1).ToArray();
             }
             catch (Exception ex)
             {
@@ -244,8 +244,8 @@ public abstract class PluginFinderBase : IPluginFinder
         if (oldDuplicates is null)
         {
             oldDuplicates = (from duplicate in duplicates
-                orderby File.GetLastWriteTime(duplicate.Location) descending
-                select duplicate).Skip(1).ToList();
+                             orderby File.GetLastWriteTime(duplicate.Location) descending
+                             select duplicate).Skip(1).ToArray();
         }
 
         return oldDuplicates;
@@ -434,7 +434,7 @@ public abstract class PluginFinderBase : IPluginFinder
         }
     }
 
-    protected virtual List<string> FindResolvableAssemblyPaths(string assemblyPath)
+    protected virtual IReadOnlyList<string> FindResolvableAssemblyPaths(string assemblyPath)
     {
         //var assemblyVersions = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
 
@@ -468,7 +468,7 @@ public abstract class PluginFinderBase : IPluginFinder
             }
         }
 
-        var paths = new List<string>(_appDomainResolvablePaths);
+        var paths = _appDomainResolvablePaths.ToArray();
         return paths;
     }
 
@@ -518,7 +518,7 @@ public abstract class PluginFinderBase : IPluginFinder
             // Ignore ref assemblies
             return true;
         }
- 
+
         if (fileName.ContainsIgnoreCase(".resources.dll"))
         {
             return true;

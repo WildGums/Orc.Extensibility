@@ -19,7 +19,7 @@ public class PluginLocationsProvider : IPluginLocationsProvider
         _appDataService = appDataService;
     }
 
-    public virtual IEnumerable<string> GetPluginDirectories()
+    public virtual IReadOnlyList<string> GetPluginDirectories()
     {
         var directories = new List<string>();
 

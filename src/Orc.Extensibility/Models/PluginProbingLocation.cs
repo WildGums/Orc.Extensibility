@@ -10,5 +10,10 @@
         public required string Location { get; set; }
 
         public bool IsRecursive { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Location} (Recursive: {IsRecursive})";
+        }
     }
 }

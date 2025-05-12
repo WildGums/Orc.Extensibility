@@ -73,7 +73,7 @@ public class PluginLocationsProvider : IPluginLocationsProvider
             // it should be added manually for better performance
             directories.Add(new PluginProbingLocation
             {
-                Location = pluginsDirectory,
+                Location = currentDirectory,
                 IsRecursive = false
             });
         }

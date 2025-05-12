@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using Catel;
 using Catel.IO;
 using Catel.Reflection;
@@ -24,19 +24,22 @@ public class PluginLocationsProvider : IPluginLocationsProvider
         var directories = new List<string>();
 
         var pluginsDirectory = System.IO.Path.Combine(_appDataService.GetApplicationDataDirectory(ApplicationDataTarget.UserRoaming), "plugins");
-        if (ValidateDirectory(pluginsDirectory))
+        if (ValidateDirectory(pluginsDirectory) &&
+            !directories.Any(x => x.EqualsIgnoreCase(pluginsDirectory)))
         {
             directories.Add(pluginsDirectory);
         }
 
         var currentDirectory = Environment.CurrentDirectory;
-        if (ValidateDirectory(currentDirectory))
+        if (ValidateDirectory(currentDirectory) &&
+            !directories.Any(x => x.EqualsIgnoreCase(currentDirectory)))
         {
             directories.Add(currentDirectory);
         }
 
         var appDirectory = AssemblyHelper.GetRequiredEntryAssembly().GetDirectory();
-        if (ValidateDirectory(appDirectory))
+        if (ValidateDirectory(appDirectory) &&
+            !directories.Any(x => x.EqualsIgnoreCase(appDirectory)))
         {
             directories.Add(appDirectory);
         }

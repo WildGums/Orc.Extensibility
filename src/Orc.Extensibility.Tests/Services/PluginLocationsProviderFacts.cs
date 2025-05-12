@@ -1,12 +1,9 @@
 ﻿namespace Orc.Extensibility.Tests.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Catel.Services;
-    using Moq;
     using NUnit.Framework;
 
     public class PluginLocationsProviderFacts

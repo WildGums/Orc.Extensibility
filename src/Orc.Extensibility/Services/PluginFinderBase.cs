@@ -131,11 +131,11 @@ public abstract class PluginFinderBase : IPluginFinder
     [Time]
     protected virtual async Task FindPluginsInUnloadedAssembliesAsync(PluginProbingContext context)
     {
-        var pluginDirectories = _pluginLocationsProvider.GetPluginDirectories();
+        var pluginLocations = _pluginLocationsProvider.GetPluginLocations();
 
-        foreach (var pluginDirectory in pluginDirectories)
+        foreach (var pluginLocation in pluginLocations)
         {
-            if (!_directoryService.Exists(pluginDirectory))
+            if (!_directoryService.Exists(pluginLocation.Location))
             {
                 continue;
             }
@@ -143,21 +143,24 @@ public abstract class PluginFinderBase : IPluginFinder
             // Step 1: top-level plugins (assemblies directly located inside the root)
             foreach (var pluginFileFilter in PluginFileFilters)
             {
-                var potentialPluginFiles = (from file in _directoryService.GetFiles(pluginDirectory, pluginFileFilter)
+                var potentialPluginFiles = (from file in _directoryService.GetFiles(pluginLocation.Location, pluginFileFilter)
                                             orderby File.GetLastWriteTime(file) descending
                                             select file).ToList();
 
                 await FindPluginsInAssembliesAsync(context, potentialPluginFiles.ToArray());
             }
 
-            // Step 2: treat each subdirectory separately
-            var directories = (from directory in _directoryService.GetDirectories(pluginDirectory)
-                               orderby Directory.GetLastWriteTime(directory) descending
-                               select directory).ToList();
-
-            foreach (var directory in directories)
+            if (pluginLocation.IsRecursive)
             {
-                await FindPluginsInDirectoryAsync(context, directory);
+                // Step 2: treat each subdirectory separately
+                var directories = (from directory in _directoryService.GetDirectories(pluginLocation.Location)
+                                   orderby Directory.GetLastWriteTime(directory) descending
+                                   select directory).ToList();
+
+                foreach (var directory in directories)
+                {
+                    await FindPluginsInDirectoryAsync(context, directory);
+                }
             }
         }
     }

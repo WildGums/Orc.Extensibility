@@ -7,7 +7,7 @@ public interface ILoadedPluginService
 {
     event EventHandler<PluginEventArgs>? PluginLoaded;
 
-    List<IPluginInfo> GetLoadedPlugins();
+    IReadOnlyList<IPluginInfo> GetLoadedPlugins();
 
     void AddPlugin(IPluginInfo pluginInfo);
 }

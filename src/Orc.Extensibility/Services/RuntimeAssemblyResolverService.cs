@@ -37,7 +37,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
         _appDataService = appDataService;
     }
 
-    public IPluginLoadContext[] GetPluginLoadContexts()
+    public IReadOnlyList<IPluginLoadContext> GetPluginLoadContexts()
     {
         return _pluginLoadContexts.Values.ToArray();
     }

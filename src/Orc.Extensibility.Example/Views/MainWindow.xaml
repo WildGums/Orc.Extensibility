@@ -4,9 +4,11 @@
               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
               xmlns:catel="http://schemas.catelproject.com"
-              xmlns:orccontrols="http://schemas.wildgums.com/orc/controls" 
+              xmlns:orccontrols="http://schemas.wildgums.com/orc/controls"
               xmlns:orctheming="http://schemas.wildgums.com/orc/theming"
-              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400">
+              mc:Ignorable="d"
+              d:DesignHeight="300"
+              d:DesignWidth="400">
 
     <orccontrols:StackGrid>
         <Grid.RowDefinitions>
@@ -18,7 +20,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <orctheming:ThemeSwitcherView />
+        <StackPanel Orientation="Horizontal">
+            <orctheming:ThemeSwitcherView />
+            <orctheming:FontSizeSwitcherView />
+        </StackPanel>
 
         <Label>
             <TextBlock TextWrapping="Wrap">
@@ -42,16 +47,19 @@
             </Grid.ColumnDefinitions>
 
             <Label Content="Selected plugin" />
-            <ComboBox ItemsSource="{Binding AvailablePlugins}" SelectedItem="{Binding SelectedPlugin}" />
+            <ComboBox ItemsSource="{Binding AvailablePlugins}"
+                      SelectedItem="{Binding SelectedPlugin}" />
         </orccontrols:StackGrid>
 
         <Label>
-            <TextBlock TextWrapping="Wrap" FontStyle="Italic">
+            <TextBlock TextWrapping="Wrap"
+                       FontStyle="Italic">
             Note that changing the plugin requires a restart of the application
             </TextBlock>
         </Label>
 
-        <Rectangle Height="50" HorizontalAlignment="Stretch">
+        <Rectangle Height="50"
+                   HorizontalAlignment="Stretch">
             <Rectangle.Fill>
                 <SolidColorBrush Color="{Binding Color}" />
             </Rectangle.Fill>
@@ -68,7 +76,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <GroupBox Grid.Row="0" 
+            <GroupBox Grid.Row="0"
                       Grid.Column="0"
                       Header="Runtime extracted assemblies">
                 <ListBox ItemsSource="{Binding RuntimeAssemblies}">
@@ -80,7 +88,7 @@
                 </ListBox>
             </GroupBox>
 
-            <GroupBox Grid.Row="1" 
+            <GroupBox Grid.Row="1"
                       Grid.Column="0"
                       Header="Runtime resolved assemblies">
                 <ListBox ItemsSource="{Binding RuntimeResolvedAssemblies}">
@@ -92,10 +100,12 @@
                 </ListBox>
             </GroupBox>
 
-            <GroupBox Grid.RowSpan="2" 
+            <GroupBox Grid.RowSpan="2"
                       Grid.Column="1"
                       Header="Logging">
-                <TextBox x:Name="loggingTextBox" IsReadOnly="True" AcceptsReturn="True" />
+                <TextBox x:Name="loggingTextBox"
+                         IsReadOnly="True"
+                         AcceptsReturn="True" />
             </GroupBox>
         </Grid>
     </orccontrols:StackGrid>

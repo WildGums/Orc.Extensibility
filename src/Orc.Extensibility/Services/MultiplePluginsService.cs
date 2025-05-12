@@ -34,9 +34,9 @@ public class MultiplePluginsService : IMultiplePluginsService
     /// Configures the and load plugins.
     /// </summary>
     /// <param name="requestedPlugins">The requested plugins.</param>
-    /// <returns>IEnumerable&lt;IPlugin&gt;.</returns>
+    /// <returns>IReadOnlyList&lt;IPlugin&gt;.</returns>
     [Time]
-    public virtual async Task<IEnumerable<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins)
+    public virtual async Task<IReadOnlyList<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins)
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 

@@ -155,7 +155,14 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     private byte[] ReadStream(Stream stream)
     {
         var array = new byte[stream.Length];
+
+#if NET8_0_OR_GREATER
+        stream.ReadExactly(array);
+#else
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
         stream.Read(array, 0, array.Length);
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+#endif
         return array;
     }
 }

@@ -5,5 +5,5 @@ using System.Threading.Tasks;
 
 public interface IMultiplePluginsService : IPluginService
 {
-    Task<IEnumerable<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins);
+    Task<IReadOnlyList<IPlugin>> ConfigureAndLoadPluginsAsync(params string[] requestedPlugins);
 }

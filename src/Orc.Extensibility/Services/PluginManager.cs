@@ -22,7 +22,7 @@ public class PluginManager : IPluginManager
         _pluginFinder = pluginFinder;
     }
 
-    public IEnumerable<IPluginInfo> GetPlugins()
+    public IReadOnlyList<IPluginInfo> GetPlugins()
     {
         lock (_lock)
         {

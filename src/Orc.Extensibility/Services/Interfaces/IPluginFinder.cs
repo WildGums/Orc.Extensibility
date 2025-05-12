@@ -5,5 +5,5 @@ using System.Threading.Tasks;
 
 public interface IPluginFinder
 {
-    Task<IEnumerable<IPluginInfo>> FindPluginsAsync();
+    Task<IReadOnlyList<IPluginInfo>> FindPluginsAsync();
 }

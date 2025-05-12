@@ -1,4 +1,4 @@
-<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyName>Orc.Extensibility.Tests</AssemblyName>
@@ -13,18 +13,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Catel.Fody" Version="4.9.0" PrivateAssets="all" />
-    <PackageReference Include="Fody" Version="6.8.2" PrivateAssets="all">
+    <PackageReference Include="Catel.Fody" Version="4.10.0" PrivateAssets="all" />
+    <PackageReference Include="Fody" Version="6.9.2" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NUnit" Version="4.2.2" PrivateAssets="all" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" PrivateAssets="all" />
-    <PackageReference Include="PublicApiGenerator" Version="11.1.0" PrivateAssets="all" />
-    <PackageReference Include="Verify.NUnit" Version="26.5.0" />
+    <PackageReference Include="NUnit" Version="4.3.2" PrivateAssets="all" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" PrivateAssets="all" />
+    <PackageReference Include="PublicApiGenerator" Version="11.4.6" PrivateAssets="all" />
+    <PackageReference Include="Verify.NUnit" Version="30.0.0" />
   </ItemGroup>
 
   <ItemGroup>

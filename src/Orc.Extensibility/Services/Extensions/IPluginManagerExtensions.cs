@@ -9,7 +9,7 @@ public static class IPluginManagerExtensions
 {
     private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-    public static async Task<IEnumerable<IPluginInfo>> RefreshAndGetPluginsAsync(this IPluginManager pluginManager)
+    public static async Task<IReadOnlyList<IPluginInfo>> RefreshAndGetPluginsAsync(this IPluginManager pluginManager)
     {
         ArgumentNullException.ThrowIfNull(pluginManager);
 
@@ -18,12 +18,12 @@ public static class IPluginManagerExtensions
         return pluginManager.GetPlugins();
     }
 
-    //public static List<IPluginInfo> FindPluginImplementations<TPlugin>(this IPluginManager pluginManager)
+    //public static IReadOnlyList<IPluginInfo> FindPluginImplementations<TPlugin>(this IPluginManager pluginManager)
     //{
     //    return FindPluginImplementations(pluginManager, typeof(TPlugin));
     //}
 
-    //public static List<IPluginInfo> FindPluginImplementations(this IPluginManager pluginManager, Type interfaceType)
+    //public static IReadOnlyList<IPluginInfo> FindPluginImplementations(this IPluginManager pluginManager, Type interfaceType)
     //{
     //    ArgumentNullException.ThrowIfNull(interfaceType);
 

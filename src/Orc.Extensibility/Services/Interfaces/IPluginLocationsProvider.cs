@@ -4,5 +4,5 @@ using System.Collections.Generic;
 
 public interface IPluginLocationsProvider
 {
-    IEnumerable<string> GetPluginDirectories();
+    IReadOnlyList<string> GetPluginDirectories();
 }

@@ -18,7 +18,6 @@
         <IncludeRuntimeAssemblies>
             Microsoft.Data.SqlClient
             Microsoft.Data.SqlClient.SNI
-            System.Data.SqlClient
             sni
         </IncludeRuntimeAssemblies>
     </Costura>

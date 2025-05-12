@@ -135,7 +135,9 @@ namespace Orc.Extensibility
     }
     public interface IPluginLocationsProvider
     {
+        [System.Obsolete("Use `GetPluginLocations` instead. Will be removed in version 6.0.0.", true)]
         System.Collections.Generic.IReadOnlyList<string> GetPluginDirectories();
+        System.Collections.Generic.IReadOnlyList<Orc.Extensibility.PluginProbingLocation> GetPluginLocations();
     }
     public interface IPluginManager
     {
@@ -270,7 +272,9 @@ namespace Orc.Extensibility
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
     {
         public PluginLocationsProvider(Catel.Services.IAppDataService appDataService) { }
+        [System.Obsolete("Use `GetPluginLocations` instead. Will be removed in version 6.0.0.", true)]
         public virtual System.Collections.Generic.IReadOnlyList<string> GetPluginDirectories() { }
+        public virtual System.Collections.Generic.IReadOnlyList<Orc.Extensibility.PluginProbingLocation> GetPluginLocations() { }
         protected virtual bool ValidateDirectory(string directory) { }
     }
     public class PluginManager : Orc.Extensibility.IPluginManager
@@ -284,6 +288,12 @@ namespace Orc.Extensibility
         public PluginProbingContext() { }
         public System.Collections.Generic.HashSet<string> Locations { get; }
         public System.Collections.Generic.List<Orc.Extensibility.IPluginInfo> Plugins { get; }
+    }
+    public class PluginProbingLocation
+    {
+        public PluginProbingLocation() { }
+        public bool IsRecursive { get; set; }
+        public required string Location { get; set; }
     }
     public static class ReflectionExtensions
     {

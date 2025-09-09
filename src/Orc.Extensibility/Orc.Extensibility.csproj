@@ -28,11 +28,11 @@
   </ItemGroup>
   
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net8.0')) ">
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="8.0.1" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.9" />
   </ItemGroup>
   
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net9.0')) ">
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.8" />
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.9" />
   </ItemGroup>  
 
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.Build.nullable.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.Build.nullable.props')" />

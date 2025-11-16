@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>Orc.Extensibility</AssemblyName>
     <RootNamespace>Orc.Extensibility</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
@@ -24,7 +24,7 @@
     <PackageReference Include="MethodTimer.Fody" Version="3.2.3" PrivateAssets="all" />
     <PackageReference Include="ModuleInit.Fody" Version="2.1.1" PrivateAssets="all" />
     <PackageReference Include="Obsolete.Fody" Version="5.3.1" PrivateAssets="all" />
-    <PackageReference Include="Orc.FileSystem" Version="5.0.0" />
+    <PackageReference Include="Orc.FileSystem" Version="5.1.0-alpha0848" />
   </ItemGroup>
   
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net8.0')) ">
@@ -32,8 +32,12 @@
   </ItemGroup>
   
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net9.0')) ">
-    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.10" />
-  </ItemGroup>  
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="9.0.11" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net10.0')) ">
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.0" />
+  </ItemGroup>
 
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.Build.nullable.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.Build.nullable.props')" />
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.Build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.Build.shared.explicit.props')" />

@@ -545,15 +545,18 @@ public abstract class PluginFinderBase : IPluginFinder
     {
         try
         {
-#if NET9_0_OR_GREATER
-            using var certificate = X509CertificateLoader.LoadCertificateFromFile(fileName);
-#else
-            using var certificate = X509Certificate.CreateFromSignedFile(fileName);
-#endif
             if (string.IsNullOrWhiteSpace(subjectName))
             {
                 return true;
             }
+
+#if NET9_0_OR_GREATER
+#pragma warning disable SYSLIB0057 // see https://github.com/dotnet/runtime/discussions/108740
+            using var certificate = new X509Certificate2(fileName);
+#pragma warning restore SYSLIB0057
+#else
+            using var certificate = X509Certificate.CreateFromSignedFile(fileName);
+#endif
 
             if (certificate.Subject.ContainsIgnoreCase(subjectName))
             {

@@ -1,0 +1,35 @@
+<Solution>
+  <Folder Name="/misc/">
+    <File Path="Directory.build.project.props" />
+    <File Path="Directory.build.props" />
+    <File Path="Directory.build.shared.explicit.props" />
+    <File Path="Directory.build.shared.implicit.props" />
+    <File Path="Directory.build.shared.mat.props" />
+    <File Path="Directory.build.targets" />
+    <File Path="GlobalSuppressions.cs" />
+    <File Path="nuget.config" />
+    <File Path="Orc.Extensibility.sln.DotSettings" />
+    <File Path="SolutionAssemblyInfo.cs" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="Orc.Extensibility/Orc.Extensibility.csproj" />
+  </Folder>
+  <Folder Name="/src/Example/">
+    <Project Path="Orc.Extensibility.Example/Orc.Extensibility.Example.csproj">
+      <BuildDependency Project="Orc.Extensibility.Example.ExtensionA/Orc.Extensibility.Example.ExtensionA.csproj" />
+      <BuildDependency Project="Orc.Extensibility.Example.ExtensionB/Orc.Extensibility.Example.ExtensionB.csproj" />
+      <BuildDependency Project="Orc.Extensibility.Tests/Orc.Extensibility.Tests.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/src/Example/Api/">
+    <Project Path="Orc.Extensibility.Example.Api/Orc.Extensibility.Example.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Example/Extensions/">
+    <Project Path="Orc.Extensibility.Example.ExtensionA/Orc.Extensibility.Example.ExtensionA.csproj" />
+    <Project Path="Orc.Extensibility.Example.ExtensionB/Orc.Extensibility.Example.ExtensionB.csproj" />
+  </Folder>
+  <Folder Name="/src/Tests/">
+    <Project Path="Orc.Extensibility.Tests/Orc.Extensibility.Tests.csproj" />
+  </Folder>
+</Solution>

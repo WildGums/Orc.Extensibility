@@ -259,13 +259,13 @@ public class AppDomainRuntimeAssemblyWatcher
                                              select x).FirstOrDefault();
                 if (alreadyLoadedAssembly is not null)
                 {
-                    Log.Warning($"Failed to load assembly from '{runtimeReference}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
+                    Log.Warning($"Failed to load assembly from '{assemblyFullName}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
 
                     return alreadyLoadedAssembly;
                 }
                 else
                 {
-                    Log.Error($"Failed to load assembly from '{runtimeReference}': {error}");
+                    Log.Error($"Failed to load assembly from '{assemblyFullName}': {error}");
                 }
             }
         }

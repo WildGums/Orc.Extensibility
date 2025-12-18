@@ -2,6 +2,5 @@
 <Weavers VerifyAssembly="true" VerifyIgnoreCodes="0x80131869,0x80131854,0x8013185D,0x801318DE" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
   <MethodTimer />
   <Catel />
-  <ModuleInit />
   <Obsolete />
 </Weavers>

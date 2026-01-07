@@ -5,14 +5,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Catel;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 public class SinglePluginService : ISinglePluginService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(SinglePluginService));
 
     private readonly IPluginFactory _pluginFactory;
     private readonly ILoadedPluginService _loadedPluginService;
     private readonly IPluginManager _pluginManager;
+
     private IPluginInfo? _fallbackPlugin;
 
     public SinglePluginService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
@@ -34,18 +36,18 @@ public class SinglePluginService : ISinglePluginService
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
-        Log.Debug("Found '{0}' plugins", plugins.Count());
+        Logger.LogDebug("Found '{0}' plugins", plugins.Count());
 
         IPluginInfo? pluginToLoad = null;
 
         // Step 1: search for full name
         foreach (var plugin in plugins)
         {
-            Log.Debug("  * {0} ({1})", plugin, plugin.Location);
+            Logger.LogDebug("  * {0} ({1})", plugin, plugin.Location);
 
             if (plugin.FullTypeName.EqualsIgnoreCase(expectedPlugin))
             {
-                Log.Debug($"Found extension via full type name matching");
+                Logger.LogDebug($"Found extension via full type name matching");
 
                 pluginToLoad = plugin;
                 break;
@@ -59,7 +61,7 @@ public class SinglePluginService : ISinglePluginService
             {
                 if (plugin.Aliases.Any(x => x.EqualsIgnoreCase(expectedPlugin)))
                 {
-                    Log.Debug($"Found extension via alias '{expectedPlugin}'");
+                    Logger.LogDebug($"Found extension via alias '{expectedPlugin}'");
 
                     pluginToLoad = plugin;
                     break;
@@ -74,7 +76,7 @@ public class SinglePluginService : ISinglePluginService
             {
                 if (plugin.FullTypeName.EndsWithIgnoreCase(expectedPlugin))
                 {
-                    Log.Debug("Found extension by partial type name matching");
+                    Logger.LogDebug("Found extension by partial type name matching");
 
                     pluginToLoad = plugin;
                     break;
@@ -91,7 +93,7 @@ public class SinglePluginService : ISinglePluginService
         {
             const string message = "Plugin could not be found, using default plugin";
 
-            Log.Warning(message);
+            Logger.LogWarning(message);
 
             PluginLoadingFailed?.Invoke(this, new PluginEventArgs(expectedPlugin, "Failed to load plugin", message));
 
@@ -107,7 +109,7 @@ public class SinglePluginService : ISinglePluginService
 
         try
         {
-            Log.Debug("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+            Logger.LogDebug("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
 
             pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
         }
@@ -115,7 +117,7 @@ public class SinglePluginService : ISinglePluginService
         {
             var message = $"Plugin '{pluginToLoad.Name}' could not be loaded, falling back to default plugin";
 
-            Log.Warning(ex, message);
+            Logger.LogWarning(ex, message);
 
             PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
 
@@ -123,7 +125,7 @@ public class SinglePluginService : ISinglePluginService
             {
                 pluginToLoad = fallbackPlugin;
 
-                Log.Debug("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
+                Logger.LogDebug("Instantiating fallback plugin '{0}'", pluginToLoad.FullTypeName);
 
                 pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             }
@@ -134,7 +136,7 @@ public class SinglePluginService : ISinglePluginService
             return null;
         }
 
-        Log.Debug($"Final instantiated plugin is '{pluginInstance.GetType().Name}'");
+        Logger.LogDebug($"Final instantiated plugin is '{pluginInstance.GetType().Name}'");
 
         _loadedPluginService.AddPlugin(pluginToLoad);
 

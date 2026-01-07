@@ -5,7 +5,8 @@ using System.Reflection;
 
 public class RuntimeLoadedAssemblyEventArgs : EventArgs
 {
-    public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
+    public RuntimeLoadedAssemblyEventArgs(AssemblyName requestedAssemblyName, 
+        IRuntimeAssembly resolvedRuntimeAssembly, Assembly resolvedAssembly)
     {
         ArgumentNullException.ThrowIfNull(requestedAssemblyName);
         ArgumentNullException.ThrowIfNull(resolvedRuntimeAssembly);

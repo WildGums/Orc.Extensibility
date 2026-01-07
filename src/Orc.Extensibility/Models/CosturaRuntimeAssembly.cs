@@ -6,10 +6,11 @@ using System.IO.Compression;
 using Catel;
 using Catel.Logging;
 using Catel.Reflection;
+using Microsoft.Extensions.Logging;
 
 public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(CosturaRuntimeAssembly));
 
     private byte[]? _cachedData;
 
@@ -72,7 +73,7 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     {
         if (IsLoaded)
         {
-            throw Log.ErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
+            throw Logger.LogErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
         }
 
         if (_cachedData is null)
@@ -81,7 +82,7 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
             var embeddedResource = EmbeddedResource;
             if (embeddedResource is null)
             {
-                throw Log.ErrorAndCreateException<NotSupportedException>("Cannot get stream when the EmbeddedResource property is not set");
+                throw Logger.LogErrorAndCreateException<NotSupportedException>("Cannot get stream when the EmbeddedResource property is not set");
             }
 
             unsafe
@@ -103,7 +104,7 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     {
         if (_cachedData is not null)
         {
-            Log.Debug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
+            Logger.LogDebug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
 
             _cachedData = null;
         }

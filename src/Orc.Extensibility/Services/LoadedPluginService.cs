@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 public class LoadedPluginService : ILoadedPluginService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(LoadedPluginService));
 
     private readonly Dictionary<string, IPluginInfo> _loadedPlugins = new();
 
@@ -30,14 +31,14 @@ public class LoadedPluginService : ILoadedPluginService
     {
         ArgumentNullException.ThrowIfNull(pluginInfo);
 
-        Log.Debug($"Registering plugin '{pluginInfo}' as loaded");
+        Logger.LogDebug($"Registering plugin '{pluginInfo}' as loaded");
 
         lock (_loadedPlugins)
         {
             var key = pluginInfo.FullTypeName.ToLower();
             if (_loadedPlugins.ContainsKey(key))
             {
-                Log.Warning($"Plugin '{pluginInfo}' is already marked as loaded");
+                Logger.LogWarning($"Plugin '{pluginInfo}' is already marked as loaded");
                 return;
             }
 

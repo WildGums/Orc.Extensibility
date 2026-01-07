@@ -7,22 +7,24 @@ using Catel.IoC;
 using Catel.Logging;
 using Catel.Reflection;
 using MethodTimer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 public class PluginFactory : IPluginFactory
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PluginFactory));
 
-    private readonly ITypeFactory _typeFactory;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
 
     private PropertyInfo? _runtimeTypePropertyInfo;
 
-    public PluginFactory(ITypeFactory typeFactory, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
+    public PluginFactory(IServiceProvider serviceProvider, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
     {
-        ArgumentNullException.ThrowIfNull(typeFactory);
+        ArgumentNullException.ThrowIfNull(serviceProvider);
         ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
 
-        _typeFactory = typeFactory;
+        _serviceProvider = serviceProvider;
         _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
     }
 
@@ -33,9 +35,9 @@ public class PluginFactory : IPluginFactory
 
         try
         {
-            Log.Debug($"Creating plugin '{pluginInfo}'");
+            Logger.LogDebug($"Creating plugin '{pluginInfo}'");
 
-            Log.Debug($"  1. Loading assembly from '{pluginInfo.Location}'");
+            Logger.LogDebug($"  1. Loading assembly from '{pluginInfo.Location}'");
 
             //#if NETCORE
             //                // Use DotNetCorePlugins
@@ -59,15 +61,15 @@ public class PluginFactory : IPluginFactory
             //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
             //loadContext.Resolving += OnLoadContextResolving;
 
-            Log.Debug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
+            Logger.LogDebug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
 
             var type = assembly.GetType(pluginInfo.FullTypeName);
             if (type is null)
             {
-                throw Log.ErrorAndCreateException<NotSupportedException>($"Cannot find type '{pluginInfo.FullTypeName}'");
+                throw Logger.LogErrorAndCreateException<NotSupportedException>($"Cannot find type '{pluginInfo.FullTypeName}'");
             }
 
-            Log.Debug($"  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
+            Logger.LogDebug($"  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
 
             try
             {
@@ -75,12 +77,12 @@ public class PluginFactory : IPluginFactory
             }
             catch (Exception innerEx)
             {
-                Log.Warning(innerEx, "Failed to preload assembly");
+                Logger.LogWarning(innerEx, "Failed to preload assembly");
             }
 
-            Log.Debug($"  4. Instantiating type '{type.GetSafeFullName(true)}'");
+            Logger.LogDebug($"  4. Instantiating type '{type.GetSafeFullName(true)}'");
 
-            var plugin = _typeFactory.CreateRequiredInstance(type);
+            var plugin = ActivatorUtilities.CreateInstance(_serviceProvider, type);
 
             // Workaround for loading assemblies
             TypeCache.InitializeTypes(type.GetAssemblyEx(), true);
@@ -89,7 +91,7 @@ public class PluginFactory : IPluginFactory
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to create plugin '{pluginInfo}'");
+            Logger.LogError(ex, $"Failed to create plugin '{pluginInfo}'");
 
             throw;
         }
@@ -119,7 +121,7 @@ public class PluginFactory : IPluginFactory
                     var runtimeType = _runtimeTypePropertyInfo.GetValue(firstModule) as Type;
                     if (runtimeType is not null)
                     {
-                        Log.Debug("Found module runtime type, force preloading assembly now");
+                        Logger.LogDebug("Found module runtime type, force preloading assembly now");
 
                         var staticConstructor = runtimeType.GetConstructor(BindingFlags.Static | BindingFlags.NonPublic, Type.DefaultBinder, Array.Empty<Type>(), Array.Empty<ParameterModifier>());
                         if (staticConstructor is not null)

@@ -136,8 +136,6 @@ namespace Orc.Extensibility
     }
     public interface IPluginLocationsProvider
     {
-        [System.Obsolete("Use `GetPluginLocations` instead. Will be removed in version 6.0.0.", true)]
-        System.Collections.Generic.IReadOnlyList<string> GetPluginDirectories();
         System.Collections.Generic.IReadOnlyList<Orc.Extensibility.PluginProbingLocation> GetPluginLocations();
     }
     public interface IPluginManager
@@ -219,7 +217,7 @@ namespace Orc.Extensibility
     }
     public class PluginFactory : Orc.Extensibility.IPluginFactory
     {
-        public PluginFactory(Catel.IoC.ITypeFactory typeFactory, Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
+        public PluginFactory(System.IServiceProvider serviceProvider, Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
         public virtual object CreatePlugin(Orc.Extensibility.IPluginInfo pluginInfo) { }
         protected virtual void PreloadAssembly(System.Reflection.Assembly assembly) { }
     }
@@ -273,8 +271,6 @@ namespace Orc.Extensibility
     public class PluginLocationsProvider : Orc.Extensibility.IPluginLocationsProvider
     {
         public PluginLocationsProvider(Catel.Services.IAppDataService appDataService) { }
-        [System.Obsolete("Use `GetPluginLocations` instead. Will be removed in version 6.0.0.", true)]
-        public virtual System.Collections.Generic.IReadOnlyList<string> GetPluginDirectories() { }
         public virtual System.Collections.Generic.IReadOnlyList<Orc.Extensibility.PluginProbingLocation> GetPluginLocations() { }
         protected virtual bool ValidateDirectory(string directory) { }
     }
@@ -349,5 +345,12 @@ namespace Orc.Extensibility
         public event System.EventHandler<Orc.Extensibility.PluginEventArgs>? PluginLoadingFailed;
         public System.Threading.Tasks.Task<Orc.Extensibility.IPlugin?> ConfigureAndLoadPluginAsync(string expectedPlugin, string defaultPlugin) { }
         public System.Threading.Tasks.Task SetFallbackPluginAsync(Orc.Extensibility.IPluginInfo? fallbackPlugin) { }
+    }
+}
+namespace Orc
+{
+    public static class OrcExtensibilityModule
+    {
+        public static Microsoft.Extensions.DependencyInjection.IServiceCollection AddOrcExtensibility(this Microsoft.Extensions.DependencyInjection.IServiceCollection serviceCollection) { }
     }
 }

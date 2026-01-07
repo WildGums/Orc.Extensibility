@@ -13,10 +13,11 @@ using Catel.Logging;
 using Catel.Reflection;
 using FileSystem;
 using MethodTimer;
+using Microsoft.Extensions.Logging;
 
 public abstract class PluginFinderBase : IPluginFinder
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PluginFinderBase));
 
     private static readonly Version DefaultFallbackVersion = new Version("0.0.0");
 
@@ -239,7 +240,7 @@ public abstract class PluginFinderBase : IPluginFinder
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to sort versions using Version");
+                Logger.LogError(ex, "Failed to sort versions using Version");
             }
         }
 
@@ -263,13 +264,13 @@ public abstract class PluginFinderBase : IPluginFinder
             return;
         }
 
-        Log.Debug("Searching for plugins in directory '{0}'", pluginDirectory);
+        Logger.LogDebug("Searching for plugins in directory '{0}'", pluginDirectory);
 
         try
         {
             if (!_directoryService.Exists(pluginDirectory))
             {
-                Log.Debug("Directory does not exist, no plugins found");
+                Logger.LogDebug("Directory does not exist, no plugins found");
                 return;
             }
 
@@ -283,7 +284,7 @@ public abstract class PluginFinderBase : IPluginFinder
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to search for plugins in directory '{0}'", pluginDirectory);
+            Logger.LogWarning(ex, "Failed to search for plugins in directory '{0}'", pluginDirectory);
         }
     }
 
@@ -332,7 +333,7 @@ public abstract class PluginFinderBase : IPluginFinder
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to search for plugins");
+                Logger.LogWarning(ex, "Failed to search for plugins");
             }
         }
     }
@@ -426,7 +427,7 @@ public abstract class PluginFinderBase : IPluginFinder
 
                 var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
 
-                Log.Debug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
+                Logger.LogDebug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
 
                 context.Plugins.Add(pluginInfo);
             }
@@ -563,12 +564,12 @@ public abstract class PluginFinderBase : IPluginFinder
                 return true;
             }
 
-            Log.Debug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
+            Logger.LogDebug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
             return false;
         }
         catch (Exception ex)
         {
-            Log.Debug(ex, $"File '{fileName}' is not signed, not allowing loading of assembly");
+            Logger.LogDebug(ex, $"File '{fileName}' is not signed, not allowing loading of assembly");
             return false;
         }
     }

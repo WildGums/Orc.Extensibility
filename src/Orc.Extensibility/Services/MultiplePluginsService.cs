@@ -6,16 +6,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Catel.Logging;
 using MethodTimer;
+using Microsoft.Extensions.Logging;
 
 public class MultiplePluginsService : IMultiplePluginsService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(MultiplePluginsService));
 
     private readonly IPluginFactory _pluginFactory;
     private readonly ILoadedPluginService _loadedPluginService;
     private readonly IPluginManager _pluginManager;
 
-    public MultiplePluginsService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
+    public MultiplePluginsService(IPluginManager pluginManager, IPluginFactory pluginFactory, 
+        ILoadedPluginService loadedPluginService)
     {
         ArgumentNullException.ThrowIfNull(pluginManager);
         ArgumentNullException.ThrowIfNull(pluginFactory);
@@ -40,13 +42,13 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
-        Log.Info("Found '{0}' plugins", plugins.Count());
+        Logger.LogInformation("Found '{0}' plugins", plugins.Count());
 
         var pluginsToLoad = new Queue<IPluginInfo>();
 
         foreach (var plugin in plugins)
         {
-            Log.Info("  * {0} ({1})", plugin, plugin.Location);
+            Logger.LogInformation("  * {0} ({1})", plugin, plugin.Location);
 
             if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.FullTypeName))
             {
@@ -88,7 +90,7 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         try
         {
-            Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+            Logger.LogInformation("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
 
             var pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
             var plugin = new Plugin(pluginInstance, pluginToLoad);
@@ -103,7 +105,7 @@ public class MultiplePluginsService : IMultiplePluginsService
         {
             var message = $"Plugin '{pluginToLoad.Name}' could not be loaded, is last retry: '{isLastTry}'";
 
-            Log.Warning(ex, message);
+            Logger.LogWarning(ex, message);
 
             if (isLastTry)
             {

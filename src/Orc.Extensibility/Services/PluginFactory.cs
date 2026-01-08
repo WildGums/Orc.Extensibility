@@ -29,15 +29,15 @@ public class PluginFactory : IPluginFactory
     }
 
     [Time]
-    public virtual object CreatePlugin(IPluginInfo pluginInfo)
+    public virtual object CreatePluginType(IPluginTypeInfo pluginTypeInfo)
     {
-        ArgumentNullException.ThrowIfNull(pluginInfo);
+        ArgumentNullException.ThrowIfNull(pluginTypeInfo);
 
         try
         {
-            Logger.LogDebug($"Creating plugin '{pluginInfo}'");
+            Logger.LogDebug($"Creating plugin '{pluginTypeInfo}'");
 
-            Logger.LogDebug($"  1. Loading assembly from '{pluginInfo.Location}'");
+            Logger.LogDebug($"  1. Loading assembly from '{pluginTypeInfo.Location}'");
 
             //#if NETCORE
             //                // Use DotNetCorePlugins
@@ -55,18 +55,18 @@ public class PluginFactory : IPluginFactory
             // Note: load via assembly name does not work when it's in a specific directory in .net core
             //var assemblyName = AssemblyName.GetAssemblyName(pluginInfo.Location);
             //var assembly = Assembly.Load(assemblyName);
-            var assembly = Assembly.LoadFrom(pluginInfo.Location);
+            var assembly = Assembly.LoadFrom(pluginTypeInfo.Location);
 
             //// NOTE: when using separate load context per assembly, this becomes important
             //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
             //loadContext.Resolving += OnLoadContextResolving;
 
-            Logger.LogDebug($"  2. Getting type '{pluginInfo.FullTypeName}' from loaded assembly");
+            Logger.LogDebug($"  2. Getting type '{pluginTypeInfo.FullTypeName}' from loaded assembly");
 
-            var type = assembly.GetType(pluginInfo.FullTypeName);
+            var type = assembly.GetType(pluginTypeInfo.FullTypeName);
             if (type is null)
             {
-                throw Logger.LogErrorAndCreateException<NotSupportedException>($"Cannot find type '{pluginInfo.FullTypeName}'");
+                throw Logger.LogErrorAndCreateException<NotSupportedException>($"Cannot find type '{pluginTypeInfo.FullTypeName}'");
             }
 
             Logger.LogDebug($"  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
@@ -91,7 +91,7 @@ public class PluginFactory : IPluginFactory
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, $"Failed to create plugin '{pluginInfo}'");
+            Logger.LogError(ex, $"Failed to create plugin '{pluginTypeInfo}'");
 
             throw;
         }

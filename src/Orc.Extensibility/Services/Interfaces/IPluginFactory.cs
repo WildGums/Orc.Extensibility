@@ -2,5 +2,5 @@
 
 public interface IPluginFactory
 {
-    object CreatePlugin(IPluginInfo pluginInfo);
+    object CreatePluginType(IPluginTypeInfo pluginTypeInfo);
 }

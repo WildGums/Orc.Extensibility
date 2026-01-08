@@ -3,10 +3,7 @@
   <Catel />
   <Costura>
     <IncludeAssemblies>
+        Orc.Notifications
     </IncludeAssemblies>
   </Costura>
-  <LoadAssembliesOnStartup>
-    <IncludeAssemblies>
-    </IncludeAssemblies>
-  </LoadAssembliesOnStartup>
 </Weavers>

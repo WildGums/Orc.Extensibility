@@ -41,6 +41,7 @@ public abstract class PluginFinderBase : IPluginFinder
         "google",
         "host", // should ignore hostpolicy, hostfxr, etc
         "libskiasharp",
+        "loadassembliesonstartup.",
         "ionic.zip.",
         "mahapps.",
         "methodtimer.",
@@ -170,10 +171,10 @@ public abstract class PluginFinderBase : IPluginFinder
     {
         for (var i = 0; i < context.Plugins.Count; i++)
         {
-            var pluginName = context.Plugins[i].FullTypeName;
+            var pluginName = context.Plugins[i].Plugin.FullTypeName;
 
             var duplicates = (from plugin in context.Plugins
-                              where string.Equals(plugin.FullTypeName, pluginName)
+                              where string.Equals(plugin.Plugin.FullTypeName, pluginName)
                               select plugin).ToList();
             if (duplicates.Count <= 1)
             {
@@ -198,7 +199,7 @@ public abstract class PluginFinderBase : IPluginFinder
                     }
 
                     // Type must always match
-                    if (!pluginInfo.FullTypeName.EqualsIgnoreCase(oldDuplicate.FullTypeName))
+                    if (!pluginInfo.Plugin.FullTypeName.EqualsIgnoreCase(oldDuplicate.Plugin.FullTypeName))
                     {
                         continue;
                     }
@@ -425,7 +426,9 @@ public abstract class PluginFinderBase : IPluginFinder
                     continue;
                 }
 
-                var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type);
+                var pluginRegistrarType = GetPluginRegistrar(context, assembly, type);
+
+                var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type, pluginRegistrarType);
 
                 Logger.LogDebug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
 
@@ -436,6 +439,12 @@ public abstract class PluginFinderBase : IPluginFinder
                 // Ignore
             }
         }
+    }
+
+    protected virtual Type? GetPluginRegistrar(PluginProbingContext context, Assembly assembly, Type pluginType)
+    {
+        // By default, no registrars
+        return null;
     }
 
     protected virtual IReadOnlyList<string> FindResolvableAssemblyPaths(string assemblyPath)

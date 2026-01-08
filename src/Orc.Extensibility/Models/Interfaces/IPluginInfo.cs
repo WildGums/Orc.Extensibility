@@ -1,6 +1,5 @@
 ﻿namespace Orc.Extensibility;
 
-using System;
 using System.Collections.Generic;
 
 public interface IPluginInfo
@@ -12,8 +11,10 @@ public interface IPluginInfo
     string Customer { get; set; }
 
     string Location { get; }
-    string FullTypeName { get; }
-    string AssemblyName { get; }
+
+    IPluginTypeInfo Plugin { get; init; }
+
+    IPluginTypeInfo? PluginRegistrar { get; init; }
 
     List<string> Aliases { get; }
 }

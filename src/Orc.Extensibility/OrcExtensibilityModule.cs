@@ -1,5 +1,6 @@
 ﻿namespace Orc
 {
+    using System;
     using Catel.Services;
     using Catel.ThirdPartyNotices;
     using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,22 @@
     {
         public static IServiceCollection AddOrcExtensibility(this IServiceCollection serviceCollection)
         {
+            return AddOrcExtensibility(serviceCollection, null);
+        }
+
+        public static IServiceCollection AddOrcExtensibility(this IServiceCollection serviceCollection,
+            Action<OrcExtensibilityConfig>? configure)
+        {
+            var config = new OrcExtensibilityConfig();
+
+            configure?.Invoke(config);
+
+            if (!config.EnableSinglePluginService &&
+                !config.EnableMultiplePluginsService)
+            {
+                throw new NotSupportedException("At least 1 plugin service should be enabled via settings");
+            }
+
             serviceCollection.TryAddSingleton<IPluginCleanupService, PluginCleanupService>();
             serviceCollection.TryAddSingleton<IPluginLocationsProvider, PluginLocationsProvider>();
             serviceCollection.TryAddSingleton<IPluginManager, PluginManager>();
@@ -23,8 +40,21 @@
             serviceCollection.TryAddSingleton<IAssemblyReflectionService, AssemblyReflectionService>();
 
             serviceCollection.TryAddSingleton<ILoadedPluginService, LoadedPluginService>();
-            serviceCollection.TryAddSingleton<ISinglePluginService, SinglePluginService>();
-            serviceCollection.TryAddSingleton<IMultiplePluginsService, MultiplePluginsService>();
+
+            if (config.EnableSinglePluginService)
+            {
+                serviceCollection.TryAddSingleton<ISinglePluginService, SinglePluginService>();
+            }
+
+            if (config.EnableMultiplePluginsService)
+            {
+                serviceCollection.TryAddSingleton<IMultiplePluginsService, MultiplePluginsService>();
+            }
+
+            if (config.EnableCosturaSupport)
+            {
+                serviceCollection.AddSingleton<AppDomainRuntimeAssemblyWatcher>();
+            }
 
             serviceCollection.AddSingleton<ILanguageSource>(new LanguageResourceSource("Orc.Extensibility", "Orc.Extensibility.Properties", "Resources"));
 
@@ -32,5 +62,22 @@
 
             return serviceCollection;
         }
+    }
+
+    public class OrcExtensibilityConfig
+    {
+        public OrcExtensibilityConfig()
+        {
+            // Fastest options enabled by default
+            EnableSinglePluginService = true;
+            EnableMultiplePluginsService = false;
+            EnableCosturaSupport = false;
+        }
+
+        public bool EnableSinglePluginService { get; set; }
+
+        public bool EnableMultiplePluginsService { get; set; }
+
+        public bool EnableCosturaSupport { get; set; }
     }
 }

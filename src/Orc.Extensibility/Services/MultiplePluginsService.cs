@@ -50,7 +50,7 @@ public class MultiplePluginsService : IMultiplePluginsService
         {
             Logger.LogInformation("  * {0} ({1})", plugin, plugin.Location);
 
-            if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.FullTypeName))
+            if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.Plugin.FullTypeName))
             {
                 pluginsToLoad.Enqueue(plugin);
             }
@@ -63,13 +63,13 @@ public class MultiplePluginsService : IMultiplePluginsService
         {
             var pluginToLoad = pluginsToLoad.Dequeue();
 
-            if (!pluginTryCount.ContainsKey(pluginToLoad.FullTypeName))
+            if (!pluginTryCount.ContainsKey(pluginToLoad.Plugin.FullTypeName))
             {
-                pluginTryCount[pluginToLoad.FullTypeName] = 0;
+                pluginTryCount[pluginToLoad.Plugin.FullTypeName] = 0;
             }
 
-            pluginTryCount[pluginToLoad.FullTypeName]++;
-            var isLastRetry = pluginTryCount[pluginToLoad.FullTypeName] == pluginsToLoad.Count;
+            pluginTryCount[pluginToLoad.Plugin.FullTypeName]++;
+            var isLastRetry = pluginTryCount[pluginToLoad.Plugin.FullTypeName] == pluginsToLoad.Count;
 
             var plugin = await ConfigureAndLoadPluginAsync(pluginToLoad, isLastRetry);
             if (plugin is null)
@@ -90,14 +90,14 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         try
         {
-            Logger.LogInformation("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+            Logger.LogInformation("Instantiating plugin '{0}'", pluginToLoad.Plugin.FullTypeName);
 
-            var pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
+            var pluginInstance = _pluginFactory.CreatePluginType(pluginToLoad.Plugin);
             var plugin = new Plugin(pluginInstance, pluginToLoad);
 
-            _loadedPluginService.AddPlugin(pluginToLoad);
+            _loadedPluginService.AddPlugin(plugin);
 
-            PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+            PluginLoaded?.Invoke(this, new PluginEventArgs(plugin, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
                 
             return plugin;
         }
@@ -109,7 +109,7 @@ public class MultiplePluginsService : IMultiplePluginsService
 
             if (isLastTry)
             {
-                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
+                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
             }
                 
             return null;

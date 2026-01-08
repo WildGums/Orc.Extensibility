@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Catel;
+using Catel.IoC;
 using Catel.Logging;
 using Catel.Reflection;
 using Catel.Services;
@@ -15,7 +16,7 @@ using MethodTimer;
 using Microsoft.Extensions.Logging;
 using Orc.FileSystem;
 
-public class AppDomainRuntimeAssemblyWatcher
+public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
 {
     private static readonly ILogger Logger = LogManager.GetLogger(typeof(AppDomainRuntimeAssemblyWatcher));
 
@@ -328,5 +329,10 @@ public class AppDomainRuntimeAssemblyWatcher
         }
 
         return IntPtr.Zero;
+    }
+
+    public void Initialize()
+    {
+        Attach();
     }
 }

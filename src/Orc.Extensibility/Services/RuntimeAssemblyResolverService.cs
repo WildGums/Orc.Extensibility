@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Catel;
 using Catel.Logging;

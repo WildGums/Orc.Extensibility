@@ -5,7 +5,7 @@ using Catel.Reflection;
 
 public static class ReflectionExtensions
 {
-    public static bool ImplementsInterface<TInterface>(this Type type)
+    public static bool ImplementsInterfaceUsingStringComparison<TInterface>(this Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
 

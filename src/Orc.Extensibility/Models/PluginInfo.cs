@@ -7,22 +7,32 @@ using Catel.Reflection;
 
 public class PluginInfo : IPluginInfo
 {
-    public PluginInfo(string location, Type type)
+    public PluginInfo(string location, Type pluginType)
+        : this(location, pluginType, null)
+    {
+        // Leave empty
+    }
+
+    public PluginInfo(string location, Type pluginType, Type? pluginRegistrarType)
     {
         ArgumentNullException.ThrowIfNull(location);
-        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(pluginType);
+
+        Plugin = new PluginTypeInfo(location, pluginType);
+
+        if (pluginRegistrarType is not null)
+        {
+            PluginRegistrar = new PluginTypeInfo(location, pluginRegistrarType);
+        }
 
         Location = location;
         Aliases = new List<string>();
 
-        FullTypeName = type.GetSafeFullName();
-        AssemblyName = type.Assembly.GetName().Name ?? string.Empty;
-
-        Name = AssemblyName;
+        Name = Plugin.AssemblyName;
         Description = Name;
-        Version = type.Assembly.Version();
+        Version = pluginType.Assembly.Version();
 
-        var customAttributes = type.Assembly.GetCustomAttributesData();
+        var customAttributes = pluginType.Assembly.GetCustomAttributesData();
 
         Name = customAttributes.GetAttributeValue<AssemblyTitleAttribute>() as string ?? Name;
         Version = customAttributes.GetAttributeValue<AssemblyInformationalVersionAttribute>() as string ?? Version;
@@ -42,9 +52,9 @@ public class PluginInfo : IPluginInfo
 
     public string Location { get; private set; }
 
-    public string FullTypeName { get; private set; }
+    public IPluginTypeInfo Plugin { get; init; }
 
-    public string AssemblyName { get; private set; }
+    public IPluginTypeInfo? PluginRegistrar { get; init; }
 
     public List<string> Aliases { get; private set; }
 

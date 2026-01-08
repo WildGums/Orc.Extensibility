@@ -17,14 +17,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Catel.Fody" Version="4.11.0" PrivateAssets="all" />
+    <PackageReference Include="Catel.Fody" Version="4.12.0-alpha0121" PrivateAssets="all" />
+    <PackageReference Include="Catel.SourceGenerators" Version="1.0.0-alpha0033" PrivateAssets="all" />
     <PackageReference Include="Costura.Fody" Version="6.0.0" PrivateAssets="all" />
     <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="LoadAssembliesOnStartup.Fody" Version="4.7.0" PrivateAssets="all" />
-    <PackageReference Include="Orc.Controls" Version="5.4.1" />
-    <PackageReference Include="Orchestra.Core" Version="7.3.0" />
+    <!--<PackageReference Include="Orc.Controls" Version="5.4.1" />
+    <PackageReference Include="Orchestra.Core" Version="7.3.0" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Orc.Notifications\src\Orc.Notifications\Orc.Notifications.csproj">
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

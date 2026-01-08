@@ -2,29 +2,139 @@
 
 using System;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
+using Catel;
+using Catel.Collections;
 using Catel.Configuration;
 using Catel.IoC;
-using Catel.Logging;
 using Catel.Services;
-
 using Configuration;
-using Theming;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Orc.Extensibility.Example.Services;
+using Orc.Extensibility.Example.Views;
+using Orchestra;
 
-public partial class App
+public partial class App : Application
 {
+#pragma warning disable IDISP006 // Implement IDisposable
+    private IHost? _host;
+#pragma warning restore IDISP006 // Implement IDisposable
+
     public App()
     {
-#if DEBUG
-        LogManager.AddDebugListener(false);
-#endif
+    }
+
+    private async Task InitializeApplicationAsync()
+    {
+        // Step 1: Find the plugins (in a simplified service provider, must be as fast as possible)
+        //
+        // Things to note:
+        // * In a real app, there should be some sort of fail-safe
+
+        var pluginProbingServiceCollection = new ServiceCollection();
+
+        pluginProbingServiceCollection.AddCatelCore();
+        pluginProbingServiceCollection.AddOrcExtensibility(x =>
+        {
+            x.EnableSinglePluginService = true;
+            x.EnableCosturaSupport = true;
+        });
+        pluginProbingServiceCollection.AddOrcFileSystem();
+        pluginProbingServiceCollection.AddOrchestraCore();
+
+        pluginProbingServiceCollection.AddSingleton<IHostService, HostService>();
+        pluginProbingServiceCollection.AddSingleton<IPluginFinder, PluginFinder>();
+
+        pluginProbingServiceCollection.AddLogging(x =>
+        {
+            x.AddConsole();
+            x.AddDebug();
+        });
+
+        using var pluginProbingServiceProvider = pluginProbingServiceCollection.BuildServiceProvider();
+
+        var pluginFinder = pluginProbingServiceProvider.GetRequiredService<IPluginFinder>();
+        var plugins = await pluginFinder.FindPluginsAsync();
+
+        // Find plugin registrars
+
+        var pluginServiceCollection = new ServiceCollection();
+
+        var pluginFactory = pluginProbingServiceProvider.GetRequiredService<IPluginFactory>();
+
+        foreach (var plugin in plugins)
+        {
+            var pluginRegistrarTypeInfo = plugin.PluginRegistrar;
+            if (pluginRegistrarTypeInfo is null)
+            {
+                continue;
+            }
+
+            var pluginRegistrar = pluginFactory.CreatePluginType(pluginRegistrarTypeInfo) as ICustomPluginRegistrar;
+            if (pluginRegistrar is null)
+            {
+                continue;
+            }
+
+            pluginRegistrar.AddServices(pluginServiceCollection);
+        }
+
+        // Step 2: Start the app now we know what plugins there are, allow
+        // all of them to initialize
+        var hostBuilder = new HostBuilder()
+            .ConfigureServices((hostContext, services) =>
+            {
+                // Clone all
+                pluginServiceCollection.ForEach(x => services.Add(x));
+
+                services.AddCatelCore();
+                services.AddCatelMvvm();
+                services.AddOrcAutomation();
+                services.AddOrcControls();
+                services.AddOrcExtensibility(x =>
+                {
+                    x.EnableSinglePluginService = true;
+                    x.EnableCosturaSupport = true;
+                });
+                services.AddOrcFileSystem();
+                services.AddOrcLogViewer();
+                services.AddOrcSerializationJson();
+                services.AddOrcSystemInfo();
+                services.AddOrcTheming();
+                services.AddOrchestraCore();
+
+                services.AddSingleton<IHostService, HostService>();
+                services.AddSingleton<IPluginFinder, PluginFinder>();
+
+                services.AddSingleton<RestartRequiredOnPluginChangeConfigurationWatcher>();
+
+                services.AddLogging(x =>
+                {
+                    x.AddConsole();
+                    x.AddDebug();
+                });
+            });
+
+        _host?.Dispose();
+        _host = hostBuilder.Build();
+
+        IoCContainer.ServiceProvider = _host.Services;
     }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
-        var serviceLocator = ServiceLocator.Default;
+        await InitializeApplicationAsync();
 
-        var languageService = serviceLocator.ResolveRequiredType<ILanguageService>();
+        base.OnStartup(e);
+
+        var serviceProvider = IoCContainer.ServiceProvider;
+
+        serviceProvider.CreateTypesThatMustBeConstructedAtStartup();
+
+        var languageService = serviceProvider.GetRequiredService<ILanguageService>();
 
         // Note: it's best to use .CurrentUICulture in actual apps since it will use the preferred language
         // of the user. But in order to demo multilingual features for devs (who mostly have en-US as .CurrentUICulture),
@@ -32,35 +142,27 @@ public partial class App
         languageService.PreferredCulture = CultureInfo.CurrentCulture;
         languageService.FallbackCulture = new CultureInfo("en-US");
 
-        base.OnStartup(e);
-
-        // This shows the StyleHelper, but uses a *copy* of the Orchestra themes. The default margins for controls are not defined in
-        // Orc.Theming since it's a low-level library. The final default styles should be in the shell (thus Orchestra makes sense)
-        StyleHelper.CreateStyleForwardersForDefaultStyles();
-
-        // Support Costura embedded runtime assemblies
-        var appDomainWatcher = serviceLocator.RegisterTypeAndInstantiate<AppDomainRuntimeAssemblyWatcher>();
-        if (appDomainWatcher is null)
-        {
-            throw new InvalidOperationException("Failed to create runtime assembly watcher");
-        }
-
-        //appDomainWatcher.AllowAssemblyResolvingFromOtherLoadContexts = false;
-        appDomainWatcher.Attach();
+        this.ApplyTheme();
 
         // In an Orchestra environment, this would go into the bootstrapper
-        var configurationService = serviceLocator.ResolveRequiredType<IConfigurationService>();
+        var configurationService = serviceProvider.GetRequiredService<IConfigurationService>();
         await configurationService.LoadAsync();
         var activePlugin = configurationService.GetRoamingValue(ConfigurationKeys.ActivePlugin, ConfigurationKeys.ActivePluginDefaultValue);
 
-        var singlePluginService = serviceLocator.ResolveRequiredType<ISinglePluginService>();
+        var singlePluginService = serviceProvider.GetRequiredService<ISinglePluginService>();
         var plugin = await singlePluginService.ConfigureAndLoadPluginAsync(activePlugin, ConfigurationKeys.ActivePluginDefaultValue);
-        if (plugin is not null)
+
+        var mainWindow = ActivatorUtilities.CreateInstance<MainWindow>(_host!.Services);
+        mainWindow.Show();
+    }
+
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        using (_host)
         {
-            serviceLocator.RegisterInstance(typeof(ICustomPlugin), plugin.Instance);
+            _ = _host?.StopAsync();
         }
 
-        // Watchers
-        serviceLocator.RegisterTypeAndInstantiate<RestartRequiredOnPluginChangeConfigurationWatcher>();
+        base.OnExit(e);
     }
 }

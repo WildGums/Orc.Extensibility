@@ -6,12 +6,14 @@
             Azure.* <!-- required for Microsoft.Data.SqlClient -->
             EntityFramework
             EntityFramework.SqlServer
+            Microsoft.Data.SqlClient
             Microsoft.Identity.Client*
             Microsoft.SqlServer.*
             Newtonsoft.Json
             Orc.Metadata
             Orc.Search
             Orc.Search.Xaml
+            System.Data.SqlClient
             YamlDotNet
         </IncludeAssemblies>
         <IncludeRuntimeAssemblies>
@@ -20,10 +22,4 @@
             sni
         </IncludeRuntimeAssemblies>
     </Costura>
-    <LoadAssembliesOnStartup>
-        <IncludeAssemblies>
-            Newtonsoft.Json
-            Orc.Search.Xaml
-        </IncludeAssemblies>
-    </LoadAssembliesOnStartup>
 </Weavers>

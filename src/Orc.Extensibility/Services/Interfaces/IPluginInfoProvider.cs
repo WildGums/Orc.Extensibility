@@ -4,5 +4,5 @@ using System;
 
 public interface IPluginInfoProvider
 {
-    IPluginInfo GetPluginInfo(string location, Type type);
+    IPluginInfo GetPluginInfo(string location, Type type, Type? registrarType);
 }

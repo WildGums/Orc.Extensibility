@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
 using Catel;
-using Catel.Collections;
 using Catel.Configuration;
 using Catel.IoC;
 using Catel.Services;
@@ -54,7 +53,10 @@ public partial class App : Application
             x.AddDebug();
         });
 
-        using var pluginProbingServiceProvider = pluginProbingServiceCollection.BuildServiceProvider();
+        // Note: do not dispose since we will be re-using it later
+#pragma warning disable IDISP001 // Dispose created
+        var pluginProbingServiceProvider = pluginProbingServiceCollection.BuildServiceProvider();
+#pragma warning restore IDISP001 // Dispose created
 
         var pluginFinder = pluginProbingServiceProvider.GetRequiredService<IPluginFinder>();
         var plugins = await pluginFinder.FindPluginsAsync();
@@ -87,8 +89,12 @@ public partial class App : Application
         var hostBuilder = new HostBuilder()
             .ConfigureServices((hostContext, services) =>
             {
-                // Clone all
-                pluginServiceCollection.ForEach(x => services.Add(x));
+                // Re-use some specific instances (as example)
+                services.AddSingleton(pluginProbingServiceProvider.GetRequiredService<IRuntimeAssemblyResolverService>());
+
+                // Clone all (existing instances)
+                //services.AddServiceProviderRegistrations(pluginProbingServiceProvider);
+                services.AddServiceCollectionRegistrations(pluginServiceCollection);
 
                 services.AddCatelCore();
                 services.AddCatelMvvm();

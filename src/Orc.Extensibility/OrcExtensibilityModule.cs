@@ -53,7 +53,7 @@
 
             if (config.EnableCosturaSupport)
             {
-                serviceCollection.AddSingleton<AppDomainRuntimeAssemblyWatcher>();
+                serviceCollection.TryAddSingleton<AppDomainRuntimeAssemblyWatcher>();
             }
 
             serviceCollection.AddSingleton<ILanguageSource>(new LanguageResourceSource("Orc.Extensibility", "Orc.Extensibility.Properties", "Resources"));

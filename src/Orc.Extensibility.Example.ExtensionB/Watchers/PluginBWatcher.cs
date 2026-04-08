@@ -1,24 +1,23 @@
-﻿namespace Orc.Extensibility.Example.Watchers
+﻿namespace Orc.Extensibility.Example.Watchers;
+
+using Catel.IoC;
+using Orc.Notifications;
+
+internal class PluginBWatcher : IInitializeAtStartup
 {
-    using Catel.IoC;
-    using Orc.Notifications;
+    private readonly INotificationService _notificationService;
 
-    internal class PluginBWatcher : IInitializeAtStartup
+    public PluginBWatcher(INotificationService notificationService)
     {
-        private readonly INotificationService _notificationService;
+        _notificationService = notificationService;
+    }
 
-        public PluginBWatcher(INotificationService notificationService)
+    public void Initialize()
+    {
+        _notificationService.ShowNotification(new Notification
         {
-            _notificationService = notificationService;
-        }
-
-        public void Initialize()
-        {
-            _notificationService.ShowNotification(new Notification
-            {
-                Title = "Plugin B is loaded",
-                Priority = NotificationPriority.High // required otherwise it will not show when there is no active window
-            });
-        }
+            Title = "Plugin B is loaded",
+            Priority = NotificationPriority.High // required otherwise it will not show when there is no active window
+        });
     }
 }

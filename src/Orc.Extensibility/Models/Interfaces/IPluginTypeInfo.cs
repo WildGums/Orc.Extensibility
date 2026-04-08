@@ -1,9 +1,8 @@
-﻿namespace Orc.Extensibility
+﻿namespace Orc.Extensibility;
+
+public interface IPluginTypeInfo
 {
-    public interface IPluginTypeInfo
-    {
-        string Location { get; }
-        string FullTypeName { get; }
-        string AssemblyName { get; }
-    }
+    string Location { get; }
+    string FullTypeName { get; }
+    string AssemblyName { get; }
 }

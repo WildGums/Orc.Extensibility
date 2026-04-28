@@ -7,6 +7,7 @@ using Catel.Services;
 using Moq;
 using NUnit.Framework;
 using FileSystem;
+using Microsoft.Extensions.DependencyInjection;
 
 [TestFixture]
 public class AppDomainRuntimeAssemblyWatcherFacts
@@ -14,6 +15,10 @@ public class AppDomainRuntimeAssemblyWatcherFacts
     [Test]
     public async Task Returns_Costura_Embedded_File_Exact_Resource_Async()
     {
+        var serviceCollection = ServiceCollectionHelper.CreateServiceCollection();
+
+        using var serviceProvider = serviceCollection.BuildServiceProvider();
+
         var costuraRuntimeAssemblyNlMock = new Mock<ICosturaRuntimeAssembly>();
         costuraRuntimeAssemblyNlMock.Setup(x => x.RelativeFileName)
             .Returns("nl-NL/MyAssembly.resources.dll");
@@ -41,8 +46,8 @@ public class AppDomainRuntimeAssemblyWatcherFacts
             });
 
         var appDataService = new AppDataService();
-        var fileService = new FileService();
-        var directoryService = new DirectoryService(fileService);
+        var fileService = serviceProvider.GetRequiredService<IFileService>();
+        var directoryService = serviceProvider.GetRequiredService<IDirectoryService>();
 
         var appDomainRuntimeAssemblyWatcher = new AppDomainRuntimeAssemblyWatcher(
             runtimeAssemblyResolverServiceMock.Object,
@@ -69,6 +74,10 @@ public class AppDomainRuntimeAssemblyWatcherFacts
     [Test]
     public async Task Returns_Costura_Embedded_File_Parent_Resource_Async()
     {
+        var serviceCollection = ServiceCollectionHelper.CreateServiceCollection();
+
+        using var serviceProvider = serviceCollection.BuildServiceProvider();
+
         var costuraRuntimeAssemblyNlMock = new Mock<ICosturaRuntimeAssembly>();
         costuraRuntimeAssemblyNlMock.Setup(x => x.RelativeFileName)
             .Returns("nl/MyAssembly.resources.dll");
@@ -96,8 +105,8 @@ public class AppDomainRuntimeAssemblyWatcherFacts
             });
 
         var appDataService = new AppDataService();
-        var fileService = new FileService();
-        var directoryService = new DirectoryService(fileService);
+        var fileService = serviceProvider.GetRequiredService<IFileService>();
+        var directoryService = serviceProvider.GetRequiredService<IDirectoryService>();
 
         var appDomainRuntimeAssemblyWatcher = new AppDomainRuntimeAssemblyWatcher(
             runtimeAssemblyResolverServiceMock.Object,

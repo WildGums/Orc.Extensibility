@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 public class PluginManager : IPluginManager
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PluginManager));
 
     private readonly object _lock = new object();
     private readonly IPluginFinder _pluginFinder;
@@ -28,7 +29,7 @@ public class PluginManager : IPluginManager
         {
             if (_plugins is null)
             {
-                throw Log.ErrorAndCreateException<InvalidOperationException>("Make sure to call RefreshAsync method at least once before using this method");
+                throw Logger.LogErrorAndCreateException<InvalidOperationException>("Make sure to call RefreshAsync method at least once before using this method");
             }
 
             return _plugins.ToArray();

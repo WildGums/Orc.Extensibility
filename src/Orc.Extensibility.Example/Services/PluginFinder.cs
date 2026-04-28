@@ -2,13 +2,17 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Catel;
 using Catel.Logging;
+using Catel.Reflection;
 using FileSystem;
+using Microsoft.Extensions.Logging;
 
 public class PluginFinder : PluginFinderBase
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PluginFinder));
 
     public PluginFinder(IPluginLocationsProvider pluginLocationsProvider, IPluginInfoProvider pluginInfoProvider, IPluginCleanupService pluginCleanupService,
         IDirectoryService directoryService, IFileService fileService, IAssemblyReflectionService assemblyReflectionService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService)
@@ -18,7 +22,13 @@ public class PluginFinder : PluginFinderBase
 
     protected override bool IsPlugin(PluginProbingContext context, Type type)
     {
-        return type.ImplementsInterface<ICustomPlugin>();
+        return type.ImplementsInterfaceEx<ICustomPlugin>();
+    }
+
+    protected override Type? GetPluginRegistrar(PluginProbingContext context, Assembly assembly, Type pluginType)
+    {
+        var pluginRegistrarType = assembly.ExportedTypes.FirstOrDefault(x => x.ImplementsInterfaceEx<ICustomPluginRegistrar>());
+        return pluginRegistrarType;
     }
 
     protected override bool ShouldIgnoreAssembly(string assemblyPath)

@@ -6,16 +6,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Catel.Logging;
 using MethodTimer;
+using Microsoft.Extensions.Logging;
 
 public class MultiplePluginsService : IMultiplePluginsService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(MultiplePluginsService));
 
     private readonly IPluginFactory _pluginFactory;
     private readonly ILoadedPluginService _loadedPluginService;
     private readonly IPluginManager _pluginManager;
 
-    public MultiplePluginsService(IPluginManager pluginManager, IPluginFactory pluginFactory, ILoadedPluginService loadedPluginService)
+    public MultiplePluginsService(IPluginManager pluginManager, IPluginFactory pluginFactory, 
+        ILoadedPluginService loadedPluginService)
     {
         ArgumentNullException.ThrowIfNull(pluginManager);
         ArgumentNullException.ThrowIfNull(pluginFactory);
@@ -40,15 +42,15 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
-        Log.Info("Found '{0}' plugins", plugins.Count());
+        Logger.LogInformation("Found '{0}' plugins", plugins.Count());
 
         var pluginsToLoad = new Queue<IPluginInfo>();
 
         foreach (var plugin in plugins)
         {
-            Log.Info("  * {0} ({1})", plugin, plugin.Location);
+            Logger.LogInformation("  * {0} ({1})", plugin, plugin.Location);
 
-            if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.FullTypeName))
+            if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.Plugin.FullTypeName))
             {
                 pluginsToLoad.Enqueue(plugin);
             }
@@ -61,13 +63,13 @@ public class MultiplePluginsService : IMultiplePluginsService
         {
             var pluginToLoad = pluginsToLoad.Dequeue();
 
-            if (!pluginTryCount.ContainsKey(pluginToLoad.FullTypeName))
+            if (!pluginTryCount.ContainsKey(pluginToLoad.Plugin.FullTypeName))
             {
-                pluginTryCount[pluginToLoad.FullTypeName] = 0;
+                pluginTryCount[pluginToLoad.Plugin.FullTypeName] = 0;
             }
 
-            pluginTryCount[pluginToLoad.FullTypeName]++;
-            var isLastRetry = pluginTryCount[pluginToLoad.FullTypeName] == pluginsToLoad.Count;
+            pluginTryCount[pluginToLoad.Plugin.FullTypeName]++;
+            var isLastRetry = pluginTryCount[pluginToLoad.Plugin.FullTypeName] == pluginsToLoad.Count;
 
             var plugin = await ConfigureAndLoadPluginAsync(pluginToLoad, isLastRetry);
             if (plugin is null)
@@ -88,14 +90,14 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         try
         {
-            Log.Info("Instantiating plugin '{0}'", pluginToLoad.FullTypeName);
+            Logger.LogInformation("Instantiating plugin '{0}'", pluginToLoad.Plugin.FullTypeName);
 
-            var pluginInstance = _pluginFactory.CreatePlugin(pluginToLoad);
+            var pluginInstance = _pluginFactory.CreatePluginType(pluginToLoad.Plugin);
             var plugin = new Plugin(pluginInstance, pluginToLoad);
 
-            _loadedPluginService.AddPlugin(pluginToLoad);
+            _loadedPluginService.AddPlugin(plugin);
 
-            PluginLoaded?.Invoke(this, new PluginEventArgs(pluginToLoad, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
+            PluginLoaded?.Invoke(this, new PluginEventArgs(plugin, "Loaded plugin", $"Plugin {pluginToLoad.Name} has been loaded and activated"));
                 
             return plugin;
         }
@@ -103,11 +105,11 @@ public class MultiplePluginsService : IMultiplePluginsService
         {
             var message = $"Plugin '{pluginToLoad.Name}' could not be loaded, is last retry: '{isLastTry}'";
 
-            Log.Warning(ex, message);
+            Logger.LogWarning(ex, message);
 
             if (isLastTry)
             {
-                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad, "Failed to load plugin", message));
+                PluginLoadingFailed?.Invoke(this, new PluginEventArgs(pluginToLoad.Name, "Failed to load plugin", message));
             }
                 
             return null;

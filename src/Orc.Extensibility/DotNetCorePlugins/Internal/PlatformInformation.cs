@@ -6,10 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 internal static class PlatformInformation
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PlatformInformation));
 
     public static readonly string[] RuntimeIdentifiers;
     public static readonly string[] NativeLibraryExtensions;
@@ -34,8 +35,8 @@ internal static class PlatformInformation
             var runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
             var osArchitecture = RuntimeInformation.OSArchitecture.ToString();
 
-            Log.Debug($"OS Architecture:    {osArchitecture}");
-            Log.Debug($"Runtime identifier: {runtimeIdentifier}");
+            Logger.LogDebug($"OS Architecture:    {osArchitecture}");
+            Logger.LogDebug($"Runtime identifier: {runtimeIdentifier}");
 
             // Note that we need to respect the process, not the OS
             runtimeIdentifiers.Add(runtimeIdentifier);
@@ -54,7 +55,7 @@ internal static class PlatformInformation
         }
         else
         {
-            Log.Error("Unknown or unsupported OS type");
+            Logger.LogError("Unknown or unsupported OS type");
 
             NativeLibraryPrefixes = Array.Empty<string>();
             NativeLibraryExtensions = Array.Empty<string>();

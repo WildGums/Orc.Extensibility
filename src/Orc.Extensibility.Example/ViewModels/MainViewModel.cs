@@ -11,12 +11,13 @@ using Catel.Configuration;
 using Catel.Logging;
 using Catel.MVVM;
 using Catel.Services;
-using Services;
 using Extensibility;
+using Microsoft.Extensions.Logging;
+using Services;
 
 public class MainViewModel : ViewModelBase
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(MainViewModel));
 
     private readonly IHostService _hostService;
     private readonly IDispatcherService _dispatcherService;
@@ -24,25 +25,23 @@ public class MainViewModel : ViewModelBase
     private readonly IConfigurationService _configurationService;
     private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
     private readonly AppDomainRuntimeAssemblyWatcher _appDomainRuntimeAssemblyWatcher;
+    private readonly ILoadedPluginService _loadedPluginService;
+
     private bool _isInitialized;
 
     public MainViewModel(IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
         IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
-        AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher)
+        AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher, IServiceProvider serviceProvider,
+        ILoadedPluginService loadedPluginService)
+        : base(serviceProvider)
     {
-        ArgumentNullException.ThrowIfNull(hostService);
-        ArgumentNullException.ThrowIfNull(dispatcherService);
-        ArgumentNullException.ThrowIfNull(pluginManager);
-        ArgumentNullException.ThrowIfNull(configurationService);
-        ArgumentNullException.ThrowIfNull(runtimeAssemblyResolverService);
-        ArgumentNullException.ThrowIfNull(appDomainRuntimeAssemblyWatcher);
-
         _hostService = hostService;
         _dispatcherService = dispatcherService;
         _pluginManager = pluginManager;
         _configurationService = configurationService;
         _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
         _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
+        _loadedPluginService = loadedPluginService;
 
         RuntimeResolvedAssemblies = new ObservableCollection<IRuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
@@ -71,26 +70,32 @@ public class MainViewModel : ViewModelBase
 
         AvailablePlugins = plugins.ToList();
         SelectedPlugin = (from plugin in AvailablePlugins
-            where plugin.FullTypeName.Contains(selectedPlugin)
-            select plugin).FirstOrDefault();
+                          where plugin.Plugin.FullTypeName.Contains(selectedPlugin)
+                          select plugin).FirstOrDefault();
 
         _hostService.ColorChanged += OnHostServiceColorChanged;
         _appDomainRuntimeAssemblyWatcher.AssemblyLoaded += OnRuntimeAssemblyWatcherAssemblyLoaded;
 
         // In an orchestra environment, this could go into the bootstrappers
 
-        Log.Info("Initializing plugins");
+        Logger.LogInformation("Initializing plugins");
 
-        foreach (var plugin in PluginHelper.GetActivePlugins())
+        foreach (var plugin in _loadedPluginService.GetLoadedPlugins())
         {
-            Log.Info($"Initializing plugin '{plugin.GetType().Name}'");
+            var customPlugin = plugin.Instance as ICustomPlugin;
+            if (customPlugin is null)
+            {
+                continue;
+            }
 
-            await plugin.InitializeAsync();
+            Logger.LogInformation($"Initializing plugin '{plugin.GetType().Name}'");
+
+            await customPlugin.InitializeAsync();
         }
 
         RuntimeAssemblies = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
-            from runtimeAssembly in pluginLoadContext.RuntimeAssemblies
-            select runtimeAssembly).ToList();
+                             from runtimeAssembly in pluginLoadContext.RuntimeAssemblies
+                             select runtimeAssembly).ToList();
 
         _isInitialized = true;
     }
@@ -122,6 +127,6 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin?.FullTypeName);
+        _configurationService.SetRoamingValue(ConfigurationKeys.ActivePlugin, SelectedPlugin?.Plugin.FullTypeName);
     }
 }

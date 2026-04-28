@@ -5,6 +5,7 @@
         <ResourceDictionary Source="/Catel.MVVM;component/Themes/Generic.xaml" />
         <ResourceDictionary Source="/Orc.Theming;component/Themes/Generic.xaml" />
         <ResourceDictionary Source="/Orc.Controls;component/Themes/Generic.xaml" />
+        <ResourceDictionary Source="/Orc.LogViewer;component/Themes/Generic.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
 </ResourceDictionary>

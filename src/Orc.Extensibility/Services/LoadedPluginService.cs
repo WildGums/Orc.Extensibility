@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 public class LoadedPluginService : ILoadedPluginService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(LoadedPluginService));
 
-    private readonly Dictionary<string, IPluginInfo> _loadedPlugins = new();
+    private readonly Dictionary<string, IPlugin> _loadedPlugins = new();
 
     public LoadedPluginService()
     {
@@ -18,7 +19,7 @@ public class LoadedPluginService : ILoadedPluginService
 
     public event EventHandler<PluginEventArgs>? PluginLoaded;
 
-    public IReadOnlyList<IPluginInfo> GetLoadedPlugins()
+    public IReadOnlyList<IPlugin> GetLoadedPlugins()
     {
         lock (_loadedPlugins)
         {
@@ -26,24 +27,24 @@ public class LoadedPluginService : ILoadedPluginService
         }
     }
 
-    public void AddPlugin(IPluginInfo pluginInfo)
+    public void AddPlugin(IPlugin plugin)
     {
-        ArgumentNullException.ThrowIfNull(pluginInfo);
+        ArgumentNullException.ThrowIfNull(plugin);
 
-        Log.Debug($"Registering plugin '{pluginInfo}' as loaded");
+        Logger.LogDebug($"Registering plugin '{plugin}' as loaded");
 
         lock (_loadedPlugins)
         {
-            var key = pluginInfo.FullTypeName.ToLower();
+            var key = plugin.Info.Plugin.FullTypeName.ToLower();
             if (_loadedPlugins.ContainsKey(key))
             {
-                Log.Warning($"Plugin '{pluginInfo}' is already marked as loaded");
+                Logger.LogWarning($"Plugin '{plugin}' is already marked as loaded");
                 return;
             }
 
-            _loadedPlugins.Add(key, pluginInfo);
+            _loadedPlugins.Add(key, plugin);
         }
 
-        PluginLoaded?.Invoke(this, new PluginEventArgs(pluginInfo, string.Empty, string.Empty));
+        PluginLoaded?.Invoke(this, new PluginEventArgs(plugin, string.Empty, string.Empty));
     }
 }

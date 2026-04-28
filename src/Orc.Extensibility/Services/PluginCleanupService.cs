@@ -4,10 +4,11 @@ using System;
 using System.Linq;
 using Catel.Logging;
 using FileSystem;
+using Microsoft.Extensions.Logging;
 
 public class PluginCleanupService : IPluginCleanupService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(PluginCleanupService));
 
     private const string DeleteMeFilter = "*.deleteme";
 
@@ -31,11 +32,11 @@ public class PluginCleanupService : IPluginCleanupService
 
     public void Cleanup(string directory)
     {
-        Log.Debug("Cleaning up plugin at '{0}'", directory);
+        Logger.LogDebug("Cleaning up plugin at '{0}'", directory);
 
         if (!IsCleanupRequired(directory))
         {
-            Log.Debug("Cleaning up of plugin is not required");
+            Logger.LogDebug("Cleaning up of plugin is not required");
             return;
         }
 
@@ -54,7 +55,7 @@ public class PluginCleanupService : IPluginCleanupService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to clean up plugin at '{0}'", directory);
+            Logger.LogError(ex, "Failed to clean up plugin at '{0}'", directory);
         }
 
         if (succeeded)

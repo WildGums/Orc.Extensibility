@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Catel.Logging;
+using Microsoft.Extensions.Logging;
 
 public static class IPluginManagerExtensions
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(IPluginManagerExtensions));
 
     public static async Task<IReadOnlyList<IPluginInfo>> RefreshAndGetPluginsAsync(this IPluginManager pluginManager)
     {
@@ -30,7 +31,7 @@ public static class IPluginManagerExtensions
     //    var interfaceTypeFullName = interfaceType.FullName;
     //    var plugins = new List<IPluginInfo>();
 
-    //    Log.Debug("Searching for plugins that implement '{0}'", interfaceType.FullName);
+    //    Logger.LogDebug("Searching for plugins that implement '{0}'", interfaceType.FullName);
 
     //    foreach (var plugin in pluginManager.GetPlugins())
     //    {

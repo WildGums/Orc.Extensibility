@@ -4,12 +4,12 @@ using System;
 
 public class PluginEventArgs : EventArgs
 {
-    public PluginEventArgs(IPluginInfo pluginInfo, string messageTitle, string messageDetails)
+    public PluginEventArgs(IPlugin plugin, string messageTitle, string messageDetails)
     {
-        ArgumentNullException.ThrowIfNull(pluginInfo);
+        ArgumentNullException.ThrowIfNull(plugin);
 
-        PluginName = pluginInfo.Name;
-        PluginInfo = pluginInfo;
+        PluginName = plugin.Info.Name;
+        PluginInfo = plugin.Info;
         MessageTitle = messageTitle;
         MessageDetails = messageDetails;
     }

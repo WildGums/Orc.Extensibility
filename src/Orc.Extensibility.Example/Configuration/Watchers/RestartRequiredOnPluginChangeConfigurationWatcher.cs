@@ -2,12 +2,14 @@
 
 using System;
 using Catel.Configuration;
+using Catel.IoC;
 using Catel.Logging;
 using Catel.Services;
+using Microsoft.Extensions.Logging;
 
-public class RestartRequiredOnPluginChangeConfigurationWatcher
+public class RestartRequiredOnPluginChangeConfigurationWatcher : IConstructAtStartup
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(RestartRequiredOnPluginChangeConfigurationWatcher));
 
     private readonly IConfigurationService _configurationService;
     private readonly IMessageService _messageService;
@@ -30,7 +32,7 @@ public class RestartRequiredOnPluginChangeConfigurationWatcher
     {
         if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))
         {
-            Log.Info("The active plugin has been changed, a restart is required");
+            Logger.LogInformation("The active plugin has been changed, a restart is required");
 
             await _messageService.ShowAsync("The active plugin has been changed, a restart is required");
         }

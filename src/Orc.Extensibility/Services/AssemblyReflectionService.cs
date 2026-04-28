@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Reflection.PortableExecutable;
 using Catel;
 using Catel.Logging;
-using MethodTimer;
 using FileSystem;
+using MethodTimer;
+using Microsoft.Extensions.Logging;
 
 public class AssemblyReflectionService : IAssemblyReflectionService
 {
-    private static readonly ILog Log = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetLogger(typeof(AssemblyReflectionService));
 
     private readonly IFileService _fileService;
 

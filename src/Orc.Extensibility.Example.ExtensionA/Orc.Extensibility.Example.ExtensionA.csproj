@@ -26,16 +26,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
-    <!--<PackageReference Include="Orc.Controls" Version="5.4.1" />
-    <PackageReference Include="Orc.Search.Xaml" Version="5.1.0" />
-    <PackageReference Include="Orchestra.Core" Version="7.3.0" />-->
+    <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0113" />
+    <PackageReference Include="Orc.Search.Xaml" Version="6.0.0-alpha0091" PrivateAssets="all" />
+    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0115" />
     <PackageReference Include="YamlDotNet" Version="17.0.1" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Orc.Search\src\Orc.Search.Xaml\Orc.Search.Xaml.csproj">
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

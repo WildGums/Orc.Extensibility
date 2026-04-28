@@ -22,11 +22,8 @@
     <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0115" />
   </ItemGroup>
   
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Orchestra\src\Orchestra.Core\Orchestra.Core.csproj" />
-  </ItemGroup>
-
   <Import Project="$(MSBuildProjectDirectory)\..\Directory.Build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.Build.shared.explicit.props')" />
 </Project>

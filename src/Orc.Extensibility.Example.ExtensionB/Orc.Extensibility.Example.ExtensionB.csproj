@@ -25,7 +25,7 @@
     </PackageReference>
     <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0113" />
     <PackageReference Include="Orc.Notifications" Version="6.0.0-alpha0103" />
-    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0115" />
+    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0122" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,14 +31,14 @@ public class LoadedPluginService : ILoadedPluginService
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        Logger.LogDebug($"Registering plugin '{plugin}' as loaded");
+        Logger.LogDebug("Registering plugin '{Plugin}' as loaded", plugin);
 
         lock (_loadedPlugins)
         {
             var key = plugin.Info.Plugin.FullTypeName.ToLower();
             if (_loadedPlugins.ContainsKey(key))
             {
-                Logger.LogWarning($"Plugin '{plugin}' is already marked as loaded");
+                Logger.LogWarning("Plugin '{Plugin}' is already marked as loaded", plugin);
                 return;
             }
 

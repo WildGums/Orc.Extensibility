@@ -35,8 +35,8 @@ internal static class PlatformInformation
             var runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
             var osArchitecture = RuntimeInformation.OSArchitecture.ToString();
 
-            Logger.LogDebug($"OS Architecture:    {osArchitecture}");
-            Logger.LogDebug($"Runtime identifier: {runtimeIdentifier}");
+            Logger.LogDebug("OS Architecture:    {OsArchitecture}", osArchitecture);
+            Logger.LogDebug("Runtime identifier: {RuntimeIdentifier}", runtimeIdentifier);
 
             // Note that we need to respect the process, not the OS
             runtimeIdentifiers.Add(runtimeIdentifier);

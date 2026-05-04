@@ -36,18 +36,18 @@ public class SinglePluginService : ISinglePluginService
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
-        Logger.LogDebug("Found '{0}' plugins", plugins.Count());
+        Logger.LogDebug("Found '{Count}' plugins", plugins.Count());
 
         IPluginInfo? pluginToLoad = null;
 
         // Step 1: search for full name
         foreach (var plugin in plugins)
         {
-            Logger.LogDebug("  * {0} ({1})", plugin, plugin.Location);
+            Logger.LogDebug("  * {Plugin} ({Location})", plugin, plugin.Location);
 
             if (plugin.Plugin.FullTypeName.EqualsIgnoreCase(expectedPlugin))
             {
-                Logger.LogDebug($"Found extension via full type name matching");
+                Logger.LogDebug("Found extension via full type name matching");
 
                 pluginToLoad = plugin;
                 break;
@@ -61,7 +61,7 @@ public class SinglePluginService : ISinglePluginService
             {
                 if (plugin.Aliases.Any(x => x.EqualsIgnoreCase(expectedPlugin)))
                 {
-                    Logger.LogDebug($"Found extension via alias '{expectedPlugin}'");
+                    Logger.LogDebug("Found extension via alias '{ExpectedPlugin}'", expectedPlugin);
 
                     pluginToLoad = plugin;
                     break;
@@ -109,7 +109,7 @@ public class SinglePluginService : ISinglePluginService
 
         try
         {
-            Logger.LogDebug("Instantiating plugin '{0}'", pluginToLoad.Plugin.FullTypeName);
+            Logger.LogDebug("Instantiating plugin '{FullTypeName}'", pluginToLoad.Plugin.FullTypeName);
 
             pluginInstance = _pluginFactory.CreatePluginType(pluginToLoad.Plugin);
         }
@@ -125,7 +125,7 @@ public class SinglePluginService : ISinglePluginService
             {
                 pluginToLoad = fallbackPlugin;
 
-                Logger.LogDebug("Instantiating fallback plugin '{0}'", pluginToLoad.Plugin.FullTypeName);
+                Logger.LogDebug("Instantiating fallback plugin '{FullTypeName}'", pluginToLoad.Plugin.FullTypeName);
 
                 pluginInstance = _pluginFactory.CreatePluginType(pluginToLoad.Plugin);
             }
@@ -136,7 +136,7 @@ public class SinglePluginService : ISinglePluginService
             return null;
         }
 
-        Logger.LogDebug($"Final instantiated plugin is '{pluginInstance.GetType().Name}'");
+        Logger.LogDebug("Final instantiated plugin is '{PluginName}'", pluginInstance.GetType().Name);
 
         var finalPlugin = new Plugin(pluginInstance, pluginToLoad);
 

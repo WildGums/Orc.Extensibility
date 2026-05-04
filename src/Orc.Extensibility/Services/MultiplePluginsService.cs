@@ -42,13 +42,13 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         var plugins = await _pluginManager.RefreshAndGetPluginsAsync();
 
-        Logger.LogInformation("Found '{0}' plugins", plugins.Count());
+        Logger.LogInformation("Found '{Count}' plugins", plugins.Count());
 
         var pluginsToLoad = new Queue<IPluginInfo>();
 
         foreach (var plugin in plugins)
         {
-            Logger.LogInformation("  * {0} ({1})", plugin, plugin.Location);
+            Logger.LogInformation("  * {Plugin} ({Location})", plugin, plugin.Location);
 
             if (requestedPlugins.Length == 0 || requestedPlugins.Contains(plugin.Plugin.FullTypeName))
             {
@@ -90,7 +90,7 @@ public class MultiplePluginsService : IMultiplePluginsService
     {
         try
         {
-            Logger.LogInformation("Instantiating plugin '{0}'", pluginToLoad.Plugin.FullTypeName);
+            Logger.LogInformation("Instantiating plugin '{FullTypeName}'", pluginToLoad.Plugin.FullTypeName);
 
             var pluginInstance = _pluginFactory.CreatePluginType(pluginToLoad.Plugin);
             var plugin = new Plugin(pluginInstance, pluginToLoad);

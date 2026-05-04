@@ -80,7 +80,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
 
         _registeredLoadContexts.Add(name);
 
-        Logger.LogDebug($"Registering additional assembly load context '{name}' to resolve runtime references");
+        Logger.LogDebug("Registering additional assembly load context '{Name}' to resolve runtime references", name);
 
         assemblyLoadContext.Resolving += OnLoadContextResolving;
         assemblyLoadContext.ResolvingUnmanagedDll += OnLoadContextResolvingUnmanagedDll;
@@ -114,7 +114,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
             return existingAssembly;
         }
 
-        Logger.LogDebug($"Requesting to load '{assemblyName.FullName}'");
+        Logger.LogDebug("Requesting to load '{AssemblyName}'", assemblyName.FullName);
 
         // Load context, ignore the requesting assembly for now
         if (!string.IsNullOrWhiteSpace(assemblyName.Name))
@@ -127,7 +127,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
             {
                 if (_activeSingleLoadContext is null)
                 {
-                    Logger.LogDebug($"Single load context is enabled, trying to find the current load context");
+                    Logger.LogDebug("Single load context is enabled, trying to find the current load context");
 
                     foreach (var loadContext in loadContexts)
                     {
@@ -142,7 +142,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
                             var potentialPluginAssembly = assemblies[i];
                             if (potentialPluginAssembly.Location.EqualsIgnoreCase(pluginLocation))
                             {
-                                Logger.LogDebug($"Found load context, caching result for all future assembly load actions to single load context of '{loadContext}'");
+                                Logger.LogDebug("Found load context, caching result for all future assembly load actions to single load context of '{LoadContext}'", loadContext);
 
                                 _activeSingleLoadContext = loadContext;
                                 valid = true;
@@ -198,7 +198,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
             {
                 if (isResourcesAssembly)
                 {
-                    Logger.LogDebug($"Could not provide resource assembly for '{assemblyName.FullName}'");
+                    Logger.LogDebug("Could not provide resource assembly for '{AssemblyName}'", assemblyName.FullName);
 
                     // Don't try again
                     _failedAssembliesByName.Add(assemblyNameAsString);
@@ -214,7 +214,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
 
             if (runtimeReference is not null)
             {
-                Logger.LogDebug($"Trying to provide '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
+                Logger.LogDebug("Trying to provide '{RuntimeReference}' as resolution for '{AssemblyName}'", runtimeReference, assemblyName.FullName);
 
                 var error = string.Empty;
 
@@ -227,7 +227,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
                     if (assemblyLoadingEventArgs.Cancel)
                     {
                         // Note: was explicitly canceled, don't add to ignore list
-                        Logger.LogDebug($"Canceling loading of '{runtimeReference}' as resolution for '{assemblyName.FullName}'");
+                        Logger.LogDebug("Canceling loading of '{RuntimeReference}' as resolution for '{AssemblyName}'", runtimeReference, assemblyName.FullName);
                         return null;
                     }
 
@@ -261,13 +261,13 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
                                              select x).FirstOrDefault();
                 if (alreadyLoadedAssembly is not null)
                 {
-                    Logger.LogWarning($"Failed to load assembly from '{assemblyFullName}', a different version '{alreadyLoadedAssembly.Version()}' is already loaded, returning already loaded assembly");
+                    Logger.LogWarning("Failed to load assembly from '{AssemblyFullName}', a different version '{Version}' is already loaded, returning already loaded assembly", assemblyFullName, alreadyLoadedAssembly.Version());
 
                     return alreadyLoadedAssembly;
                 }
                 else
                 {
-                    Logger.LogError($"Failed to load assembly from '{assemblyFullName}': {error}");
+                    Logger.LogError("Failed to load assembly from '{AssemblyFullName}': {Error}", assemblyFullName, error);
                 }
             }
         }
@@ -280,7 +280,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
     [Time("{libraryName}")]
     internal IntPtr OnLoadContextResolvingUnmanagedDll(Assembly assembly, string libraryName)
     {
-        Logger.LogDebug($"Requesting to load unmanaged '{libraryName}', requested by '{assembly.FullName}'");
+        Logger.LogDebug("Requesting to load unmanaged '{LibraryName}', requested by '{AssemblyName}'", libraryName, assembly.FullName);
 
         // Load context, ignore the requesting assembly for now
         var runtimeReference = (from pluginLoadContext in _runtimeAssemblyResolverService.GetPluginLoadContexts()
@@ -298,7 +298,7 @@ public class AppDomainRuntimeAssemblyWatcher : IInitializeAtStartup
 
             var targetFileName = Path.Combine(targetDirectory, runtimeReference.Name);
 
-            Logger.LogDebug($"Trying to provide '{runtimeReference}' as resolution for '{libraryName}', temp file is '{targetFileName}'");
+            Logger.LogDebug("Trying to provide '{RuntimeReference}' as resolution for '{LibraryName}', temp file is '{TargetFileName}'", runtimeReference, libraryName, targetFileName);
 
             // Only load what we extracted ourselves and immediately took into use (blocked)
             if (!_loadedUnmanagedAssemblies.ContainsKey(targetFileName))

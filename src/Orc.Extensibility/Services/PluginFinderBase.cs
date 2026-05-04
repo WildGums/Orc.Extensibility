@@ -265,7 +265,7 @@ public abstract class PluginFinderBase : IPluginFinder
             return;
         }
 
-        Logger.LogDebug("Searching for plugins in directory '{0}'", pluginDirectory);
+        Logger.LogDebug("Searching for plugins in directory '{PluginDirectory}'", pluginDirectory);
 
         try
         {
@@ -285,7 +285,7 @@ public abstract class PluginFinderBase : IPluginFinder
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Failed to search for plugins in directory '{0}'", pluginDirectory);
+            Logger.LogWarning(ex, "Failed to search for plugins in directory '{PluginDirectory}'", pluginDirectory);
         }
     }
 
@@ -430,7 +430,7 @@ public abstract class PluginFinderBase : IPluginFinder
 
                 var pluginInfo = _pluginInfoProvider.GetPluginInfo(assembly.Location, type, pluginRegistrarType);
 
-                Logger.LogDebug($"Found plugin '{pluginInfo}' in assembly '{assembly.Location}'");
+                Logger.LogDebug("Found plugin '{PluginInfo}' in assembly '{AssemblyLocation}'", pluginInfo, assembly.Location);
 
                 context.Plugins.Add(pluginInfo);
             }
@@ -573,12 +573,12 @@ public abstract class PluginFinderBase : IPluginFinder
                 return true;
             }
 
-            Logger.LogDebug($"File '{fileName}' is signed with subject name '{certificate.Subject}', not matching the requested one so not allowing loading of assembly");
+            Logger.LogDebug("File '{FileName}' is signed with subject name '{SubjectName}', not matching the requested one so not allowing loading of assembly", fileName, certificate.Subject);
             return false;
         }
         catch (Exception ex)
         {
-            Logger.LogDebug(ex, $"File '{fileName}' is not signed, not allowing loading of assembly");
+            Logger.LogDebug(ex, "File '{FileName}' is not signed, not allowing loading of assembly", fileName);
             return false;
         }
     }

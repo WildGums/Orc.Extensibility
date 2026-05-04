@@ -32,7 +32,7 @@ public class PluginCleanupService : IPluginCleanupService
 
     public void Cleanup(string directory)
     {
-        Logger.LogDebug("Cleaning up plugin at '{0}'", directory);
+        Logger.LogDebug("Cleaning up plugin at '{Directory}'", directory);
 
         if (!IsCleanupRequired(directory))
         {
@@ -55,7 +55,7 @@ public class PluginCleanupService : IPluginCleanupService
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to clean up plugin at '{0}'", directory);
+            Logger.LogError(ex, "Failed to clean up plugin at '{Directory}'", directory);
         }
 
         if (succeeded)

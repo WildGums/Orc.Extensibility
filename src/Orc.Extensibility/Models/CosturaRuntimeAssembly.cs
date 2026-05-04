@@ -73,7 +73,7 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     {
         if (IsLoaded)
         {
-            throw Logger.LogErrorAndCreateException<NotSupportedException>($"{this} is marked as loaded, stream is no longer available");
+            throw Logger.LogErrorAndCreateException<NotSupportedException>("{RuntimeAssembly} is marked as loaded, stream is no longer available", this);
         }
 
         if (_cachedData is null)
@@ -104,7 +104,7 @@ public class CosturaRuntimeAssembly : RuntimeAssembly, ICosturaRuntimeAssembly
     {
         if (_cachedData is not null)
         {
-            Logger.LogDebug($"Releasing '{_cachedData.Length}' bytes of cached memory for {this}");
+            Logger.LogDebug("Releasing '{CachedDataLength}' bytes of cached memory for {RuntimeAssembly}", _cachedData.Length, this);
 
             _cachedData = null;
         }

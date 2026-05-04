@@ -58,7 +58,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
             return;
         }
 
-        Logger.LogDebug($"Registering runtime assembly resolving for '{runtimeAssembly}'");
+        Logger.LogDebug("Registering runtime assembly resolving for '{RuntimeAssembly}'", runtimeAssembly);
 
         var pluginLoadContext = new PluginLoadContext(runtimeAssembly);
         _pluginLoadContexts[runtimeAssembly.Checksum] = pluginLoadContext;
@@ -94,7 +94,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
             return Array.Empty<IRuntimeAssembly>();
         }
 
-        Logger.LogDebug($"Indexing all Costura embedded assemblies from '{runtimeAssembly}'");
+        Logger.LogDebug("Indexing all Costura embedded assemblies from '{RuntimeAssembly}'", runtimeAssembly);
 
         var indexedCosturaAssemblies = new List<IRuntimeAssembly>();
 
@@ -117,7 +117,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                             var costuraEmbeddedAssembliesFromMetadata = await FindEmbeddedAssembliesViaCosturaMetadataAsync(embeddedResources);
                             if (costuraEmbeddedAssembliesFromMetadata is null)
                             {
-                                Logger.LogError($"Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
+                                Logger.LogError("Files are embedded with an older version of Costura (< 5.x). It's required to update so metadata is embedded by Costura");
                                 return indexedCosturaAssemblies;
                             }
 
@@ -131,7 +131,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
 
                                     if (!PlatformInformation.RuntimeIdentifiers.Any(x => costuraEmbeddedAssembly.RelativeFileName.ContainsIgnoreCase($"/{x}/")))
                                     {
-                                        Logger.LogDebug($"Ignoring '{costuraEmbeddedAssembly}' since it's not applicable to the current platform");
+                                        Logger.LogDebug("Ignoring '{CosturaEmbeddedAssembly}' since it's not applicable to the current platform", costuraEmbeddedAssembly);
 
                                         // Not for this platform
                                         continue;
@@ -177,7 +177,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, $"Failed to index Costura assemblies for '{runtimeAssembly}'");
+            Logger.LogWarning(ex, "Failed to index Costura assemblies for '{RuntimeAssembly}'", runtimeAssembly);
         }
 
         return indexedCosturaAssemblies;
@@ -216,14 +216,14 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
 
         if (!peReader.PEHeaders.TryGetDirectoryOffset(resourcesDirectory, out var start))
         {
-            Logger.LogWarning($"could not obtain ResourcesDirectory offset");
+            Logger.LogWarning("could not obtain ResourcesDirectory offset");
             return embeddedResources;
         }
 
         var peImage = peReader.GetEntireImage();
         if (start + resourcesDirectory.Size >= peImage.Length)
         {
-            Logger.LogWarning($"Invalid resource offset {start} + length {resourcesDirectory.Size} greater than {peImage.Length}");
+            Logger.LogWarning("Invalid resource offset {Start} + length {Size} greater than {Length}", start, resourcesDirectory.Size, peImage.Length);
             return embeddedResources;
         }
 
@@ -253,26 +253,26 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
 
                 if (resource.Offset < 0)
                 {
-                    Logger.LogWarning($"Unexpected offset {resource.Offset} for resource {resourceName}");
+                    Logger.LogWarning("Unexpected offset {Offset} for resource {ResourceName}", resource.Offset, resourceName);
                     continue;
                 }
 
                 if (resource.Offset + sizeof(int) > resourcesDirectory.Size)
                 {
-                    Logger.LogWarning($"Offset {resource.Offset} leaves no room for size for resource {resourceName}");
+                    Logger.LogWarning("Offset {Offset} leaves no room for size for resource {ResourceName}", resource.Offset, resourceName);
                     continue;
                 }
 
                 var size = *(int*)(resourcesStart + resource.Offset);
                 if (size < 0)
                 {
-                    Logger.LogWarning($"Unexpected size {size} for resource {resourceName}");
+                    Logger.LogWarning("Unexpected size {Size} for resource {ResourceName}", size, resourceName);
                     continue;
                 }
 
                 if (resource.Offset + size > resourcesDirectory.Size)
                 {
-                    Logger.LogWarning($"Size {size} exceeds size of resource directory for resource {resourceName}");
+                    Logger.LogWarning("Size {Size} exceeds size of resource directory for resource {ResourceName}", size, resourceName);
                     continue;
                 }
 
@@ -320,7 +320,7 @@ public partial class RuntimeAssemblyResolverService : IRuntimeAssemblyResolverSe
                                                 select x).FirstOrDefault();
                         if (embeddedResource is null)
                         {
-                            Logger.LogError($"Expected to find Costura embedded resource '{costuraEmbeddedResource.ResourceName}', but could not find it");
+                            Logger.LogError("Expected to find Costura embedded resource '{ResourceName}', but could not find it", costuraEmbeddedResource.ResourceName);
                             continue;
                         }
 

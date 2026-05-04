@@ -35,9 +35,9 @@ public class PluginFactory : IPluginFactory
 
         try
         {
-            Logger.LogDebug($"Creating plugin '{pluginTypeInfo}'");
+            Logger.LogDebug("Creating plugin '{PluginTypeInfo}'", pluginTypeInfo);
 
-            Logger.LogDebug($"  1. Loading assembly from '{pluginTypeInfo.Location}'");
+            Logger.LogDebug("  1. Loading assembly from '{Location}'", pluginTypeInfo.Location);
 
             //#if NETCORE
             //                // Use DotNetCorePlugins
@@ -61,15 +61,15 @@ public class PluginFactory : IPluginFactory
             //var loadContext = AssemblyLoadContext.GetLoadContext(assembly);
             //loadContext.Resolving += OnLoadContextResolving;
 
-            Logger.LogDebug($"  2. Getting type '{pluginTypeInfo.FullTypeName}' from loaded assembly");
+            Logger.LogDebug("  2. Getting type '{FullTypeName}' from loaded assembly", pluginTypeInfo.FullTypeName);
 
             var type = assembly.GetType(pluginTypeInfo.FullTypeName);
             if (type is null)
             {
-                throw Logger.LogErrorAndCreateException<NotSupportedException>($"Cannot find type '{pluginTypeInfo.FullTypeName}'");
+                throw Logger.LogErrorAndCreateException<NotSupportedException>("Cannot find type '{FullTypeName}'", pluginTypeInfo.FullTypeName);
             }
 
-            Logger.LogDebug($"  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
+            Logger.LogDebug("  3. Force loading assembly into AppDomain (if using Fody.ModuleInit)");
 
             try
             {
@@ -80,7 +80,7 @@ public class PluginFactory : IPluginFactory
                 Logger.LogWarning(innerEx, "Failed to preload assembly");
             }
 
-            Logger.LogDebug($"  4. Instantiating type '{type.GetSafeFullName(true)}'");
+            Logger.LogDebug("  4. Instantiating type '{TypeName}'", type.GetSafeFullName(true));
 
             var plugin = ActivatorUtilities.CreateInstance(_serviceProvider, type);
 
@@ -91,7 +91,7 @@ public class PluginFactory : IPluginFactory
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, $"Failed to create plugin '{pluginTypeInfo}'");
+            Logger.LogError(ex, "Failed to create plugin '{PluginTypeInfo}'", pluginTypeInfo);
 
             throw;
         }

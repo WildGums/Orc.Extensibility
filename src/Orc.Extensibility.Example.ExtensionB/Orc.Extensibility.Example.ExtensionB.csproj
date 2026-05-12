@@ -24,7 +24,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0160" />
-    <PackageReference Include="Orc.Notifications" Version="6.0.0-alpha0103" />
+    <PackageReference Include="Orc.Notifications" Version="6.0.0-alpha0139" />
     <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0177" />
   </ItemGroup>
 

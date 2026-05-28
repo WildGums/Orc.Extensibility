@@ -103,7 +103,7 @@ public abstract class PluginFinderBase : IPluginFinder
     }
 
     [Time]
-    public async Task<IReadOnlyList<IPluginInfo>> FindPluginsAsync()
+    public virtual async Task<IReadOnlyList<IPluginInfo>> FindPluginsAsync()
     {
         var pluginProbingContext = new PluginProbingContext();
 

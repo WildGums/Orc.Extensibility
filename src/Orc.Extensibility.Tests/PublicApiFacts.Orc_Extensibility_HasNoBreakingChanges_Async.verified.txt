@@ -233,7 +233,7 @@ namespace Orc.Extensibility
         protected PluginFinderBase(Orc.Extensibility.IPluginLocationsProvider pluginLocationsProvider, Orc.Extensibility.IPluginInfoProvider pluginInfoProvider, Orc.Extensibility.IPluginCleanupService pluginCleanupService, Orc.FileSystem.IDirectoryService directoryService, Orc.FileSystem.IFileService fileService, Orc.Extensibility.IAssemblyReflectionService assemblyReflectionService, Orc.Extensibility.IRuntimeAssemblyResolverService runtimeAssemblyResolverService) { }
         protected virtual bool CanInvestigateAssembly(Orc.Extensibility.PluginProbingContext context, System.Reflection.Assembly assembly) { }
         protected virtual bool CanInvestigateAssembly(Orc.Extensibility.PluginProbingContext context, string assemblyPath) { }
-        public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Orc.Extensibility.IPluginInfo>> FindPluginsAsync() { }
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Orc.Extensibility.IPluginInfo>> FindPluginsAsync() { }
         protected System.Threading.Tasks.Task FindPluginsInAssembliesAsync(Orc.Extensibility.PluginProbingContext context, params string[] assemblyPaths) { }
         protected virtual System.Threading.Tasks.Task FindPluginsInAssemblyAsync(Orc.Extensibility.PluginProbingContext context, System.Reflection.Assembly assembly) { }
         protected virtual System.Threading.Tasks.Task FindPluginsInAssemblyAsync(Orc.Extensibility.PluginProbingContext context, string assemblyPath) { }

@@ -26,21 +26,21 @@ public class MainViewModel : ViewModelBase
     private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
     private readonly AppDomainRuntimeAssemblyWatcher _appDomainRuntimeAssemblyWatcher;
     private readonly ILoadedPluginService _loadedPluginService;
-
+        
     private bool _isInitialized;
 
-    public MainViewModel(IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
+    public MainViewModel(AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher, 
+        IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
         IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
-        AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher, IServiceProvider serviceProvider,
-        ILoadedPluginService loadedPluginService)
+        IServiceProvider serviceProvider, ILoadedPluginService loadedPluginService)
         : base(serviceProvider)
     {
+        _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
         _hostService = hostService;
         _dispatcherService = dispatcherService;
         _pluginManager = pluginManager;
         _configurationService = configurationService;
         _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
-        _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
         _loadedPluginService = loadedPluginService;
 
         RuntimeResolvedAssemblies = new ObservableCollection<IRuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);

@@ -124,6 +124,7 @@ namespace Orc.Extensibility
         string Name { get; set; }
         Orc.Extensibility.IPluginTypeInfo Plugin { get; init; }
         Orc.Extensibility.IPluginTypeInfo? PluginRegistrar { get; init; }
+        object? Tag { get; }
         string Version { get; set; }
     }
     public interface IPluginInfoProvider
@@ -262,6 +263,7 @@ namespace Orc.Extensibility
         public string Name { get; set; }
         public Orc.Extensibility.IPluginTypeInfo Plugin { get; init; }
         public Orc.Extensibility.IPluginTypeInfo? PluginRegistrar { get; init; }
+        public object? Tag { get; set; }
         public string Version { get; set; }
         public override string ToString() { }
     }

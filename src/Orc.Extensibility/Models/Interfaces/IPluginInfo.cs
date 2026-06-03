@@ -16,5 +16,7 @@ public interface IPluginInfo
 
     IPluginTypeInfo? PluginRegistrar { get; init; }
 
+    object? Tag { get; }
+
     List<string> Aliases { get; }
 }

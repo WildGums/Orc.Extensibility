@@ -56,6 +56,8 @@ public class PluginInfo : IPluginInfo
 
     public IPluginTypeInfo? PluginRegistrar { get; init; }
 
+    public object? Tag { get; set; }
+
     public List<string> Aliases { get; private set; }
 
     public override string ToString()

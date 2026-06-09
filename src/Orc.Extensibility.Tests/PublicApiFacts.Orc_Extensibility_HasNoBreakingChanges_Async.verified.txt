@@ -47,7 +47,7 @@ namespace Orc.Extensibility
     {
         public static object? GetAttributeValue<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
-        public static System.Collections.Generic.List<object> GetAttributeValues<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
+        public static System.Collections.Generic.IReadOnlyList<object> GetAttributeValues<TAttribute>(this System.Collections.Generic.IEnumerable<System.Reflection.CustomAttributeData> customAttributes)
             where TAttribute : System.Attribute { }
     }
     public class EmbeddedResource

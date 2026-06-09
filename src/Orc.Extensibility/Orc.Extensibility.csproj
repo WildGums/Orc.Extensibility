@@ -5,7 +5,7 @@
     <RootNamespace>Orc.Extensibility</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageId>Orc.Extensibility</PackageId>
-    <PackageVersion>4.0.0-alpha0204</PackageVersion>
+    <PackageVersion>6.0.0-alpha0185</PackageVersion>
     <Description>Extensibility library.</Description>
     <PackageTags>orc;extensibility;extension;plugin;add-in;addin;add-on;addon</PackageTags>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

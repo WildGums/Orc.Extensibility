@@ -14,20 +14,20 @@ public static class CustomAttributeDataExtensions
         var attribute = FilterCustomAttributes<TAttribute>(customAttributes).FirstOrDefault();
         if (attribute is not null)
         {
-            return attribute.ConstructorArguments[0].Value;
+            return GetAttributeValue(attribute);
         }
 
         return null;
     }
 
-    public static List<object> GetAttributeValues<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
+    public static IReadOnlyList<object> GetAttributeValues<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
         where TAttribute : Attribute
     {
         var values = new List<object>();
 
         foreach (var attribute in FilterCustomAttributes<TAttribute>(customAttributes))
         {
-            var value = attribute.ConstructorArguments[0].Value;
+            var value = GetAttributeValue(attribute);
             if (value is not null)
             {
                 values.Add(value);
@@ -37,13 +37,43 @@ public static class CustomAttributeDataExtensions
         return values;
     }
 
-    private static List<CustomAttributeData> FilterCustomAttributes<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
+    private static object? GetAttributeValue(this CustomAttributeData customAttributeData)
+    {
+        if (customAttributeData.ConstructorArguments.Count > 0)
+        {
+            return customAttributeData.ConstructorArguments[0].Value;
+        }
+
+        return null;    
+    }
+
+    private static IReadOnlyList<CustomAttributeData> FilterCustomAttributes<TAttribute>(this IEnumerable<CustomAttributeData> customAttributes)
         where TAttribute : Attribute
     {
-        var attributes = (from customAttributeData in customAttributes
-            let declaringTypeName = customAttributeData.Constructor.DeclaringType?.Name
-            where !string.IsNullOrEmpty(declaringTypeName) && declaringTypeName.EqualsIgnoreCase(typeof(TAttribute).Name)
-            select customAttributeData).ToList();
+        var attributes = new List<CustomAttributeData>();
+
+        foreach (var customAttributeData in customAttributes)
+        {
+            try
+            {
+                var declaringTypeName = customAttributeData.Constructor.DeclaringType?.Name;
+                if (string.IsNullOrEmpty(declaringTypeName))
+                {
+                    continue;
+                }
+                
+                if (!declaringTypeName.EqualsIgnoreCase(typeof(TAttribute).Name))
+                {
+                    continue;
+                }
+
+                attributes.Add(customAttributeData);
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+        }
 
         return attributes;
     }

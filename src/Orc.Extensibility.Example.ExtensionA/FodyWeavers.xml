@@ -3,11 +3,9 @@
     <Catel />
     <Costura>
         <IncludeAssemblies>
-            Azure.* <!-- required for Microsoft.Data.SqlClient -->
             EntityFramework
             EntityFramework.SqlServer
             Microsoft.Data.SqlClient
-            Microsoft.Identity.Client*
             Microsoft.SqlServer.*
             Newtonsoft.Json
             Orc.Metadata

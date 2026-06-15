@@ -28,7 +28,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
     <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0265" />
     <PackageReference Include="Orc.Search.Xaml" Version="6.0.0-alpha0195" PrivateAssets="all" />
-    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0255" />
+    <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0273" />
     <PackageReference Include="YamlDotNet" Version="18.0.0" PrivateAssets="all" />
   </ItemGroup>
 

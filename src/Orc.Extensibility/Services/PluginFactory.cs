@@ -28,7 +28,7 @@ public class PluginFactory : IPluginFactory
         _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
     }
 
-    [Time]
+    [Time("{pluginTypeInfo}")]
     public virtual object CreatePluginType(IPluginTypeInfo pluginTypeInfo)
     {
         ArgumentNullException.ThrowIfNull(pluginTypeInfo);

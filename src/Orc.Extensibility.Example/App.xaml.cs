@@ -49,6 +49,8 @@ public partial class App : Application
 
         pluginProbingServiceCollection.AddLogging(x =>
         {
+            x.SetMinimumLevel(LogLevel.Debug);
+
             x.AddConsole();
             x.AddDebug();
         });
@@ -57,6 +59,8 @@ public partial class App : Application
 #pragma warning disable IDISP001 // Dispose created
         var pluginProbingServiceProvider = pluginProbingServiceCollection.BuildServiceProvider();
 #pragma warning restore IDISP001 // Dispose created
+
+        IoCContainer.ServiceProvider = pluginProbingServiceProvider;
 
         var pluginFinder = pluginProbingServiceProvider.GetRequiredService<IPluginFinder>();
         var plugins = await pluginFinder.FindPluginsAsync();

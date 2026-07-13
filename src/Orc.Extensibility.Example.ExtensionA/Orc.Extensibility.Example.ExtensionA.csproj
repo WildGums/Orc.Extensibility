@@ -26,7 +26,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
-    <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0265" />
+    <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0306" />
     <PackageReference Include="Orc.Search.Xaml" Version="6.0.0-alpha0195" PrivateAssets="all" />
     <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0283" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" PrivateAssets="all" />

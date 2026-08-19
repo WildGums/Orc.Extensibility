@@ -22,7 +22,7 @@
     <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-  <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0324" />
+  <PackageReference Include="Orc.Controls" Version="6.0.0-alpha0333" />
     <PackageReference Include="Orchestra.Core" Version="8.0.0-alpha0321" />
   </ItemGroup>
   

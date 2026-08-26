@@ -28,16 +28,7 @@
 
         <Label>
             <TextBlock TextWrapping="Wrap">
-            This example shows you how to use the Orc.Extensibility component. This example consists of the following components:
-            <LineBreak /><LineBreak />
-            - Host<LineBreak />
-            - Api<LineBreak />
-            - ExtensionA<LineBreak />
-            - ExtensionB<LineBreak />
-            <LineBreak />
-            The extensions can be automatically instantiated without having to reference them in the host. Note that for this example,
-            you will need to build the extensions manually (since there are no actual dependencies set up in Visual Studio). To make
-            deployment easy for this example, post-build steps are added to automatically copy the compiled extensions.
+                <catel:LanguageBinding ResourceName="MainWindow_Description" />
             </TextBlock>
         </Label>
 
@@ -47,7 +38,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Label Content="Selected plugin" />
+            <Label Content="{catel:LanguageBinding MainWindow_SelectedPlugin}" />
             <ComboBox ItemsSource="{Binding AvailablePlugins}"
                       SelectedItem="{Binding SelectedPlugin, Mode=TwoWay}" />
         </orccontrols:StackGrid>
@@ -55,7 +46,7 @@
         <Label>
             <TextBlock TextWrapping="Wrap"
                        FontStyle="Italic">
-            Note that changing the plugin requires a restart of the application
+                <catel:LanguageBinding ResourceName="MainWindow_PluginChangeNote" />
             </TextBlock>
         </Label>
 
@@ -79,7 +70,7 @@
 
             <GroupBox Grid.Row="0"
                       Grid.Column="0"
-                      Header="Runtime extracted assemblies">
+                      Header="{catel:LanguageBinding MainWindow_RuntimeExtractedAssemblies}">
                 <ListBox ItemsSource="{Binding RuntimeAssemblies}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -91,7 +82,7 @@
 
             <GroupBox Grid.Row="1"
                       Grid.Column="0"
-                      Header="Runtime resolved assemblies">
+                      Header="{catel:LanguageBinding MainWindow_RuntimeResolvedAssemblies}">
                 <ListBox ItemsSource="{Binding RuntimeResolvedAssemblies}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -103,7 +94,7 @@
 
             <GroupBox Grid.RowSpan="2"
                       Grid.Column="1"
-                      Header="Logging">
+                      Header="{catel:LanguageBinding MainWindow_Logging}">
                 <orclogviewer:AdvancedLogViewerControl />
             </GroupBox>
         </Grid>

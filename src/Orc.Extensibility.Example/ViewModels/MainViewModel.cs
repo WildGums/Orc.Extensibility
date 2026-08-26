@@ -26,13 +26,14 @@ public class MainViewModel : ViewModelBase
     private readonly IRuntimeAssemblyResolverService _runtimeAssemblyResolverService;
     private readonly AppDomainRuntimeAssemblyWatcher _appDomainRuntimeAssemblyWatcher;
     private readonly ILoadedPluginService _loadedPluginService;
+    private readonly ILanguageService _languageService;
         
     private bool _isInitialized;
 
     public MainViewModel(AppDomainRuntimeAssemblyWatcher appDomainRuntimeAssemblyWatcher, 
         IHostService hostService, IDispatcherService dispatcherService, IPluginManager pluginManager,
         IConfigurationService configurationService, IRuntimeAssemblyResolverService runtimeAssemblyResolverService,
-        IServiceProvider serviceProvider, ILoadedPluginService loadedPluginService)
+        IServiceProvider serviceProvider, ILoadedPluginService loadedPluginService, ILanguageService languageService)
         : base(serviceProvider)
     {
         _appDomainRuntimeAssemblyWatcher = appDomainRuntimeAssemblyWatcher;
@@ -42,6 +43,7 @@ public class MainViewModel : ViewModelBase
         _configurationService = configurationService;
         _runtimeAssemblyResolverService = runtimeAssemblyResolverService;
         _loadedPluginService = loadedPluginService;
+        _languageService = languageService;
 
         RuntimeResolvedAssemblies = new ObservableCollection<IRuntimeAssembly>(appDomainRuntimeAssemblyWatcher.LoadedAssemblies);
 
@@ -49,7 +51,7 @@ public class MainViewModel : ViewModelBase
         RuntimeAssemblies = new List<IRuntimeAssembly>();
     }
 
-    public override string Title => "Orc.Extensibility example";
+    public override string Title => _languageService.GetString("MainViewModel_Title") ?? "Orc.Extensibility example";
 
     public List<IPluginInfo> AvailablePlugins { get; private set; }
 

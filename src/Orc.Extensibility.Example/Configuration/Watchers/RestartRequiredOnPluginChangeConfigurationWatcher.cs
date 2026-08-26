@@ -13,15 +13,18 @@ public class RestartRequiredOnPluginChangeConfigurationWatcher : IConstructAtSta
 
     private readonly IConfigurationService _configurationService;
     private readonly IMessageService _messageService;
+    private readonly ILanguageService _languageService;
 
     public RestartRequiredOnPluginChangeConfigurationWatcher(IConfigurationService configurationService,
-        IMessageService messageService)
+        IMessageService messageService, ILanguageService languageService)
     {
         ArgumentNullException.ThrowIfNull(configurationService);
         ArgumentNullException.ThrowIfNull(messageService);
+        ArgumentNullException.ThrowIfNull(languageService);
 
         _configurationService = configurationService;
         _messageService = messageService;
+        _languageService = languageService;
 
         _configurationService.ConfigurationChanged += OnConfigurationServiceConfigurationChanged;
     }
@@ -32,9 +35,12 @@ public class RestartRequiredOnPluginChangeConfigurationWatcher : IConstructAtSta
     {
         if (e.IsConfigurationKey(ConfigurationKeys.ActivePlugin))
         {
-            Logger.LogInformation("The active plugin has been changed, a restart is required");
+            var message = _languageService.GetString("RestartRequiredOnPluginChangeConfigurationWatcher_PluginChangedMessage")
+                ?? "The active plugin has been changed, a restart is required";
 
-            await _messageService.ShowAsync("The active plugin has been changed, a restart is required");
+            Logger.LogInformation(message);
+
+            await _messageService.ShowAsync(message);
         }
     }
 }

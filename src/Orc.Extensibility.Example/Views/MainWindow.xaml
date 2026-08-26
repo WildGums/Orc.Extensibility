@@ -27,9 +27,8 @@
         </StackPanel>
 
         <Label>
-            <TextBlock TextWrapping="Wrap">
-                <catel:LanguageBinding ResourceName="MainWindow_Description" />
-            </TextBlock>
+            <TextBlock TextWrapping="Wrap"
+                       Text="{catel:LanguageBinding MainWindow_Description}" />
         </Label>
 
         <orccontrols:StackGrid>
@@ -45,9 +44,8 @@
 
         <Label>
             <TextBlock TextWrapping="Wrap"
-                       FontStyle="Italic">
-                <catel:LanguageBinding ResourceName="MainWindow_PluginChangeNote" />
-            </TextBlock>
+                       FontStyle="Italic"
+                       Text="{catel:LanguageBinding MainWindow_PluginChangeNote}" />
         </Label>
 
         <Rectangle Height="50"

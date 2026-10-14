@@ -12,7 +12,7 @@ internal class SemVersion : IComparable
     public SemVersion(string version)
     {
         _version = version;
-        var classicVersion = StripDashPartOfVersion(version);
+        var classicVersion = StripDashPartOfVersion(StripBuildMetadata(version));
         _classicVersion = new System.Version(classicVersion);
     }
 
@@ -157,6 +157,17 @@ internal class SemVersion : IComparable
         return comparableVersion;
     }
 
+    private static string StripBuildMetadata(string version)
+    {
+        var plusIndex = version.IndexOf('+');
+        if (plusIndex != -1)
+        {
+            return version.Substring(0, plusIndex);
+        }
+
+        return version;
+    }
+
     private static string StripDashPartOfVersion(string version)
     {
         var dashIndex = version.IndexOf('-');
@@ -176,8 +187,12 @@ internal class SemVersion : IComparable
 
     private static int CompareVersions(string versionA, string versionB)
     {
-        var originalVersionA = versionA;
-        var originalVersionB = versionB;
+        var metadataIndexA = versionA.IndexOf('+');
+        var metadataIndexB = versionB.IndexOf('+');
+        var metadataA = metadataIndexA != -1 ? versionA.Substring(metadataIndexA + 1) : string.Empty;
+        var metadataB = metadataIndexB != -1 ? versionB.Substring(metadataIndexB + 1) : string.Empty;
+        var originalVersionA = StripBuildMetadata(versionA);
+        var originalVersionB = StripBuildMetadata(versionB);
 
         var versionWithoutDashPart = StripDashPartOfVersion(originalVersionA);
         var versionToCheckWithoutDashPart = StripDashPartOfVersion(originalVersionB);
@@ -206,6 +221,12 @@ internal class SemVersion : IComparable
             versionB = GetComparableVersion(originalVersionB);
         }
 
-        return string.Compare(versionA, versionB);
+        var comparison = string.Compare(versionA, versionB);
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        return string.Compare(metadataA, metadataB);
     }
 }

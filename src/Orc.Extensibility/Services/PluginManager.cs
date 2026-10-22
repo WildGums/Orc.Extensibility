@@ -42,7 +42,7 @@ public class PluginManager : IPluginManager
 
         lock (_lock)
         {
-            _plugins = new List<IPluginInfo>(plugins.OrderBy(x => x.Name));
+            _plugins = new List<IPluginInfo>(plugins);
         }
     }
 }

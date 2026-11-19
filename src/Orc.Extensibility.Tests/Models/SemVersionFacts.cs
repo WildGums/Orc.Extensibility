@@ -37,6 +37,23 @@ public class SemVersionFacts
         Assert.That(sortedVersions[1].Version, Is.EqualTo(olderVersion));
     }
 
+    [TestCase("2.8.7", "2.8.13-beta03")]
+    [TestCase("2.8.7+9999", "2.8.13-beta03+1")]
+    [TestCase("2.9.99", "2.10.0-beta03")]
+    [TestCase("9.99.99", "10.0.0-beta03")]
+    [TestCase("2.8.7.9", "2.8.7.10-beta03")]
+    [TestCase("2.8.07-beta03", "2.8.7")]
+    public void Sort_Uses_Numeric_Version_Components(string olderVersion, string newerVersion)
+    {
+        var older = new SemVersion(olderVersion);
+        var newer = new SemVersion(newerVersion);
+
+        Assert.That(newer.CompareTo(older), Is.GreaterThan(0));
+        Assert.That(older.CompareTo(newer), Is.LessThan(0));
+        Assert.That(new[] { older, newer }.OrderByDescending(version => version).First(), Is.SameAs(newer));
+        Assert.That(new[] { newer, older }.OrderByDescending(version => version).First(), Is.SameAs(newer));
+    }
+
     [TestCase("2.8.0-beta.1+1234", "2.8.0-beta.1+1222")]
     [TestCase("2.8.0-beta1+1234", "2.8.0-beta1")]
     [TestCase("2.8.0+1234", "2.8.0+1222")]

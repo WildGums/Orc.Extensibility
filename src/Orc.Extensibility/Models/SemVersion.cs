@@ -197,29 +197,25 @@ internal class SemVersion : IComparable
         var versionWithoutDashPart = StripDashPartOfVersion(originalVersionA);
         var versionToCheckWithoutDashPart = StripDashPartOfVersion(originalVersionB);
 
-        versionA = versionWithoutDashPart;
-        versionB = versionToCheckWithoutDashPart;
-
-        if (string.Equals(versionWithoutDashPart, versionToCheckWithoutDashPart))
+        var numericComparison = new System.Version(versionWithoutDashPart).CompareTo(new System.Version(versionToCheckWithoutDashPart));
+        if (numericComparison != 0)
         {
-            // Without dash part, versions are equal, special care
-
-            // If 1 of the items does not contain a dash, treat that as larger (1.0.0 is larger than 1.0.0-beta)
-            if (string.Equals(originalVersionA, versionA) && !string.Equals(originalVersionB, versionB))
-            {
-                return 1;
-            }
-
-            // If 1 of the items does not contain a dash, treat that as larger (1.0.0-beta is smaller than 1.0.0)
-            if (!string.Equals(originalVersionA, versionA) && string.Equals(originalVersionB, versionB))
-            {
-                return -1;
-            }
-
-            // Get special versions
-            versionA = GetComparableVersion(originalVersionA);
-            versionB = GetComparableVersion(originalVersionB);
+            return numericComparison;
         }
+
+        // If one version has no suffix, treat it as larger than the prerelease.
+        if (string.Equals(originalVersionA, versionWithoutDashPart) && !string.Equals(originalVersionB, versionToCheckWithoutDashPart))
+        {
+            return 1;
+        }
+
+        if (!string.Equals(originalVersionA, versionWithoutDashPart) && string.Equals(originalVersionB, versionToCheckWithoutDashPart))
+        {
+            return -1;
+        }
+
+        versionA = GetComparableVersion($"0.0.0{originalVersionA.Substring(versionWithoutDashPart.Length)}");
+        versionB = GetComparableVersion($"0.0.0{originalVersionB.Substring(versionToCheckWithoutDashPart.Length)}");
 
         var comparison = string.Compare(versionA, versionB);
         if (comparison != 0)
